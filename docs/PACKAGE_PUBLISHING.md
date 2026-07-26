@@ -1,0 +1,337 @@
+# Publishing and consuming the design systems
+
+Two design systems, one rule: **consumers install a published, versioned
+artifact — never the source by path.**
+
+| Target | Package | Published as | Section |
+|---|---|---|---|
+| React | `packages/insolvia_design_system_react/` | npm package `@insolvia-ai/design-system` on GitHub Packages | [React](#the-react-design-system-insolvia-aidesign-system-on-github-packages) |
+| Flutter | `packages/insolvia_design_system/` | annotated git tag `insolvia_design_system-v<version>` in this repo | [Flutter](#the-flutter-design-system-insolvia_design_system-via-git-tags) |
+
+Both publish automatically on merge to `main`, both publishes are idempotent by
+version, and both PR gates machine-enforce the corollary: **any change to a
+design-system package bumps its version in the same PR**, because an unbumped
+merge publishes nothing and the published surface silently rots underneath its
+consumers.
+
+## The React design system: `@insolvia-ai/design-system` on GitHub Packages
+
+`packages/insolvia_design_system_react/` is published as the npm package
+**`@insolvia-ai/design-system`** to **GitHub Packages**
+(`https://npm.pkg.github.com`), not to npmjs.org.
+
+**The scope is a contract with the registry.** GitHub Packages only accepts an
+npm scope equal to the owning org's login — `insolvia-ai`, not `insolvia` —
+and rejects any other scope with a misleading E403
+(`Permission permission_denied: The requested installation does not exist.`)
+that names neither the scope nor the rule. Keep it `@insolvia-ai` everywhere:
+`package.json`, `.npmrc`, imports, docs.
+
+Its consumer — the marketing site (`apps/insolvia_marketing/`, Milestone 3) —
+lives in **this same repository**. It is still published and installed rather
+than wired up as a path dependency, deliberately:
+
+- **The published `dist` is the contract.** Consuming `@insolvia-ai/design-system`
+  by name means the marketing site imports exactly what an outside consumer
+  would — the built ESM/CJS output and `dist/theme.css`, through the `exports`
+  map. A path dependency would let it reach into `src/`, and the first import of
+  an unexported internal would silently become load-bearing.
+- **It keeps the npm and pub worlds from bleeding together.** The React package
+  and the marketing site are npm projects sitting inside a Dart pub workspace
+  they are both excluded from. A registry boundary is unambiguous where a
+  relative path across that line is not.
+- **A second consumer costs nothing.** Nothing about the arrangement assumes one
+  site.
+
+| | |
+|---|---|
+| Package | `@insolvia-ai/design-system` |
+| Registry | `https://npm.pkg.github.com` |
+| Source | `packages/insolvia_design_system_react/` |
+| Publish workflow | `.github/workflows/design-system-react-publish.yml` |
+| PR gate | `.github/workflows/design-system-react-pr.yml` |
+
+### How publishing works
+
+The workflow runs on **push to `main`** touching the package (plus
+`workflow_dispatch`). It:
+
+1. installs with `npm ci` (Node 24, matching `engines.node`),
+2. asks the registry whether `@insolvia-ai/design-system@<version>` already exists,
+3. **skips cleanly** if it does — a version bump is the only thing that triggers
+   an actual publish,
+4. otherwise builds (`tsup`) and runs `npm publish`.
+
+**To ship a new version: bump `version` in
+`packages/insolvia_design_system_react/package.json` and merge to `main`.**
+Nothing else. Every other push to `main` lands on the skip path and stays green.
+
+#### Every package change must bump the version
+
+The skip path in step 3 has a failure mode: a PR that changes the package but
+not the version merges green, the publish no-ops, and the registry silently
+goes stale — consumers keep installing an artifact that no longer matches
+`main`, with no error anywhere. So the rule is: **any change under
+`packages/insolvia_design_system_react/` bumps `version` in the same PR.** This
+is machine-enforced by the *Require a version bump when the package changed*
+step in `design-system-react-pr.yml`, which diffs the package directory against
+the PR base and fails on an unchanged version (and hard-errors if it cannot
+read the base `package.json`, rather than silently passing).
+
+The flip side of publish-on-every-change: consumers — the marketing site —
+**install the published package, never the source by path.** A committed
+`file:` dependency bypasses the published `dist` contract above; a local
+`file:` override while debugging is fine, but it never gets committed.
+
+Auth is `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` with
+`permissions: { contents: read, packages: write }`. There is no PAT, no
+long-lived secret, and no repository secret to rotate.
+
+#### Publishing is not a deploy
+
+Publishing is deliberately outside the deploy machinery — no `environment:`,
+no OIDC role, no infra preconditions. Publishing an npm package touches no AWS
+account, no Route53 zone and no CloudFront distribution, so nothing on the
+AWS side can make a publish fail or make a published package wrong, and no
+infra outage should ever block the marketing site from installing a new
+design-system version.
+
+### Consuming it (authenticating to install)
+
+GitHub Packages requires authentication for **every** npm read, including
+public packages. There is no anonymous install.
+
+#### Local development
+
+Create a classic PAT with the **`read:packages`** scope
+(<https://github.com/settings/tokens>), then put the scope mapping in the
+consuming project's `.npmrc` and keep the token in your environment:
+
+```ini
+# .npmrc — committed. Contains a variable reference, never a token.
+@insolvia-ai:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+```
+
+```sh
+export NODE_AUTH_TOKEN=ghp_xxx   # your PAT, in your shell profile — never committed
+npm install @insolvia-ai/design-system
+```
+
+npm expands `${NODE_AUTH_TOKEN}` when it reads the file, so the committed
+`.npmrc` is safe in a public repo. **Never write a literal token into
+`.npmrc`.** This repo is public (see `CLAUDE.md`); so is anything that
+consumes it via a committed config file.
+
+Only the `@insolvia-ai` scope is redirected — `react`, `tailwindcss` and every
+other dependency still resolve from the public npm registry.
+
+#### In the consumer's CI
+
+The marketing site is in **this** repository, so its workflows install with the
+automatic `secrets.GITHUB_TOKEN` — no PAT, nothing to rotate:
+
+```yaml
+- uses: actions/setup-node@v4
+  with:
+    node-version: "24"
+    cache: npm
+- run: npm ci
+  env:
+    NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+The job needs `permissions: { packages: read }` (plus whatever else it does).
+
+For a consumer in a **different** repository in the same org, the same token
+works once the package grants that repo access: package → *Package settings* →
+*Manage Actions access*. Only a consumer in a **different org** needs a PAT with
+`read:packages` stored as a repository or environment secret. No such consumer
+exists today.
+
+#### Using it
+
+```css
+/* Tailwind v4 CSS entrypoint */
+@import 'tailwindcss';
+@import '@insolvia-ai/design-system/theme.css';
+@source '../node_modules/@insolvia-ai/design-system/dist';
+```
+
+The `@source` line is not optional. Tailwind v4 scans your own source for class
+names, but the design system's classes live in its `dist` inside `node_modules`,
+which Tailwind does not scan by default. Omit it and the components render
+completely unstyled — the utilities they reference are simply never generated.
+This is the classic "why are my styles gone" bug (MVP_PLAN 3.2).
+
+```tsx
+import { Button, Card, Field } from '@insolvia-ai/design-system';
+```
+
+`react` and `react-dom` are peer dependencies (18 or 19).
+
+### The `ssr.noExternal` trick — why the runtime image needs no token
+
+**Apply this in `apps/insolvia_marketing/` when Milestone 3 scaffolds it.** It is
+a well-established technique for the same problem — a private-registry
+design-system dependency in an SSR build.
+
+The marketing site is server-rendered and deployed as a **Lambda container
+image**. The naive arrangement is: install `@insolvia-ai/design-system` at build
+time, and let the SSR server `require`/`import` it at runtime from
+`node_modules` inside the image. That drags the private-registry dependency
+into the **runtime** — the image must ship `node_modules`, and any layer that
+rebuilds or reinstalls at runtime needs a registry token in the deployed
+artifact. A registry credential inside a running Lambda image is exactly the
+kind of secret you do not want to have.
+
+Vite's `ssr.noExternal` removes the problem. By default Vite treats
+dependencies as **external** for the SSR build — it leaves the bare
+`@insolvia-ai/design-system` import in the server bundle and resolves it from
+`node_modules` at runtime. Marking it `noExternal` tells Vite to **bundle the
+package's source into the server build instead**:
+
+```ts
+// vite.config.ts (apps/insolvia_marketing/)
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  ssr: {
+    // Bundle the design system INTO the SSR server build. After this, the
+    // built server has no runtime dependency on @insolvia-ai/design-system, so
+    // the Lambda image never needs a GitHub Packages token.
+    noExternal: ['@insolvia-ai/design-system'],
+  },
+});
+```
+
+The consequences, which are the whole point:
+
+- The private-registry dependency is a **build-time-only** concern. The token
+  lives in the build environment (GitHub Actions), never in the deployed image.
+- The runtime Lambda image can ship **without** `@insolvia-ai/design-system` in
+  `node_modules` at all.
+- **CSS needs no equivalent trick.** `theme.css` *is* shipped in the published
+  package — `tsup` copies it to `dist/theme.css` and the `exports` map publishes
+  it as `@insolvia-ai/design-system/theme.css`. `ssr.noExternal` is irrelevant to
+  it, because it is never imported by JavaScript at runtime: the site's Tailwind
+  entrypoint `@import`s it, Tailwind resolves that from `node_modules` while
+  compiling, and the output is a plain CSS file in the client bundle. So the CSS
+  is build-time-only for the same reason as the JS, but by a different
+  mechanism, and nothing needs configuring.
+
+Two things to watch:
+
+- `noExternal` bundles the package's **published `dist`**, and `tsup` marks
+  `react`, `react-dom` and `@base-ui/react` as external. Those stay external in
+  the SSR bundle too — they are ordinary public-registry deps of the site, which
+  is fine.
+- If the site ever adds a second `@insolvia-ai/*` package, add it to the same
+  `noExternal` array. A regex (`/^@insolvia-ai\//`) is accepted and saves the
+  bookkeeping.
+
+## The Flutter design system: `insolvia_design_system` via git tags
+
+`packages/insolvia_design_system/` is **not** published to pub.dev (and moving
+it out of this monorepo is explicitly deferred). The Dart-native way to publish
+a versioned artifact from an unpublished package is a **git dependency pinned
+to a version tag**: the published artifact is an annotated tag
+**`insolvia_design_system-v<version>`** in this repo, where `<version>` is the
+`version:` in the package's `pubspec.yaml`. The repo is public, so consumers
+clone it anonymously — no auth, no registry, no token.
+
+| | |
+|---|---|
+| Package | `insolvia_design_system` |
+| Artifact | annotated git tag `insolvia_design_system-v<version>` |
+| Source | `packages/insolvia_design_system/` |
+| Publish workflow | `.github/workflows/design-system-publish.yml` |
+| PR gate | `.github/workflows/design-system-pr.yml` (job `Flutter design system`) |
+
+### How publishing works
+
+The workflow runs on **push to `main`** touching the package (plus
+`workflow_dispatch` — the escape hatch for a transient failure or for the very
+first tag of a version that landed before the workflow existed). It:
+
+1. reads `version:` from `packages/insolvia_design_system/pubspec.yaml`,
+2. asks origin whether the tag `insolvia_design_system-v<version>` already
+   exists (`git ls-remote --tags`),
+3. **skips cleanly** if it does — a version bump is the only thing that
+   triggers an actual publish,
+4. otherwise pushes an annotated tag at `HEAD` (the merge commit on `main`),
+   authenticated with the job's own `GITHUB_TOKEN`
+   (`permissions: { contents: write }` — no PAT, nothing to rotate).
+
+**To ship a new version: bump `version` in
+`packages/insolvia_design_system/pubspec.yaml` and merge to `main`.** Nothing
+else. As on the npm side, any change under the package without a version bump
+fails the PR gate (the *Require a version bump when the package changed* step
+in `design-system-pr.yml` — same diff-against-base, same
+hard-error-on-unreadable-base behaviour). And publishing sits outside the
+deploy machinery, for the same reason as the npm publish (see above): pushing
+a git tag touches no AWS resource.
+
+### Consuming it
+
+The app pins the tag:
+
+```yaml
+# apps/insolvia_app/pubspec.yaml
+insolvia_design_system:
+  git:
+    url: https://github.com/insolvia-ai/insolvia.git
+    path: packages/insolvia_design_system
+    ref: insolvia_design_system-v0.1.1
+```
+
+Upgrading the app to a new design-system version is a deliberate two-line
+change: bump `ref`, run `flutter pub get`, commit the regenerated root
+`pubspec.lock` (which pins the tag's resolved commit). Nothing upgrades
+implicitly — which is the point: the app builds against a published, versioned
+artifact, exactly like the marketing site does with npm.
+
+### Why the package sits outside the pub workspace
+
+Pub workspaces silently **override any dependency on a workspace member back
+to the local path**. If `insolvia_design_system` were still a member, the git
+dependency above would be quietly rewritten to the source path and the whole
+scheme would enforce nothing. So the package is not in the root
+`pubspec.yaml`'s `workspace:` list and has no `resolution: workspace`. The
+fallout, handled deliberately:
+
+- It resolves standalone: `flutter pub get` inside the package. Its own
+  `pubspec.lock` is a library lockfile and is **gitignored** (the root
+  *workspace* lock is still committed).
+- `melos bootstrap` and the melos exec scripts (`analyze`/`format`/`test`/`ci`)
+  no longer cover it. `design-system-pr.yml` runs the equivalent commands
+  directly inside the package (`flutter pub get`, `dart format
+  --set-exit-if-changed`, `flutter analyze --fatal-infos`, `flutter test`).
+- The token generator is unaffected — it writes into the package by file path.
+
+### Hacking on the design system and the app together
+
+The published tag is the contract, but pub has a sanctioned, *uncommitted*
+override file for exactly this loop. Create
+`apps/insolvia_app/pubspec_overrides.yaml`:
+
+```yaml
+dependency_overrides:
+  insolvia_design_system:
+    path: ../../packages/insolvia_design_system
+```
+
+run `flutter pub get`, and the app builds against your working tree. The file
+is gitignored at the root — **delete it before committing** (a committed
+override is the path dependency this whole document exists to forbid), and do
+not commit a `pubspec.lock` regenerated while the override was active.
+
+## Related
+
+- `packages/insolvia_design_system_react/README.md` — component scope, theming,
+  and the local dev loop.
+- `packages/insolvia_design_system_react/.npmrc` — the scope→registry mapping
+  used by this repo's own CI.
+- `CLAUDE.md` → *Patterns Every Package Follows* — the same rules in
+  agent-instruction form.
+- `docs/ARCHITECTURE.md` — the monorepo shape and where these packages sit.

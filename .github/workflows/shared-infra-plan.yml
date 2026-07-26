@@ -1,0 +1,84 @@
+name: Infra · Terraform plan · PR
+
+# No `on.pull_request.paths:` filter, deliberately — see
+# `.github/actions/changed-paths/action.yml`. This job is a required status
+# check on `protect-main`, so it must trigger and report on *every* PR; the
+# `steps.filter` guard below is what keeps an unrelated PR cheap. Re-adding a
+# `paths:` filter would silently deadlock every PR that does not touch these
+# paths.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  terraform-validate:
+    # Matrixed, so this reports three separate checks — "Terraform validate
+    # (shared)", "(staging)" and "(prod)". All three are required by name.
+    name: Terraform validate
+    runs-on: ubuntu-latest
+    strategy:
+      # One environment failing should not cancel the others. With fail-fast on,
+      # a flake in `prod` hides whether `shared` and `staging` actually pass, so
+      # a re-run is the only way to learn anything.
+      fail-fast: false
+      matrix:
+        # `dev` (per-developer machine) and `ci-trust` (the trust anchor —
+        # OIDC provider + deploy role, applied only by a human) are validated
+        # offline here like the others but never applied by CI. Their
+        # "Terraform validate (dev)" / "(ci-trust)" checks are NOT part of the
+        # required-checks contract in CLAUDE.md (the ruleset requires
+        # shared/staging/prod); they run for coverage, not as gates.
+        env: [shared, staging, prod, ci-trust, dev]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so the guard can diff against the PR base commit.
+          fetch-depth: 0
+
+      - id: filter
+        uses: ./.github/actions/changed-paths
+        with:
+          paths: |
+            infra/**
+            .tflint.hcl
+            .github/workflows/shared-infra-plan.yml
+            .github/actions/changed-paths/action.yml
+
+      - uses: hashicorp/setup-terraform@v3
+        if: steps.filter.outputs.run == 'true'
+        with:
+          terraform_version: "~1.10"
+
+      - uses: terraform-linters/setup-tflint@v4
+        if: steps.filter.outputs.run == 'true'
+        with:
+          tflint_version: v0.62.0
+
+      - name: Format check
+        if: steps.filter.outputs.run == 'true'
+        run: terraform fmt -check -recursive
+
+      - name: TFLint
+        if: steps.filter.outputs.run == 'true'
+        # `tflint --init` pulls the AWS ruleset from the GitHub API. Without a
+        # token that request is anonymous, and GitHub-hosted runners share
+        # outbound IPs — so the 60/hr anonymous quota is routinely exhausted by
+        # other tenants and the job dies on an unrelated 403:
+        #   Failed to download tflint-ruleset-aws...: 403 API rate limit exceeded
+        # The default GITHUB_TOKEN authenticates the download and removes the
+        # whole failure class. It needs no extra permissions.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tflint --init
+          tflint --chdir=infra/envs/${{ matrix.env }} --recursive
+
+      # Offline validation — no AWS credentials needed (backend disabled).
+      - name: Validate ${{ matrix.env }}
+        if: steps.filter.outputs.run == 'true'
+        run: |
+          terraform -chdir=infra/envs/${{ matrix.env }} init -backend=false
+          terraform -chdir=infra/envs/${{ matrix.env }} validate

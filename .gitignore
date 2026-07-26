@@ -1,0 +1,90 @@
+# ── Dart / Flutter ──────────────────────────────────────────────
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+# The root workspace pubspec.lock IS committed (reproducible app builds).
+# The design system resolves OUTSIDE the workspace (see root pubspec.yaml) and
+# is a library — its own lockfile is never committed.
+packages/insolvia_design_system/pubspec.lock
+# Local design-system debugging overrides (path override while hacking live,
+# see docs/PACKAGE_PUBLISHING.md) — never committed.
+pubspec_overrides.yaml
+*.iml
+*.ipr
+*.iws
+.idea/
+doc/api/
+coverage/
+*.log
+
+# FVM
+.fvm/flutter_sdk
+
+# ── macOS build / Xcode ─────────────────────────────────────────
+**/macos/Flutter/ephemeral/
+**/macos/Pods/
+**/Podfile.lock
+*.dSYM/
+DerivedData/
+xcuserdata/
+
+# ── Web ─────────────────────────────────────────────────────────
+apps/insolvia_app/web/flutter_service_worker.js
+
+# ── Terraform ───────────────────────────────────────────────────
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars                # real vars are secret; *.tfvars.example IS committed
+!*.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+# .terraform.lock.hcl intentionally ignored for now (locks were generated with
+# -backend=false during bootstrap). Commit proper multi-platform locks later:
+#   terraform providers lock -platform=linux_amd64 -platform=darwin_arm64
+.terraform.lock.hcl
+.terraformrc
+terraform.rc
+# Lambda zips built by archive_file at plan time.
+infra/modules/*/.build/
+
+# Per-machine local wiring written by scripts/dev-aws-setup.sh (table name,
+# profile name — no secrets, but machine-specific and never committed).
+/services/api/.env
+
+# ── Python ──────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+
+# ── Node (packages/insolvia_design_system_react) ────────────────
+# package-lock.json IS committed (reproducible npm installs in CI).
+node_modules/
+storybook-static/
+# Build output is anchored per package rather than a bare `dist/`, which would
+# silently swallow any future build directory anywhere in the repo. Each new
+# Node package adds its own line.
+/packages/insolvia_design_system_react/dist/
+
+# Tool-run artifacts that may sit on disk while a branch that does not track
+# their package is checked out (the per-app .gitignore only exists on branches
+# where the app does). Ignoring them at the root keeps a `git add -A` from a
+# different branch from sweeping them into an unrelated commit.
+.lighthouseci/
+.react-router/
+
+# ── OS / editor ─────────────────────────────────────────────────
+.DS_Store
+*.swp
+*~
+.vscode/

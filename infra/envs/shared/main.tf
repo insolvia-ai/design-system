@@ -1,0 +1,157 @@
+# Account-wide, environment-independent resources for Insolvia:
+#   • Route53 hosted zone for insolvia.ai
+#   • wildcard ACM cert *.insolvia.ai (+ apex SAN), DNS-validated, us-east-1
+#   • the SES domain identity for insolvia.ai + all mail DNS (see `email` below)
+#
+# The GitHub OIDC provider and the insolvia-github-actions deploy role USED to
+# live here; they were extracted into infra/envs/ci-trust so the deploy role's
+# own policy is never applied by CI (it can't be — see that root's header and
+# DenySelfPrivilegeEscalation). Consequence: everything left in `shared` is
+# freely CI-applied; there is no human-gated resource here anymore.
+#
+# Insolvia has its own dedicated AWS account (521762924626).
+
+locals {
+  common_tags = {
+    Project     = "insolvia"
+    Environment = "shared"
+    ManagedBy   = "terraform"
+  }
+}
+
+# ── Trust-anchor extraction: state migration (transitional) ─────
+# The three resources above were MOVED to infra/envs/ci-trust in config, but
+# they still live in THIS root's state until the move is completed. Deleting
+# their config without this would make a CI apply of `shared` try to DESTROY
+# them — and that apply runs AS the deploy role, whose own policy denies
+# iam:DeleteRolePolicy on itself (DenySelfPrivilegeEscalation), so the destroy
+# fails and turns `Infra · Terraform apply · Shared` red on every push.
+#
+# `removed { ... destroy = false }` instead tells Terraform to FORGET each
+# resource from `shared`'s state without touching AWS — a state-only op that
+# needs no delete permission, so CI can run it. The live resources stay put and
+# are adopted into ci-trust's state by the matching `import` blocks there
+# (applied by a human via scripts/apply-ci-trust.sh).
+#
+# These blocks are one-time. Once a `shared` apply has run and dropped the three
+# from state, they are inert no-ops and should be deleted (along with the
+# ci-trust import blocks). See docs/AWS_SETUP.md § "The ci-trust anchor".
+removed {
+  from = aws_iam_openid_connect_provider.github
+  lifecycle {
+    destroy = false
+  }
+}
+
+removed {
+  from = aws_iam_role.github_actions
+  lifecycle {
+    destroy = false
+  }
+}
+
+removed {
+  from = aws_iam_role_policy.github_permissions
+  lifecycle {
+    destroy = false
+  }
+}
+
+# ── DNS zone ────────────────────────────────────────────────────
+# Register insolvia.ai (blocked on the domain support request), then delegate
+# the registrar to this zone's name servers (see outputs).
+resource "aws_route53_zone" "main" {
+  name = var.domain_name
+  tags = local.common_tags
+}
+
+# ── Wildcard TLS certificate (us-east-1 for CloudFront) ─────────
+resource "aws_acm_certificate" "wildcard" {
+  provider                  = aws.us_east_1
+  domain_name               = "*.${var.domain_name}"
+  subject_alternative_names = [var.domain_name]
+  validation_method         = "DNS"
+  tags                      = local.common_tags
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# The names the certificate covers, derived from the variable rather than from
+# the certificate resource. This is load-bearing: `for_each` KEYS must be known
+# at plan time, and `domain_validation_options` does not exist until the cert
+# has been created. Keying off it means a fresh state cannot plan at all —
+# "Invalid for_each argument ... known only after apply" — which blocks both the
+# first apply and `terraform import`. Keys static, values resolved at apply.
+locals {
+  cert_domain_names = toset(["*.${var.domain_name}", var.domain_name])
+
+  cert_validation = {
+    for dvo in aws_acm_certificate.wildcard.domain_validation_options :
+    dvo.domain_name => dvo
+  }
+}
+
+resource "aws_route53_record" "cert_validation" {
+  for_each = local.cert_domain_names
+
+  zone_id = aws_route53_zone.main.zone_id
+  name    = local.cert_validation[each.key].resource_record_name
+  type    = local.cert_validation[each.key].resource_record_type
+  records = [local.cert_validation[each.key].resource_record_value]
+  ttl     = 60
+
+  # A wildcard cert and its apex SAN validate through the SAME DNS record, so
+  # both instances UPSERT identical content. Overwrite is required, not lax.
+  allow_overwrite = true
+}
+
+resource "aws_acm_certificate_validation" "wildcard" {
+  provider                = aws.us_east_1
+  certificate_arn         = aws_acm_certificate.wildcard.arn
+  validation_record_fqdns = [for r in aws_route53_record.cert_validation : r.fqdn]
+}
+
+# ── Email: SES identity, DKIM, MAIL FROM, mail DNS (#19, #20) ───
+# Lives in `shared` because the SES identity is per-domain, not per-environment:
+# staging and prod both send as insolvia.ai.
+module "email" {
+  source = "../../modules/email"
+
+  aws_region      = var.aws_region
+  domain_name     = var.domain_name
+  route53_zone_id = aws_route53_zone.main.zone_id
+
+  # Google Workspace domain-ownership token. Route53 permits exactly ONE TXT
+  # record set per name, so this cannot be a separate resource — it goes here
+  # and the module publishes it in the same set as the apex SPF record. Adding
+  # it as its own `aws_route53_record` would silently clobber SPF, which is the
+  # trap `additional_apex_txt_records` exists to prevent.
+  #
+  # Not a secret: verification tokens are public by design and prove only that
+  # whoever set them controls this zone.
+  additional_apex_txt_records = [
+    "google-site-verification=0zLxT_6T4BpPh5oSYJEEUN5EjdGe56DylP9yvnxFaqk",
+  ]
+
+  # Google Workspace's DKIM public key, from Admin console → Gmail →
+  # Authenticate email. Public by definition — the private half never leaves
+  # Google. Currently a 1024-bit key (Google's shorter option); see
+  # `var.google_dkim_value` for why 2048 is preferable and why nothing here has
+  # to change to switch.
+  google_dkim_value = "v=DKIM1;k=rsa;p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCh00xKEHBfQhVsuK0hNrNB6jsPiyFwUH1o2xcIUhX885biq4dp5af9qBwzKTjWSw8/DexMf2XnqiyHZyhZ0IP6Ie6ddSgHw9gx8upC4bLrz6MNbJPpqK4app0Bw+ewlVQ9KWfI5riE0Ltc8QGVMGM5CSHbBs8ce2g6ngrS/UgpXwIDAQAB"
+}
+# ── end email ──────────────────────────────────────────────────
+
+# ── Inbound mail: Google Workspace, not AWS ────────────────────
+# There is deliberately no inbound-mail stack here. hello@ / support@ /
+# security@ were once SES receipt rules writing to S3 and a forwarder Lambda
+# that re-sent each message to one private mailbox (#21–#25); they are now real
+# Google Workspace inboxes, so the whole path — rule set, bucket, Lambda, DLQ,
+# alarms, and the forward-to SecureString — was removed.
+#
+# The apex MX that makes Workspace reachable is owned by `module.email`, and
+# only one apex MX set can exist: reinstating SES receiving means taking inbound
+# mail away from Workspace. Outbound is untouched — SES still sends as
+# no-reply@insolvia.ai.

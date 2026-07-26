@@ -1,0 +1,29 @@
+# Local dev for services/api — `./services/api/scripts/dev-up.sh`, then
+# `curl http://127.0.0.1:8080/health`.
+#
+# There is no local DynamoDB emulator: the container talks to this machine's
+# REAL per-developer AWS waitlist table
+# (infra/envs/dev), provisioned by ./scripts/dev-aws-setup.sh. That script
+# writes services/api/.env (gitignored), which compose auto-reads for the
+# ${VAR:-default} substitutions below — WAITLIST_TABLE_NAME names the
+# per-machine table.
+#
+# AWS credentials are never written to a file: scripts/dev-up.sh exports
+# short-lived credentials from the developer's AWS profile into the shell
+# before `up` (shell env beats .env in compose substitution) and
+# force-recreates the container so it can never keep an expired set. The
+# ${VAR:-} forms below just pass that shell environment through.
+services:
+  api:
+    build:
+      context: .
+      target: development
+    environment:
+      INSOLVIA_ENV: ${INSOLVIA_ENV:-local}
+      WAITLIST_TABLE_NAME: ${WAITLIST_TABLE_NAME:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+    ports:
+      - "127.0.0.1:8080:8080"

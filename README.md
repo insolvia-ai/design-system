@@ -1,0 +1,71 @@
+# Insolvia
+
+Modern, cross-platform bankruptcy case-preparation & e-filing for consumer
+bankruptcy law firms — a competitor to Best Case by Stretto. One **Dart/Flutter**
+codebase ships a native **desktop** app *and* a **web** app, so we can meet
+desktop-loyal attorneys where they are.
+
+> **Agents:** read [`CLAUDE.md`](CLAUDE.md) first — it is the source of truth for
+> conventions in this monorepo.
+
+## Layout
+
+Standard Flutter monorepo split — runnable apps in `apps/`, shared libraries in
+`packages/`:
+
+| Path | What |
+|---|---|
+| [`apps/insolvia_app/`](apps/insolvia_app/) | The Insolvia app (`insolvia_app`) — desktop + web. Currently a themed, feature-first hello-world. |
+| [`packages/insolvia_design_system/`](packages/insolvia_design_system/) | Shared Flutter UI package: tokens, theme, components. |
+| [`infra/`](infra/) | AWS infrastructure (Terraform): `shared`, `staging`, `prod`. |
+| [`docs/`](docs/) | [Business plan](docs/business-plan.html) + engineering runbooks. |
+
+## Prerequisites
+
+- [FVM](https://fvm.app) (pins Flutter — see [`.fvmrc`](.fvmrc)): `dart pub global activate fvm && fvm install`
+- [Melos](https://melos.invertase.dev): `dart pub global activate melos`
+- For macOS desktop builds: full **Xcode** (Command Line Tools alone are not enough).
+
+## Quick start
+
+```bash
+fvm install                 # install the pinned Flutter
+melos bootstrap             # resolve the workspace packages (tokens + app)
+melos run ci                # token drift + format-check + analyze + test the workspace
+
+# The design system resolves OUTSIDE the workspace (consumers pin its git tag
+# — see docs/PACKAGE_PUBLISHING.md), so melos does not cover it:
+cd packages/insolvia_design_system
+fvm flutter pub get && fvm flutter analyze && fvm flutter test
+cd ../..
+
+# Run the app locally
+cd apps/insolvia_app
+fvm flutter run -d chrome   --dart-define=INSOLVIA_ENV=local   # web
+fvm flutter run -d macos    --dart-define=INSOLVIA_ENV=local   # desktop
+```
+
+## Builds
+
+```bash
+cd apps/insolvia_app
+fvm flutter build web   --dart-define=INSOLVIA_ENV=staging     # -> build/web
+fvm flutter build macos --dart-define=INSOLVIA_ENV=staging     # -> build/macos/Build/Products/Release/insolvia_app.app
+```
+
+### Installing the macOS build (unsigned, for now)
+
+The desktop app is **not yet code-signed/notarized**, so on first launch macOS
+Gatekeeper will block it. To open it: **right-click the app → Open → Open**. This
+is a one-time step per download. Signing/notarization is on the roadmap.
+
+## Deployment
+
+Deploys run through GitHub Actions (AWS via OIDC) — see
+[`docs/AWS_SETUP.md`](docs/AWS_SETUP.md) and
+[`docs/TERRAFORM_ARCHITECTURE.md`](docs/TERRAFORM_ARCHITECTURE.md). Shared
+infra is applied and the `*.insolvia.ai` ACM cert is `ISSUED`, so pushes to
+`main` deploy for real; CI also builds and uploads web + macOS artifacts.
+
+- **staging** → `staging-app.insolvia.ai` (auto, on merge to `main`)
+- **production** → `app.insolvia.ai` (manual, gated)
