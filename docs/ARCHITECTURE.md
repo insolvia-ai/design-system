@@ -31,7 +31,29 @@ shared concerns (`routing/`, `config/`) alongside — not by technical layer.
   (`insolvia_design_system-v<version>`), never by path — see
   `docs/PACKAGE_PUBLISHING.md`.
 - **Task runner:** Melos (`melos.yaml`) — `melos bootstrap`, `melos run ci`.
-- **Flutter version:** pinned via FVM (`.fvmrc`).
+- **Flutter:** Homebrew cask `flutter` (latest stable); CI uses the same via
+  `subosito/flutter-action`. See *Flutter toolchain* below.
+
+## Flutter toolchain
+
+Flutter is the Homebrew cask `flutter` (latest stable), not FVM.
+`scripts/dev-setup.sh` runs `brew install --cask flutter`, and the `dart` bundled
+inside it powers Melos. CI installs the same latest stable via
+`subosito/flutter-action` (`channel: stable`), so local and CI share one channel
+— no pinned copy to drift.
+
+**Multi-user machines.** The cask installs the SDK to a shared prefix
+(`/opt/homebrew/share/flutter`) owned by whoever ran `brew`. Because the SDK is a
+git repo and Flutter shells out to git, a *second* user account hits
+`fatal: detected dubious ownership` and cannot write the SDK cache. To share one
+Flutter across users, trust it system-wide and make it group-writable (both
+accounts must share the group, e.g. `admin`):
+
+```bash
+sudo git config --system --add safe.directory /opt/homebrew/share/flutter
+sudo chgrp -R admin /opt/homebrew/share/flutter
+sudo chmod -R g+rwX /opt/homebrew/share/flutter
+```
 
 ## Environment model (staging vs production)
 
@@ -39,7 +61,7 @@ The app is a single binary/bundle configured at **build time** — no separate
 codepaths. Selection is via a compile-time define:
 
 ```bash
-fvm flutter build web --dart-define=INSOLVIA_ENV=staging      # or production, or local (default)
+flutter build web --dart-define=INSOLVIA_ENV=staging      # or production, or local (default)
 ```
 
 `apps/insolvia_app/lib/src/config/environment.dart` reads `INSOLVIA_ENV` and exposes a typed
@@ -109,6 +131,46 @@ irrelevant PR they succeed in a few seconds having done nothing.
 you find yourself "cleaning that up", read
 `.github/actions/changed-paths/action.yml` first.
 
-Required-check names, and the fact that enabling them is a manual repo-settings
-step, are documented in the root `CLAUDE.md` under *PR gates, required status
-checks, and why no `paths:` filter*.
+### Branch protection — what `protect-main` enforces (and doesn't)
+
+`main` is protected by the `protect-main` ruleset. Verify, don't assume:
+`gh api repos/insolvia-ai/insolvia/rulesets/18947945 --jq .rules`.
+
+**Enforced today:** a PR is required (no direct pushes); linear history; no
+force-push; no branch deletion; squash or rebase merges only; review threads must
+be resolved, and pushes dismiss stale reviews.
+
+**Not enforced today** (despite `.github/CODEOWNERS` existing):
+`required_approving_review_count` is `0` and `require_code_owner_review` is
+`false` — a PR can merge with **no approval** — and there are **no required
+status checks**, so a PR with red CI can still merge. CODEOWNERS only *requests*
+the code owner's review; it does not gate the merge.
+
+### Required status checks — pending manual step
+
+Turning red CI into a merge blocker is a **repo-settings change a human makes in
+the GitHub UI/API** — nothing in this repo can grant itself branch protection.
+The workflows above are already shaped (always-run-and-report) to allow it. In
+`protect-main` → *Require status checks to pass*, add exactly these eleven job
+`name:` values (matrix legs get a `(leg)` suffix):
+
+| Check name | Workflow |
+|---|---|
+| `Flutter app` | `app-pr.yml` |
+| `macOS build` | `app-pr.yml` |
+| `Flutter design system` | `design-system-pr.yml` |
+| `React design system` | `design-system-react-pr.yml` |
+| `Marketing site` | `marketing-pr.yml` |
+| `API service` | `api-pr.yml` |
+| `Mailer service` | `mailer-pr.yml` |
+| `Dart API client` | `api-client-pr.yml` |
+| `Terraform validate (shared)` | `shared-infra-plan.yml` |
+| `Terraform validate (staging)` | `shared-infra-plan.yml` |
+| `Terraform validate (prod)` | `shared-infra-plan.yml` |
+
+These strings are a **contract with the ruleset**: renaming a job `name:` (or a
+matrix leg) silently orphans the required check — the ruleset waits forever for a
+name nobody reports. Change one only alongside the ruleset. Also enable *Require
+branches to be up to date before merging*, and set
+`required_approving_review_count` to 1 with `require_code_owner_review: true` if
+CODEOWNER review is wanted.
