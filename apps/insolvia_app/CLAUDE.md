@@ -61,4 +61,10 @@ Rules that follow from it:
   live, add an *uncommitted* `pubspec_overrides.yaml` pointing at
   `../../packages/insolvia_design_system` and delete it before committing (see
   [`docs/PACKAGE_PUBLISHING.md`](../../docs/PACKAGE_PUBLISHING.md)).
-- Committed platform targets: `web/`, `macos/`.
+- Committed platform targets: `web/`, `macos/`, `windows/`.
+- **Desktop is built but not promoted** (`docs/MVP_PLAN.md` D8) and both
+  artifacts are **unsigned** — no signing or notarization step belongs in the
+  build. The CI jobs that compile both desktop targets on every PR are what
+  stops them rotting; don't delete them as dead weight.
+- The Windows installer is authored in `windows/packaging/insolvia_app.iss`
+  (Inno Setup) — `flutter build windows` emits a directory, not an installer.
