@@ -1,75 +1,85 @@
-# Insolvia
+# insolvia_design_system
 
-Modern bankruptcy case-preparation & e-filing for consumer bankruptcy law firms —
-a competitor to Best Case by Stretto. The wedge is *seamlessness*: living inside
-the firm's existing workflow instead of being one more disconnected petition
-silo. One **TypeScript** codebase: the **web** app we promote, built with
-**React Native on Expo**, with mobile held open by `expo prebuild` and nothing
-committed until we want it.
+Insolvia's owned, cross-platform design system, published as
+`@insolvia-ai/design-system` (0.2.x). One set of component names serves both
+front-end stacks: the marketing site (React DOM + Tailwind) and the app
+(React Native / Expo). Agent rules: [`CLAUDE.md`](CLAUDE.md).
 
-> **Agents:** read [`CLAUDE.md`](CLAUDE.md) first — it is the source of truth for
-> conventions in this monorepo.
+It succeeds `packages/insolvia_design_system_react` (0.1.x, web-only, Base UI),
+which coexists frozen until marketing moves to 0.2.x and it is deleted.
 
-## Layout
+## The pattern: one props module, two leaves
 
-Runnable apps in `apps/`, shared libraries in `packages/`, backend services in
-`services/`, infrastructure in `infra/`. The full annotated map is in
-[`CLAUDE.md`](CLAUDE.md).
+Every component is three files:
 
-| Path | What |
+```
+src/button/
+  button.props.ts    shared: types, variant maps, state hooks, a11y string rules
+  button.web.tsx     React DOM + Tailwind — what marketing renders
+  button.native.tsx  React Native primitives over @insolvia-ai/tokens
+  index.ts           re-exports the extensionless "./button"
+```
+
+The per-component `index.ts` deliberately imports `"./button"` with no
+extension — **the consumer's bundler picks the leaf**:
+
+| Consumer | Bundler | Leaf | Why |
+|---|---|---|---|
+| Marketing site | Vite | `.web.tsx` | Tailwind classes over `theme.css` |
+| App (native, later) | Metro | `.native.tsx` | RN primitives, tokens values |
+| App (web, today) | Metro | `.native.tsx` | react-native-web renders the RN tree — the app has no Tailwind (ADR 0004), so the `.web` leaf would be unstyled there |
+
+The props module is the platform-SHARED third and must never import a
+renderer — no `react-native`, no `react-dom`, no `@base-ui/*`. That rule is
+what keeps react-native-web out of marketing's bundle, so it is machine-
+enforced: `eslint.config.js` bans those imports in `**/*.props.ts` (and
+`src/lib/`), and the spike measured the result — a web build from these
+leaves is byte-equivalent to the old package's, zero react-native-web.
+
+**Litmus test for a new component:** pure data (variant → class/value maps)
+is a candidate to collapse into a single shared file later; anything with
+events, state, or accessibility wiring is a leaf pair from day one — the two
+platforms' event and a11y models do not unify.
+
+## Two consumers, two channels
+
+| Consumer | Resolves the package via |
 |---|---|
-| [`apps/insolvia_app/`](apps/insolvia_app/) | The Insolvia app — React Native on Expo, web today (themed hello-world). |
-| [`apps/insolvia_marketing/`](apps/insolvia_marketing/) | Marketing site for `www.insolvia.ai` — React Router v7, SSR. |
-| [`packages/`](packages/) | Shared libraries: design tokens, the React design system, the API client. |
-| [`services/`](services/) | Backend services (Python on Lambda): `api`, `mailer`. |
-| [`infra/`](infra/) | AWS infrastructure (Terraform): `ci-trust`, `shared`, `staging`, `prod`. |
-| [`docs/`](docs/) | [Business plan](docs/business-plan.html) + engineering runbooks. |
+| `apps/insolvia_app` | workspace symlink (root npm workspace member) |
+| `apps/insolvia_marketing` | the **published version** from GitHub Packages |
 
-## Getting started
+Marketing consuming by version is why **any change here is its own PR with a
+`version` bump** — see the `insolvia-design-system-pr` skill. The app sees
+your change on save; marketing sees nothing until a publish.
 
-The `scripts/` directory is the toolchain — prefer it over hand-running `npm` or
-`npx expo`. One-time system setup (Homebrew installs Terraform, AWS CLI, Node,
-Python), idempotent and re-runnable:
+## No build step — the package publishes source
+
+`files: ["src"]`, exports point at `.ts`/`.tsx`, and there is no tsup/tsc
+emit. Leaf resolution happens in the consumer's bundler, so the
+`.web.tsx`/`.native.tsx` pairs must survive into the published artifact
+verbatim; a package-side build would collapse each pair into one compiled
+entry and break the pattern.
+
+## theme.css is generated
+
+`src/styles/theme.css` (public specifier
+`@insolvia-ai/design-system/theme.css`) is rendered from
+`packages/insolvia_tokens/tokens.json` — never hand-edit it. Change a value
+there, then `npm run tokens` from the repo root; `npm run tokens:check` gates
+drift in CI.
+
+## Checks
 
 ```bash
-./scripts/dev-setup.sh          # add --check to report without installing
+npm run lint            --workspace @insolvia-ai/design-system
+npm run typecheck       --workspace @insolvia-ai/design-system   # web program
+npm run typecheck:native --workspace @insolvia-ai/design-system  # RN program
+npm run test            --workspace @insolvia-ai/design-system
 ```
 
-Then set up and run whichever thing you're working on — each app/package/service
-has its own `scripts/dev-setup.sh` and `scripts/dev-up.sh`:
-
-```bash
-apps/insolvia_app/scripts/dev-setup.sh   &&  apps/insolvia_app/scripts/dev-up.sh
-apps/insolvia_marketing/scripts/dev-setup.sh  &&  apps/insolvia_marketing/scripts/dev-up.sh
-services/api/scripts/dev-setup.sh  &&  services/api/scripts/dev-up.sh
-```
-
-The full catalogue — including per-machine dev AWS resources and deploys — is in
-[`scripts/README.md`](scripts/README.md).
-
-**A prerequisite the scripts can't install for you:** [Docker
-Desktop](https://www.docker.com/products/docker-desktop/) — the backend services
-run in compose. Nothing here needs Xcode: there are no native builds in the repo.
-
-### There is no desktop or mobile build
-
-The app targets **web**, and that is the only artifact CI produces. There are no
-macOS or Windows builds (see decision D9 in
-[`docs/MVP_PLAN.md`](docs/MVP_PLAN.md)) and nothing committed under `ios/` or
-`android/` — `npx expo prebuild` generates those from `app.json` if and when we
-want them.
-
-We use **Expo's free tier only**: no EAS Build, Submit, Update or Hosting, and no
-Expo account. A CI guard enforces it. Deploys go to our own AWS, through
-Terraform, like everything else.
-
-## Deployment
-
-Deploys run through GitHub Actions (AWS via OIDC) — see
-[`docs/AWS_SETUP.md`](docs/AWS_SETUP.md) and
-[`docs/TERRAFORM_ARCHITECTURE.md`](docs/TERRAFORM_ARCHITECTURE.md). Shared
-infra is applied and the `*.insolvia.ai` ACM cert is `ISSUED`, so pushes to
-`main` deploy for real.
-
-- **staging** → `staging-app.insolvia.ai` (auto, on merge to `main`)
-- **production** → `app.insolvia.ai` (manual, gated)
+Typechecking is split because the imports are: each tsconfig sets
+`moduleSuffixes` (`[".web", ""]` / `[".native", ""]`) so tsc resolves the same
+extensionless imports to the same leaves the bundlers do. Tests are Vitest +
+Testing Library against the `.web` leaves (plus direct unit tests for props
+modules that carry real logic); the native leaves are typechecked against real
+React Native types and rendered by the app's own test harness.

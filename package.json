@@ -1,88 +1,113 @@
 {
-  "name": "insolvia-workspace",
-  "private": true,
+  "name": "@insolvia-ai/design-system",
+  "version": "0.2.0",
+  "description": "Insolvia's owned, platform-split design system: one props module per component, a React DOM + Tailwind web leaf, and a React Native leaf over @insolvia-ai/tokens.",
   "type": "module",
-  "//": [
-    "Root of the Insolvia npm workspace. NOT a shippable package — it declares",
-    "the members and pins the shared toolchain.",
-    "",
-    "The member list is EXPLICIT and must stay that way. `packages/*` would",
-    "swallow packages/insolvia_design_system_react, which publishes to GitHub",
-    "Packages and is consumed by the marketing site BY VERSION, never by path.",
-    "Making it a workspace member would silently symlink marketing to the local",
-    "source, so a broken package would pass CI and only fail after publishing.",
-    "apps/insolvia_marketing is out for the same reason: it resolves against the",
-    "published package.",
-    "",
-    "CAUTION — Node resolution walks UP the tree. A missing dependency in",
-    "apps/insolvia_marketing or packages/insolvia_design_system_react can resolve",
-    "from this root's node_modules and pass CI, then fail in a clean install.",
-    "Both keep their own package-lock.json and their own CI job installs from it,",
-    "which is what catches this — do not consolidate them here."
-  ],
-  "engines": {
-    "node": ">=24"
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/insolvia-ai/insolvia.git",
+    "directory": "packages/insolvia_design_system"
   },
-  "workspaces": [
-    "apps/insolvia_app",
-    "packages/insolvia_tokens",
-    "packages/insolvia_api_client"
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "//": [
+    "Each component is three files: <name>.props.ts (shared logic/variants —",
+    "imports NOTHING from react-native/react-dom/base-ui, ESLint-enforced),",
+    "<name>.web.tsx (React DOM + Tailwind) and <name>.native.tsx (React Native",
+    "primitives over @insolvia-ai/tokens). The per-component index re-exports",
+    "the extensionless './<name>' and the CONSUMER'S bundler picks the leaf:",
+    "Vite resolves .web.tsx, Metro resolves .native.tsx (and react-native-web",
+    "renders the .native leaf on app-web — the app has no Tailwind, ADR 0004).",
+    "",
+    "Litmus test for new components: pure data/styling maps may later collapse",
+    "to a single shared file; anything with events, state, or a11y wiring is a",
+    "leaf pair from day one — the platforms' event and accessibility models do",
+    "not unify.",
+    "",
+    "This package PUBLISHES SOURCE — `files: [\"src\"]`, exports point at .ts,",
+    "and there is deliberately NO build step. Leaf resolution happens in the",
+    "consumer's bundler, so the .web.tsx/.native.tsx pairs must survive into",
+    "the published artifact verbatim; a package-side build (tsup, tsc --emit)",
+    "would collapse the pair into one compiled entry and break the pattern.",
+    "Do not 'fix' this by adding a build.",
+    "",
+    "Two consumers, two channels: the app consumes it as a workspace member by",
+    "symlink; the marketing site consumes the PUBLISHED version from GitHub",
+    "Packages. Publishing is why this package is not private and why any change",
+    "here is its own PR with a version bump.",
+    "",
+    "clsx + tailwind-merge are real dependencies (cn() runs at render/SSR time",
+    "on web). react-native and @insolvia-ai/tokens are OPTIONAL peers: a web",
+    "consumer never imports the .native leaves, so it must not be made to",
+    "install them — keeping them out of `dependencies` is what keeps a plain",
+    "`npm install` from a web app free of react-native and of the unpublished",
+    "tokens package."
   ],
+  "files": [
+    "src",
+    "!src/**/*.test.ts",
+    "!src/**/*.test.tsx"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./theme.css": "./src/styles/theme.css",
+    "./package.json": "./package.json"
+  },
   "scripts": {
-    "//tokens": [
-      "Run with plain `node`, no loader and no build step: Node >=24 strips",
-      "TypeScript types natively, so the generator stays dependency-free.",
-      "Type-stripping cannot execute `enum`, `namespace`, or parameter",
-      "properties — the generator must avoid all three (erasableSyntaxOnly in",
-      "tsconfig.base.json enforces it)."
-    ],
-    "tokens": "node packages/insolvia_tokens/tool/generate-tokens.ts",
-    "tokens:check": "node packages/insolvia_tokens/tool/generate-tokens.ts --check",
-    "//lint": [
-      "Fans out per member rather than running ESLint once from the root, and",
-      "there is deliberately NO `eslint.config.js` at the repo root — the rules",
-      "live in `eslint.base.js`, which each member re-exports. ESLint discovers",
-      "a flat config by walking UP from its cwd, so a root one is also found by",
-      "packages/insolvia_design_system_react, breaking that version-gated",
-      "package's own ESLint 8 gate. Read eslint.base.js before changing this."
-    ],
-    "lint": "npm run lint --workspaces --if-present",
-    "format": "prettier --check apps/insolvia_app packages/insolvia_tokens packages/insolvia_api_client",
-    "format:write": "prettier --write apps/insolvia_app packages/insolvia_tokens packages/insolvia_api_client",
-    "//app": [
-      "The app's own scripts (`build`, `web`, `lint`, `typecheck`, `test`) live in",
-      "apps/insolvia_app/package.json and are a contract with app-*.yml. These two",
-      "are conveniences for a developer at the repo root: `app` starts the dev",
-      "server on port 3000 (the exact-match Cognito origin), `app:build` produces",
-      "the production web export."
-    ],
-    "app": "npm run web --workspace @insolvia-ai/app",
-    "app:build": "npm run build --workspace @insolvia-ai/app",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
-    "//ci": [
-      "The whole local gate: token drift, format, lint, typecheck, test. Mirrors",
-      "what the CI workflows run per area, so `npm run ci` green locally is a",
-      "fair predictor of a green PR."
-    ],
-    "ci": "npm run tokens:check && npm run format && npm run lint && npm run typecheck && npm run test"
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.native.json",
+    "typecheck:native": "tsc -p tsconfig.native.json",
+    "test": "vitest run",
+    "typecheck:web": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.2"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0",
+    "react-native": ">=0.74.0",
+    "@insolvia-ai/tokens": "*"
+  },
+  "peerDependenciesMeta": {
+    "react-dom": {
+      "optional": true
+    },
+    "react-native": {
+      "optional": true
+    },
+    "@insolvia-ai/tokens": {
+      "optional": true
+    }
   },
   "//devDependencies": [
-    "ESLint/Prettier versions match apps/insolvia_marketing deliberately — the",
-    "app added in PR 3 is told to match marketing's lint setup, so a second",
-    "ESLint major in the repo would be a trap, not a choice.",
-    "TypeScript is 5.9 rather than the 7.x line: `erasableSyntaxOnly` (5.8+) is",
-    "the feature this workspace depends on, and adopting a rewritten compiler in",
-    "the middle of a toolchain migration would confound any failure."
+    "react/react-dom/react-native/@types/react are pinned to the app's exact",
+    "versions so the workspace dedupes to one copy; react-native is here so",
+    "`typecheck:native` resolves REAL RN types (RN ships its own since 0.71),",
+    "closing the spike's 'native leaves never typechecked' gap. The",
+    "testing-library/jsdom set matches insolvia_design_system_react so the",
+    "ported tests run against the same harness. vitest itself comes from the",
+    "root workspace devDependencies, like insolvia_api_client."
   ],
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
-    "@types/node": "^24.13.3",
-    "eslint": "^9.17.0",
-    "globals": "^15.14.0",
-    "prettier": "^3.3.3",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.19.0",
-    "vitest": "^4.1.10"
+    "@insolvia-ai/tokens": "*",
+    "@testing-library/jest-dom": "^6.5.0",
+    "@testing-library/react": "^16.0.1",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
+    "jsdom": "^25.0.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.0"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }
