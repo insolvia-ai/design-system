@@ -78,12 +78,87 @@ generated file.
 - **A native test** if the native leaf carries a11y or state wiring. The Field
   label wiring shipped broken in 0.2.1 precisely because only `.web` was
   tested. Native tests are `*.native.test.tsx` beside the leaf.
-- **A story** in `workbench/`, pairing both leaves via `<LeafPair>`. A story is
-  the only thing that can show the two leaves agreeing.
+- **A story** in `workbench/`, pairing both leaves via `<LeafPair>` — see "The
+  story a component owes" below for what it must cover.
 - **All three typecheck programs passing** — `npm run typecheck` chains the web
   program, the RN program (real `react-native` types, no DOM lib) and the
   native-test program. If tsc cannot see an extensionless leaf import, fix the
   `moduleSuffixes` list; never add extensions to the index re-exports.
+
+### The story a component owes
+
+`workbench/<name>.stories.tsx`, following `button.stories.tsx` (single
+component), `select.stories.tsx` (controlled/uncontrolled plus a permanent
+regression story), or `dialog.stories.tsx` (parts object, portaled overlay) —
+pick whichever shape matches.
+
+**Coverage.** `Basic` is the default `<LeafPair>` pairing, driven by
+meta-level `args`. Add `Appearance`/`Sizes`/`Disabled`/state stories as the
+component has variants worth seeing side by side. A story added to pin a
+regression (Select's `OpenInsideAForm`, the 0.7.1 fix) is permanent — never
+delete it, even once the bug feels ancient. It is the only place left where a
+human eye can still see the symptom.
+
+**Args are typed against `<name>.props.ts`**, never against either leaf —
+declare a story-local `type XxxArgs` and thread it EXPLICITLY, prop by prop,
+through a meta-level `render` into BOTH leaves. Never `{...args}`. That is
+what lets `typecheck:workbench` catch a bad prop NAME against both leaves at
+once — the 0.8.3 lesson: `intentStyles['danger']` silently went `undefined`
+because stories then sat outside every tsconfig program, and explicit
+threading turns that class of bug into a compile error instead. Where the
+leaves disagree on a handler's name (web `onClick`, native `onPress`), the
+story owns exactly ONE bridging arg (e.g. `onPress`) and `render` wires it to
+each leaf's own prop. Every handler arg is `fn()` from `'storybook/test'`, so
+the Actions panel logs it and a play can assert calls against it.
+
+**`component:` in meta** is the web leaf (`component: ButtonWeb`) for a single
+component — it only feeds the docs props table (react-docgen is best-effort
+under this framework; see `.storybook/main.ts`), controls never rely on it.
+Omit it for a parts object (Dialog): no single component owns that surface,
+and react-docgen has nothing to say about a namespace. Controls are always
+declared BY HAND in `argTypes`, never inferred. Option lists get a
+module-level `const X = [...] as const satisfies readonly T[]` tied to the
+props type — the same drift guard as the args typing above. An arg that only
+seeds uncontrolled state (`defaultValue`) gets `control: false`; a control
+that does nothing teaches the wrong lesson about the prop.
+
+**Interactive components MUST have a `play`.** `story-coverage.test.ts`
+enforces this through a hard-coded `INTERACTIVE` list — adding an interactive
+component means adding it to that list, not just writing the play. Inside a
+play, scope every query through `pair(canvasElement)` from `leaf-pair.tsx`,
+never a bare `canvasElement` query: every `<LeafPair>` story renders the
+component TWICE, so an unscoped query finds duplicates and throws. The one
+exception is a portaled overlay (Dialog, AlertDialog), which escapes both
+panes into `document.body` — reach it with `screen` from `'storybook/test'`
+instead, open only one leaf at a time, and end with both closed (two open
+modals fight over focus and `aria-hidden`; `dialog.stories.tsx`'s file header
+has the full reasoning).
+
+**Play craft**, one line each:
+- Assert a shared `fn()` arg's call COUNT per pane, not just its last call —
+  the two panes share one arg, so a pane that silently drops input is
+  otherwise vouched for by the other pane's earlier call.
+- Call `el.focus()` before `userEvent.keyboard` on an RNW `Pressable` — a
+  click does not focus it, so unfocused keyboard input goes nowhere.
+- Never commit or toggle a native `Pressable` with `{Enter}`/`{Space}` in a
+  play — react-native-web synthesizes a second `onPress` from the keypress
+  (see the native Select workaround comment in `select.stories.tsx`), so a
+  commit is immediately toggled back open.
+- Wrap an unmount assertion (`not.toBeInTheDocument()`) in `waitFor`.
+- Assert `disabled`, don't click it — web `toBeDisabled()`, native
+  `aria-disabled` (react-native-web can only speak ARIA, not the real
+  attribute).
+- END a play in the expanded/open state, except a modal — axe runs AFTER the
+  play, so whatever state the play leaves the component in is the state that
+  gets audited.
+
+**Docs.** JSDoc above `meta` becomes the component's autodocs summary; JSDoc
+above a story becomes what to look at on that story's docs entry (see the
+addon-docs note in `.storybook/main.ts` — nothing here is authored twice, so
+nothing can drift). A story that must render a deliberately-invalid state
+scopes the a11y exception to itself — `parameters: { a11y: { test: 'todo' } }`
+— with a comment saying why, rather than weakening the gate for everyone (see
+`a11y.test` in `preview.tsx`).
 
 ## Before you finish
 

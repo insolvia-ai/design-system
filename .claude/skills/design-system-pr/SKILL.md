@@ -50,7 +50,10 @@ component.
   structurally cannot provide it: they assert roles and labels in jsdom, and
   cannot see wrong colour, wrong position, or one thing painted under another.
   If the change touches colour, screenshot light **and** dark — the 0.2.1
-  regression was invisible in light mode.
+  regression was invisible in light mode. Interaction tests (plays) and the
+  workbench's open-state axe coverage are real evidence too, but they do not
+  replace this screenshot — there is still no visual-regression tooling, so
+  the screenshot remains the only record of what the change looked like.
 - **What you did not verify, and why.**
 
 ## Before you open it
