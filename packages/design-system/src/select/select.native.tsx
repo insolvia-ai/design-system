@@ -51,6 +51,18 @@ export const Select = ({
   disabled = false,
   name: _name,
   style,
+  // PULLED OUT OF `props` ON PURPOSE, and the omission is the fix. Everything
+  // left in `props` is spread onto the ROOT View below, so leaving the label
+  // there put the accessible name on TWO nodes: a roleless container and the
+  // combobox. React Native Testing Library found two matches for one control;
+  // a screen reader gets a name on a wrapper that has no business having one.
+  //
+  // The web leaf never had this — it spreads `props` straight onto the
+  // <button>, so there is only ever one carrier. This makes the native leaf
+  // agree, and hands the name to the two nodes that should have it: the
+  // combobox, and the listbox it controls (which is what the web leaf does
+  // with its <ul>).
+  'aria-label': ariaLabel,
   ...props
 }: SelectProps) => {
   const field = React.useContext(FieldContext);
@@ -118,7 +130,17 @@ export const Select = ({
   } as Partial<PressableProps>;
 
   return (
-    <View style={[styles.root, style]} {...props}>
+    // The ROOT carries the elevation, not just the popup, and that is the
+    // whole fix. react-native-web gives every View `position: relative`, so a
+    // form is a run of positioned siblings painting in DOM order — and a
+    // z-index on the popup alone cannot lift it past a sibling that comes
+    // AFTER this Select. The open list rendered behind the description text,
+    // the file button and the submit button below it: legible enough to look
+    // like a rendering glitch, and impossible to click through.
+    //
+    // Applied only while open, so a closed Select creates no stacking context
+    // and cannot shadow anything of its own accord.
+    <View style={[styles.root, open && styles.rootOpen, style]} {...props}>
       <Pressable
         nativeID={field?.controlId}
         role="combobox"
@@ -127,7 +149,7 @@ export const Select = ({
         // Field's native leaf establishes (the web leaf points label -> control
         // with htmlFor instead).
         aria-labelledby={field?.labelId}
-        aria-label={props['aria-label']}
+        aria-label={ariaLabel}
         aria-invalid={invalid}
         aria-disabled={disabled}
         disabled={disabled}
@@ -176,6 +198,9 @@ export const Select = ({
           // unmount between pointerdown and pointerup and the press would never
           // complete. Cancelling the default on mousedown stops focus leaving
           // the trigger at all, which is the same fix the web leaf uses.
+          // Named after the control, matching the web leaf's <ul>. A listbox
+          // with no accessible name is announced as an unlabelled group.
+          aria-label={ariaLabel}
           {...({
             role: 'listbox',
             onMouseDown: (event: { preventDefault: () => void }) => event.preventDefault(),
@@ -222,6 +247,10 @@ export const Select = ({
 
 const styles = StyleSheet.create({
   root: { position: 'relative' },
+  // Above the form controls that follow it. Not a large number on purpose —
+  // it has to beat sibling content, never a Dialog or an AlertDialog, which
+  // render through RN's Modal and sit above the whole tree regardless.
+  rootOpen: { zIndex: 30 },
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
