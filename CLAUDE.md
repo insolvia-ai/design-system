@@ -56,6 +56,11 @@ claims about who consumes what.
 ./scripts/dev-up.sh
 ```
 
+Merges to `main` also publish the built workbench to GitHub Pages
+(`.github/workflows/pages.yml`) — same stories, same gates, no checkout
+needed. The local script is for work in progress; the URL is for looking at
+what shipped.
+
 Everything else here is blind. Vitest renders into jsdom and asserts on roles
 and labels; tsc checks types. Neither can see that something is the wrong
 colour, in the wrong place, or painted underneath the thing below it — and that
@@ -103,4 +108,4 @@ stops at the graft commit; plain `git log` shows the whole story.
 |---|---|
 | Any knowledge of who consumes this | See above. The registry is the interface. |
 | A build step | The consumer's bundler picks the leaf; a build would decide for it. |
-| A component gallery beyond the workbench | Not built. Don't add one as a side effect of another task. |
+| A separately-authored component gallery | The workbench IS the gallery: autodocs assembles each component's docs page from the same stories the a11y gate runs, and Pages serves that same build. One source of truth — a hand-written gallery or MDX-per-component site would be a second one, free to drift. (`workbench/workbench.mdx` is the single exception: the front page explaining how to read the rest.) |
