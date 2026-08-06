@@ -7,8 +7,8 @@
     an upgrade the loss is cosmetic and harmless, which is the standard this
     file must keep: nothing functional, nothing a story depends on.
 
-    Palette notes live in theme.ts — the violet is the shell's accent, chosen
-    because no design-system token uses it.
+    Palette notes live in theme.ts — the accent is the insolvia blue, deep
+    navy for surfaces and a lightened tint of the same hue for text.
   */
 
   /* Slimmer, quieter scrollbars than the OS default — the stock ones read
@@ -36,17 +36,19 @@
     opacity: 0.75;
   }
 
-  /* The selected story: a violet gradient pill instead of the flat default —
-     the single strongest "not out-of-the-box" signal in the sidebar, and
-     white-on-violet keeps AA contrast. */
+  /* The selected story: an insolvia-blue gradient pill instead of the flat
+     default — the single strongest "not out-of-the-box" signal in the
+     sidebar, and white-on-navy keeps AA contrast comfortably. The gradient
+     runs brand navy into a lighter step of the same hue so the pill reads
+     against the near-black sidebar. */
   #storybook-explorer-tree [data-selected="true"] {
-    background: linear-gradient(90deg, #6c5ce7, #5646c6) !important;
+    background: linear-gradient(90deg, #0b2a4a, #16467a) !important;
     border-radius: 6px;
   }
 
-  /* Hovered-but-unselected rows get a whisper of the same accent. */
+  /* Hovered-but-unselected rows get a whisper of the same blue. */
   #storybook-explorer-tree .sidebar-item:not([data-selected="true"]):hover {
-    background: rgba(108, 92, 231, 0.14);
+    background: rgba(22, 70, 122, 0.28);
     border-radius: 6px;
   }
 
