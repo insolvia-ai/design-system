@@ -4,16 +4,81 @@ import { Text, View } from 'react-native';
 
 import { Separator as SeparatorWeb } from '@design-system/separator/separator.web.tsx';
 import { Separator as SeparatorNative } from '@design-system/separator/separator.native.tsx';
+import type { SeparatorOrientation } from '@design-system/separator/separator.props.ts';
 
 import { LeafPair } from './leaf-pair.tsx';
 
+const ORIENTATIONS = ['horizontal', 'vertical'] as const satisfies readonly SeparatorOrientation[];
+
+/**
+ * Separator takes exactly one prop that matters — `orientation` — so args are
+ * typed straight off the shared `SeparatorOwnProps` union (`separator.props.ts`)
+ * rather than a story-local shape; both leaves take it under the identical
+ * name, so no bridging arg is needed. Separator has no interactive state and
+ * nothing to click or type into — unlike date-input/field/radio-group, this
+ * file has no play functions, only args and docs.
+ */
+type SeparatorArgs = {
+  orientation: SeparatorOrientation;
+};
+
 const meta = {
   title: 'Components/Separator',
+  // The web leaf, for the docs-page props table only (best-effort react-docgen
+  // — see the addon-docs note in .storybook/main.ts). Controls never rely on
+  // it: they are declared by hand in `argTypes` below.
+  component: SeparatorWeb,
   parameters: { layout: 'fullscreen' },
-} satisfies Meta;
+  args: {
+    orientation: 'horizontal',
+  },
+  argTypes: {
+    orientation: { control: 'inline-radio', options: [...ORIENTATIONS] },
+  },
+  render: (args) => (
+    <LeafPair
+      web={
+        args.orientation === 'vertical' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 24 }}>
+            <span style={{ fontSize: 14 }}>Case No. 21-10432</span>
+            <SeparatorWeb orientation={args.orientation} />
+            <span style={{ fontSize: 14 }}>Chapter 13</span>
+          </div>
+        ) : (
+          <div style={{ width: 280 }}>
+            <SeparatorWeb orientation={args.orientation} />
+          </div>
+        )
+      }
+      native={
+        args.orientation === 'vertical' ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, height: 24 }}>
+            <Text style={{ fontSize: 14 }}>Case No. 21-10432</Text>
+            <SeparatorNative orientation={args.orientation} />
+            <Text style={{ fontSize: 14 }}>Chapter 13</Text>
+          </View>
+        ) : (
+          <View style={{ width: 280 }}>
+            <SeparatorNative orientation={args.orientation} />
+          </View>
+        )
+      }
+    />
+  ),
+} satisfies Meta<SeparatorArgs>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+/**
+ * One Separator, its orientation driven by the `orientation` control.
+ * Horizontal needs only a width to draw a visible line across; vertical needs
+ * a height to stretch against (`align-self: stretch` / `alignSelf: 'stretch'`
+ * has nothing to stretch to in an unbounded flex column), so this story gives
+ * it a label either side purely to supply that height honestly, rather than a
+ * bare fixed box with nothing in it.
+ */
+export const Basic: Story = {};
 
 /**
  * Never label a Separator. The native leaf is `accessibilityRole="none"` →

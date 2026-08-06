@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { expect, fn, userEvent } from 'storybook/test';
 import { Text, View } from 'react-native';
 
 import { CheckboxGroup as CheckboxGroupWeb } from '@design-system/checkbox-group/checkbox-group.web.tsx';
@@ -7,7 +8,7 @@ import { CheckboxGroup as CheckboxGroupNative } from '@design-system/checkbox-gr
 import { Checkbox as CheckboxWeb } from '@design-system/checkbox/checkbox.web.tsx';
 import { Checkbox as CheckboxNative } from '@design-system/checkbox/checkbox.native.tsx';
 
-import { LeafPair } from './leaf-pair.tsx';
+import { LeafPair, pair } from './leaf-pair.tsx';
 
 const DEBT_TYPES = [
   { value: 'credit-card', label: 'Credit card debt' },
@@ -16,23 +17,96 @@ const DEBT_TYPES = [
   { value: 'auto-loan', label: 'Auto loan' },
 ];
 
+/**
+ * `CheckboxGroup` is a parts object (`Root` only) composed with `Checkbox`,
+ * not a single component — so there is no meta `component` for the docs-page
+ * props table, the same omission Dialog and CheckboxGroup's own `Checkbox`
+ * make for the same reason. Args cover the group's own state
+ * (`defaultValue`/`disabled`/`onValueChange`); the member checkboxes
+ * (`DEBT_TYPES`) are fixed composition, the same way Dialog's content is
+ * fixed and only the text args vary. `defaultValue` gets no control — it
+ * seeds UNCONTROLLED state (the select.stories.tsx `defaultValue` note
+ * explains the same gap).
+ */
+type CheckboxGroupArgs = {
+  defaultValue: string[];
+  disabled: boolean;
+  onValueChange: (value: string[]) => void;
+};
+
 const meta = {
   title: 'Components/CheckboxGroup',
   parameters: { layout: 'fullscreen' },
-} satisfies Meta;
+  args: {
+    defaultValue: ['credit-card', 'medical'],
+    disabled: false,
+    onValueChange: fn(),
+  },
+  argTypes: {
+    defaultValue: { control: false },
+  },
+  render: (args) => (
+    <LeafPair
+      web={
+        <DebtTypesWeb
+          defaultValue={args.defaultValue}
+          disabled={args.disabled}
+          onValueChange={args.onValueChange}
+        />
+      }
+      native={
+        <DebtTypesNative
+          defaultValue={args.defaultValue}
+          disabled={args.disabled}
+          onValueChange={args.onValueChange}
+        />
+      }
+    />
+  ),
+} satisfies Meta<CheckboxGroupArgs>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  render: () => (
-    <LeafPair
-      web={<DebtTypesWeb defaultValue={['credit-card', 'medical']} />}
-      native={<DebtTypesNative defaultValue={['credit-card', 'medical']} />}
-    />
-  ),
+/**
+ * The default pairing, live in both panes. The play checks the group's
+ * accessible name (`role="group"`, `aria-label="Debt types"` — see
+ * `DebtTypesWeb`/`DebtTypesNative` below) and that selecting an unlisted
+ * member appends it to the shared `onValueChange` array, in both panes.
+ */
+export const Basic: Story = {
+  play: async ({ canvasElement, args, step }) => {
+    const { web, native } = pair(canvasElement);
+
+    await step('web leaf: group is named, selecting a member updates the value', async () => {
+      await expect(web.getByRole('group', { name: 'Debt types' })).toBeInTheDocument();
+      await userEvent.click(web.getByRole('checkbox', { name: 'Student loan' }));
+      await expect(args.onValueChange).toHaveBeenCalledTimes(1);
+      await expect(args.onValueChange).toHaveBeenLastCalledWith([
+        'credit-card',
+        'medical',
+        'student-loan',
+      ]);
+    });
+
+    await step('native leaf: same group semantics, same handler', async () => {
+      await expect(native.getByRole('group', { name: 'Debt types' })).toBeInTheDocument();
+      await userEvent.click(native.getByRole('checkbox', { name: 'Student loan' }));
+      await expect(args.onValueChange).toHaveBeenCalledTimes(2);
+      await expect(args.onValueChange).toHaveBeenLastCalledWith([
+        'credit-card',
+        'medical',
+        'student-loan',
+      ]);
+    });
+  },
 };
 
+/**
+ * Disabled is asserted, not clicked: the web member checkboxes are real
+ * disabled `<button>`s (jest-dom's `toBeDisabled`), the native ones can only
+ * speak ARIA through react-native-web (`aria-disabled`).
+ */
 export const Disabled: Story = {
   render: () => (
     <LeafPair
@@ -40,6 +114,14 @@ export const Disabled: Story = {
       native={<DebtTypesNative defaultValue={['credit-card']} disabled />}
     />
   ),
+  play: async ({ canvasElement }) => {
+    const { web, native } = pair(canvasElement);
+    await expect(web.getByRole('checkbox', { name: 'Credit card debt' })).toBeDisabled();
+    await expect(native.getByRole('checkbox', { name: 'Credit card debt' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  },
 };
 
 /**

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { within } from 'storybook/test';
 
 /**
  * Render both leaves of a component side by side.
@@ -34,12 +35,17 @@ export function LeafPair({
     <div style={styles.wrap}>
       {note ? <p style={styles.note}>{note}</p> : null}
       <div style={styles.panes}>
-        <Pane label="web leaf" sub="React DOM + Tailwind — what a web consumer renders">
+        <Pane
+          label="web leaf"
+          sub="React DOM + Tailwind — what a web consumer renders"
+          testId="leaf-pair-web"
+        >
           {web}
         </Pane>
         <Pane
           label="native leaf"
           sub="RN primitives via react-native-web — what a React Native consumer renders"
+          testId="leaf-pair-native"
         >
           {native}
         </Pane>
@@ -48,7 +54,17 @@ export function LeafPair({
   );
 }
 
-function Pane({ label, sub, children }: { label: string; sub: string; children: React.ReactNode }) {
+function Pane({
+  label,
+  sub,
+  testId,
+  children,
+}: {
+  label: string;
+  sub: string;
+  testId: string;
+  children: React.ReactNode;
+}) {
   return (
     <section style={styles.pane}>
       <header style={styles.header}>
@@ -57,9 +73,44 @@ function Pane({ label, sub, children }: { label: string; sub: string; children: 
       </header>
       {/* The frame is deliberately plain: no background, no card, nothing that
           could be mistaken for part of the component being shown. */}
-      <div style={styles.stage}>{children}</div>
+      <div style={styles.stage} data-testid={testId}>
+        {children}
+      </div>
     </section>
   );
+}
+
+/**
+ * Pane-scoped queries for play functions.
+ *
+ * Every LeafPair story renders the component TWICE — once per leaf — so a bare
+ * `within(canvasElement).getByRole('button')` finds duplicates and throws.
+ * Scope every query through this instead:
+ *
+ *   const { web, native } = pair(canvasElement);
+ *   await userEvent.click(web.getByRole('button', { name: 'Continue' }));
+ *
+ * The one thing this cannot scope is a portaled overlay: Dialog and
+ * AlertDialog render their surface into `document.body`, outside both panes.
+ * Query those with `screen` from 'storybook/test' — and open them one leaf at
+ * a time, never both at once (two open modals fight over focus and
+ * aria-hidden, and the story's own docs forbid it).
+ *
+ * Rejected alternative: `getAllByRole(...)[0]` / `[1]` — it couples every play
+ * to pane order and degrades silently to the wrong pane in a single-leaf
+ * story. A missing stage here throws with a message that says what happened.
+ */
+export function pair(canvasElement: HTMLElement) {
+  const stage = (id: string) => {
+    const el = canvasElement.querySelector<HTMLElement>(`[data-testid="${id}"]`);
+    if (!el) {
+      throw new Error(
+        `LeafPair stage "${id}" not found — pair() only works in a story that renders through <LeafPair>.`,
+      );
+    }
+    return within(el);
+  };
+  return { web: stage('leaf-pair-web'), native: stage('leaf-pair-native') };
 }
 
 /**

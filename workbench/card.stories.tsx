@@ -4,13 +4,70 @@ import { Text, View } from 'react-native';
 
 import { Card as CardWeb } from '@design-system/card/card.web.tsx';
 import { Card as CardNative } from '@design-system/card/card.native.tsx';
+import type { CardElevation } from '@design-system/card/card.props.ts';
 
 import { LeafPair } from './leaf-pair.tsx';
 
+// The two elevations that EXIST — tied to `CardElevation` with `satisfies` so
+// a typo here is a `typecheck:workbench` failure, not a card that quietly
+// renders with no shadow class (the same reasoning as `button.stories.tsx`'s
+// `INTENTS`).
+const ELEVATIONS = ['flat', 'raised'] as const satisfies readonly CardElevation[];
+
+/**
+ * `Card` is a parts object (`Root`/`Title`/`Body`/`Footer`), the same shape
+ * as `Dialog` — there is no single component for a meta `component` to point
+ * at, so the args below cover the CONTENT threaded into that composition
+ * (title, body copy, footer note) plus `Root`'s own `elevation`.
+ */
+type CardArgs = {
+  elevation: CardElevation;
+  title: string;
+  body: string;
+  footerNote: string;
+};
+
+/**
+ * A bordered surface for a title/body/footer trio, with an optional shadow.
+ * Pure presentation — no state, no behavior — so both leaves are a direct
+ * style port off `card.props.ts`'s `elevationStyles`.
+ */
 const meta = {
   title: 'Components/Card',
   parameters: { layout: 'fullscreen' },
-} satisfies Meta;
+  args: {
+    elevation: 'raised',
+    title: 'Chapter 7 in minutes',
+    body: 'Schedules, means test, and the petition, all from one intake.',
+    footerNote: 'Included in every plan',
+  },
+  argTypes: {
+    elevation: { control: 'inline-radio', options: [...ELEVATIONS] },
+  },
+  render: (args) => (
+    <LeafPair
+      note='The web Title is an `<h3>`; the native Title is an `<h1>` (`accessibilityRole="header"`). Same card, different heading level — see the doc comment above this story.'
+      web={
+        <CardWeb.Root elevation={args.elevation} style={{ maxWidth: 360 }}>
+          <CardWeb.Title>{args.title}</CardWeb.Title>
+          <CardWeb.Body>{args.body}</CardWeb.Body>
+          <CardWeb.Footer>
+            <span style={{ fontSize: 13 }}>{args.footerNote}</span>
+          </CardWeb.Footer>
+        </CardWeb.Root>
+      }
+      native={
+        <CardNative.Root elevation={args.elevation} style={{ maxWidth: 360 }}>
+          <CardNative.Title>{args.title}</CardNative.Title>
+          <CardNative.Body>{args.body}</CardNative.Body>
+          <CardNative.Footer>
+            <Text style={{ fontSize: 13 }}>{args.footerNote}</Text>
+          </CardNative.Footer>
+        </CardNative.Root>
+      }
+    />
+  ),
+} satisfies Meta<CardArgs>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -28,34 +85,13 @@ type Story = StoryObj<typeof meta>;
  * which axe allows, while h1 then h3 would skip a level on the way back down.
  * Don't reorder the panes.
  */
-export const Default: Story = {
-  render: () => (
-    <LeafPair
-      note='The web Title is an `<h3>`; the native Title is an `<h1>` (`accessibilityRole="header"`). Same card, different heading level — see the doc comment above this story.'
-      web={
-        <CardWeb.Root elevation="raised" style={{ maxWidth: 360 }}>
-          <CardWeb.Title>Chapter 7 in minutes</CardWeb.Title>
-          <CardWeb.Body>Schedules, means test, and the petition, all from one intake.</CardWeb.Body>
-          <CardWeb.Footer>
-            <span style={{ fontSize: 13 }}>Included in every plan</span>
-          </CardWeb.Footer>
-        </CardWeb.Root>
-      }
-      native={
-        <CardNative.Root elevation="raised" style={{ maxWidth: 360 }}>
-          <CardNative.Title>Chapter 7 in minutes</CardNative.Title>
-          <CardNative.Body>
-            Schedules, means test, and the petition, all from one intake.
-          </CardNative.Body>
-          <CardNative.Footer>
-            <Text style={{ fontSize: 13 }}>Included in every plan</Text>
-          </CardNative.Footer>
-        </CardNative.Root>
-      }
-    />
-  ),
-};
+export const Basic: Story = {};
 
+/**
+ * The two elevations side by side — `flat` sits flush with the page, `raised`
+ * lifts off it with a shadow. A grid, not a single card, so this stays its
+ * own render rather than an `args` override of `Basic`.
+ */
 export const Elevations: Story = {
   render: () => (
     <LeafPair

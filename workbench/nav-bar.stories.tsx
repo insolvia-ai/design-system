@@ -8,10 +8,71 @@ import { Button as ButtonNative } from '@design-system/button/button.native.tsx'
 
 import { LeafPair } from './leaf-pair.tsx';
 
+/**
+ * `NavBar` is a parts object (`Root`/`Brand`/`Links`/`Link`/`Actions`), the
+ * same shape as `Dialog` — there is no single component for a meta
+ * `component` to point at, so the args below cover the CONTENT threaded into
+ * the fixed composition: the brand mark and the action button's label. The
+ * link labels stay hardcoded, the same way Dialog hardcodes its "Save note"
+ * button — they're structural, not something a docs-page reader tunes.
+ */
+type NavBarArgs = {
+  brand: string;
+  actionLabel: string;
+};
+
+/**
+ * The page's top bar: a brand mark, a link list, and an actions slot. Pure
+ * presentation — no state, no behavior — but see the doc comment on `Basic`
+ * below for a real semantic divergence between the two leaves.
+ */
 const meta = {
   title: 'Components/NavBar',
   parameters: { layout: 'fullscreen' },
-} satisfies Meta;
+  args: {
+    brand: 'Meridian',
+    actionLabel: 'Sign out',
+  },
+  render: (args) => (
+    <LeafPair
+      note='Web: `<nav aria-label="Main">`, a navigation landmark. Native: `accessibilityRole="header"` renders as an `<h1>` wrapping the whole bar. Same layout, different semantics — see the doc comment above this story.'
+      web={
+        <NavBarWeb.Root>
+          <NavBarWeb.Brand href="/">{args.brand}</NavBarWeb.Brand>
+          <NavBarWeb.Links>
+            <NavBarWeb.Link href="/overview" active>
+              Overview
+            </NavBarWeb.Link>
+            <NavBarWeb.Link href="/documents">Documents</NavBarWeb.Link>
+            <NavBarWeb.Link href="/deadlines">Deadlines</NavBarWeb.Link>
+          </NavBarWeb.Links>
+          <NavBarWeb.Actions>
+            <ButtonWeb size="sm" intent="secondary">
+              {args.actionLabel}
+            </ButtonWeb>
+          </NavBarWeb.Actions>
+        </NavBarWeb.Root>
+      }
+      native={
+        <NavBarNative.Root>
+          <NavBarNative.Brand>{args.brand}</NavBarNative.Brand>
+          <NavBarNative.Links>
+            <NavBarNative.Link active onPress={() => {}}>
+              Overview
+            </NavBarNative.Link>
+            <NavBarNative.Link onPress={() => {}}>Documents</NavBarNative.Link>
+            <NavBarNative.Link onPress={() => {}}>Deadlines</NavBarNative.Link>
+          </NavBarNative.Links>
+          <NavBarNative.Actions>
+            <ButtonNative size="sm" intent="secondary" onPress={() => {}}>
+              {args.actionLabel}
+            </ButtonNative>
+          </NavBarNative.Actions>
+        </NavBarNative.Root>
+      }
+    />
+  ),
+} satisfies Meta<NavBarArgs>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -36,44 +97,4 @@ type Story = StoryObj<typeof meta>;
  * and nothing stops a page from having two of them (each becoming its own
  * `<h1>`), which plain `<nav>` would never allow.
  */
-export const Default: Story = {
-  render: () => (
-    <LeafPair
-      note='Web: `<nav aria-label="Main">`, a navigation landmark. Native: `accessibilityRole="header"` renders as an `<h1>` wrapping the whole bar. Same layout, different semantics — see the doc comment above this story.'
-      web={
-        <NavBarWeb.Root>
-          <NavBarWeb.Brand href="/">Meridian</NavBarWeb.Brand>
-          <NavBarWeb.Links>
-            <NavBarWeb.Link href="/overview" active>
-              Overview
-            </NavBarWeb.Link>
-            <NavBarWeb.Link href="/documents">Documents</NavBarWeb.Link>
-            <NavBarWeb.Link href="/deadlines">Deadlines</NavBarWeb.Link>
-          </NavBarWeb.Links>
-          <NavBarWeb.Actions>
-            <ButtonWeb size="sm" intent="secondary">
-              Sign out
-            </ButtonWeb>
-          </NavBarWeb.Actions>
-        </NavBarWeb.Root>
-      }
-      native={
-        <NavBarNative.Root>
-          <NavBarNative.Brand>Meridian</NavBarNative.Brand>
-          <NavBarNative.Links>
-            <NavBarNative.Link active onPress={() => {}}>
-              Overview
-            </NavBarNative.Link>
-            <NavBarNative.Link onPress={() => {}}>Documents</NavBarNative.Link>
-            <NavBarNative.Link onPress={() => {}}>Deadlines</NavBarNative.Link>
-          </NavBarNative.Links>
-          <NavBarNative.Actions>
-            <ButtonNative size="sm" intent="secondary" onPress={() => {}}>
-              Sign out
-            </ButtonNative>
-          </NavBarNative.Actions>
-        </NavBarNative.Root>
-      }
-    />
-  ),
-};
+export const Basic: Story = {};

@@ -4,30 +4,69 @@ import { View } from 'react-native';
 
 import { Avatar as AvatarWeb } from '@design-system/avatar/avatar.web.tsx';
 import { Avatar as AvatarNative } from '@design-system/avatar/avatar.native.tsx';
+import type { AvatarSize } from '@design-system/avatar/avatar.props.ts';
 
 import { LeafPair } from './leaf-pair.tsx';
 
+// The three sizes that EXIST — tied to `AvatarSize` with `satisfies` so a
+// typo here is a `typecheck:workbench` failure, not a size button that quietly
+// renders nothing (the same reasoning as `button.stories.tsx`'s `INTENTS`).
+const SIZES = ['sm', 'md', 'lg'] as const satisfies readonly AvatarSize[];
+
+/**
+ * Args cover `Root`'s `size` and the initials `Fallback` shows while no image
+ * has loaded — the two props a docs-page reader would actually reach for.
+ * There is no meta `component`: `Avatar` is a parts object
+ * (`Root`/`Image`/`Fallback`), the same shape as `Card`, and the loaded- and
+ * broken-image states below are real API divergences (`src` vs `source`) that
+ * only make sense as their own stories, not as something a control can drive.
+ */
+type AvatarArgs = {
+  size: AvatarSize;
+  initials: string;
+};
+
+/**
+ * A fixed-size circular identity badge: initials until an image loads, then
+ * the image. `Root` owns the size and the image-load state machine
+ * (`avatar.props.ts`'s `useAvatarImageStatus`); `Image` and `Fallback` both
+ * read it, which is why `Fallback` alone is enough to show the default state.
+ */
 const meta = {
   title: 'Components/Avatar',
   parameters: { layout: 'fullscreen' },
-} satisfies Meta;
+  args: {
+    size: 'md',
+    initials: 'MC',
+  },
+  argTypes: {
+    size: { control: 'inline-radio', options: [...SIZES] },
+  },
+  render: (args) => (
+    <LeafPair
+      web={
+        <AvatarWeb.Root size={args.size}>
+          <AvatarWeb.Fallback>{args.initials}</AvatarWeb.Fallback>
+        </AvatarWeb.Root>
+      }
+      native={
+        <AvatarNative.Root size={args.size}>
+          <AvatarNative.Fallback>{args.initials}</AvatarNative.Fallback>
+        </AvatarNative.Root>
+      }
+    />
+  ),
+} satisfies Meta<AvatarArgs>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const SIZES = ['sm', 'md', 'lg'] as const;
-
-// A 1x1 PNG, inlined so the loaded-image story resolves with no
-// network round trip in headless Chromium. react-native-web's Image loads a
-// `data:` URI the same way a browser `<img>` does, so this exercises the
-// real load path on both leaves.
-const PIXEL =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
-
-// `.invalid` is reserved by RFC 2606 to never resolve — a deterministic way
-// to force the error branch without depending on some third party's server
-// returning the right status code on the day CI runs.
-const BROKEN_URL = 'https://avatar-fixture.invalid/does-not-exist.jpg';
+/**
+ * The default pairing: no image, so both leaves fall back to initials —
+ * the state every avatar starts in before an image resolves one way or the
+ * other.
+ */
+export const Basic: Story = {};
 
 // Avatar.Root is a bare box with no role — never give it an aria-label, the
 // same rule as Separator's native leaf: a label with no subtree text and no
@@ -56,6 +95,18 @@ export const Sizes: Story = {
     />
   ),
 };
+
+// A 1x1 PNG, inlined so the loaded-image story resolves with no
+// network round trip in headless Chromium. react-native-web's Image loads a
+// `data:` URI the same way a browser `<img>` does, so this exercises the
+// real load path on both leaves.
+const PIXEL =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+
+// `.invalid` is reserved by RFC 2606 to never resolve — a deterministic way
+// to force the error branch without depending on some third party's server
+// returning the right status code on the day CI runs.
+const BROKEN_URL = 'https://avatar-fixture.invalid/does-not-exist.jpg';
 
 /**
  * The two leaves take the image source through different props — `src` on

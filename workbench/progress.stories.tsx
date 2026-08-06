@@ -1,25 +1,111 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { expect } from 'storybook/test';
 import { Text, View } from 'react-native';
 
 import { Progress as ProgressWeb } from '@design-system/progress/progress.web.tsx';
 import { Progress as ProgressNative } from '@design-system/progress/progress.native.tsx';
 
-import { LeafPair } from './leaf-pair.tsx';
-
-const meta = {
-  title: 'Components/Progress',
-  parameters: { layout: 'fullscreen' },
-} satisfies Meta;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
+import { LeafPair, pair } from './leaf-pair.tsx';
 
 const UPLOADS = [
   { name: 'Petition.pdf', value: 30 },
   { name: 'Schedules.pdf', value: 80 },
 ];
 
+/**
+ * `Progress` is a parts object (`Root`/`Track`/`Indicator`), the same shape
+ * as `Meter` — there is no single component for a meta `component` to point
+ * at. Args cover `Root`'s `value`/`max` plus the visible label text and the
+ * accessible name threaded into the composition below. `value: null` is the
+ * indeterminate state; it stays out of the default args (see `Indeterminate`)
+ * because the two leaves render it with genuinely different markup, not just
+ * a different number.
+ */
+type ProgressArgs = {
+  value: number | null;
+  max: number;
+  label: string;
+  ariaLabel: string;
+};
+
+/**
+ * A determinate-or-indeterminate bar: `value` is a number when progress is
+ * known, `null` when it isn't (`progress.props.ts`). `Basic` below threads a
+ * single known value through the meta args; `Determinate` and `Indeterminate`
+ * keep their own renders because their content doesn't reduce to that one
+ * shape — a multi-file grid and a label-less bar, respectively.
+ */
+const meta = {
+  title: 'Components/Progress',
+  parameters: { layout: 'fullscreen' },
+  args: {
+    value: 30,
+    max: 100,
+    label: 'Petition.pdf',
+    ariaLabel: 'Petition.pdf upload progress',
+  },
+  argTypes: {
+    value: { control: { type: 'range', min: 0, max: 100 } },
+  },
+  render: (args) => (
+    <LeafPair
+      web={
+        <div style={{ display: 'grid', gap: 6, width: 260 }}>
+          <span style={{ fontSize: 13 }}>{args.label}</span>
+          <ProgressWeb.Root value={args.value} max={args.max} aria-label={args.ariaLabel}>
+            <ProgressWeb.Track>
+              <ProgressWeb.Indicator />
+            </ProgressWeb.Track>
+          </ProgressWeb.Root>
+        </div>
+      }
+      native={
+        <View style={{ gap: 6, width: 260 }}>
+          <Text style={{ fontSize: 13 }}>{args.label}</Text>
+          <ProgressNative.Root
+            value={args.value}
+            max={args.max}
+            accessibilityLabel={args.ariaLabel}
+          >
+            <ProgressNative.Track>
+              <ProgressNative.Indicator />
+            </ProgressNative.Track>
+          </ProgressNative.Root>
+        </View>
+      }
+    />
+  ),
+} satisfies Meta<ProgressArgs>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+/**
+ * The default pairing: a single known value. The play pins the one thing a
+ * screenshot can't — both leaves report the same number through
+ * `aria-valuenow` under the shared `progressbar` role, not just a matching
+ * bar width.
+ */
+export const Basic: Story = {
+  play: async ({ canvasElement, args }) => {
+    const { web, native } = pair(canvasElement);
+    await expect(web.getByRole('progressbar', { name: args.ariaLabel })).toHaveAttribute(
+      'aria-valuenow',
+      String(args.value),
+    );
+    await expect(native.getByRole('progressbar', { name: args.ariaLabel })).toHaveAttribute(
+      'aria-valuenow',
+      String(args.value),
+    );
+  },
+};
+
+/**
+ * Two uploads at once, each with its own value and label — a grid, not a
+ * single bar, so this stays its own render rather than an `args` override of
+ * `Basic`.
+ */
 export const Determinate: Story = {
   render: () => (
     <LeafPair

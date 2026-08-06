@@ -1,20 +1,13 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { AlertDialog as AlertDialogWeb } from '@design-system/alert-dialog/alert-dialog.web.tsx';
 import { AlertDialog as AlertDialogNative } from '@design-system/alert-dialog/alert-dialog.native.tsx';
 import { Button as ButtonWeb } from '@design-system/button/button.web.tsx';
 import { Button as ButtonNative } from '@design-system/button/button.native.tsx';
 
-import { LeafPair } from './leaf-pair.tsx';
-
-const meta = {
-  title: 'Components/AlertDialog',
-  parameters: { layout: 'fullscreen' },
-} satisfies Meta;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
+import { LeafPair, pair } from './leaf-pair.tsx';
 
 /**
  * Same split as `dialog.stories.tsx`, for the same reason: the web leaf
@@ -22,10 +15,38 @@ type Story = StoryObj<typeof meta>;
  * native leaf opens an RN `Modal` through react-native-web's own portal as
  * `position: fixed; inset: 0` with a `ModalFocusTrap`, and two open overlays
  * on one page means the native one covers the web one and the focus traps
- * fight. `Default` pairs the two leaves CLOSED; the open state is a single
- * state per leaf, not a cross-leaf comparison, which is exactly what
- * `leaf-pair.tsx`'s doc comment sanctions a single-leaf story for.
+ * fight. Args cover the CONTENT threaded into the composition, not the parts'
+ * own props — there is no meta `component` because no single component owns
+ * this surface, same reason `dialog.stories.tsx` has none.
  */
+type AlertDialogArgs = {
+  triggerLabel: string;
+  title: string;
+  description: string;
+  onOpenChange: (open: boolean) => void;
+};
+
+const meta = {
+  title: 'Components/AlertDialog',
+  parameters: { layout: 'fullscreen' },
+  args: {
+    triggerLabel: 'Withdraw filing',
+    title: 'Withdraw the Chapter 7 petition?',
+    description: 'This cannot be undone once it is submitted to the court.',
+    onOpenChange: fn(),
+  },
+  render: (args) => (
+    <LeafPair
+      note="Both alert dialogs render CLOSED. Open one trigger at a time — an open web Popup and an open native Modal cannot share this page (see the file header)."
+      web={<WithdrawFilingDialogWeb {...storyContent(args)} />}
+      native={<WithdrawFilingDialogNative {...storyContent(args)} />}
+    />
+  ),
+} satisfies Meta<AlertDialogArgs>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
 const singleLeafStyles: Record<string, React.CSSProperties> = {
   wrap: { padding: 24, fontFamily: 'ui-sans-serif, system-ui, sans-serif' },
   note: {
@@ -45,25 +66,67 @@ function SingleLeafNote({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const Default: Story = {
-  render: () => (
-    <LeafPair
-      note="Both alert dialogs render CLOSED. Open one trigger at a time — an open web Popup and an open native Modal cannot share this page (see the file header)."
-      web={<WithdrawFilingDialogWeb />}
-      native={<WithdrawFilingDialogNative />}
-    />
-  ),
+/**
+ * `Default` pairs the two leaves CLOSED — comparing the trigger and
+ * composition is still useful — and the open state gets its own single-leaf
+ * stories instead. `leaf-pair.tsx`'s doc comment sanctions exactly this: "A
+ * story that renders only ONE leaf is fine when the point is a state rather
+ * than a comparison." An open AlertDialog is a state, not a cross-leaf
+ * comparison, and forcing it through `LeafPair` would be the very failure
+ * this file exists to avoid.
+ *
+ * The play opens the web dialog, closes it, and only THEN opens the native
+ * one — strictly sequential, ending with both closed, for the same reason
+ * `dialog.stories.tsx`'s `Basic` play is: both portals escape the `LeafPair`
+ * panes entirely, so the play reaches them through `screen`, not `pair()`.
+ * It also checks the contract that makes this component an ALERT dialog
+ * rather than a plain one — Escape does NOT dismiss it; only the explicit
+ * "Keep editing" choice does.
+ */
+export const Basic: Story = {
+  play: async ({ canvasElement, args, step }) => {
+    const { web, native } = pair(canvasElement);
+
+    await step(
+      'web alert dialog: open, resist Escape, close via an explicit choice, focus returns',
+      async () => {
+        const trigger = web.getByRole('button', { name: args.triggerLabel });
+        await userEvent.click(trigger);
+        const dialog = await screen.findByRole('alertdialog', { name: args.title });
+        await expect(dialog).toHaveAttribute('aria-modal', 'true');
+        await expect(args.onOpenChange).toHaveBeenLastCalledWith(true);
+        // Unlike Dialog, Escape must NOT close this — dismissal is only ever
+        // an explicit choice (see the leaf's own header comment).
+        await userEvent.keyboard('{Escape}');
+        await expect(screen.getByRole('alertdialog')).toBeVisible();
+        await userEvent.click(within(dialog).getByRole('button', { name: 'Keep editing' }));
+        await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+        await expect(args.onOpenChange).toHaveBeenLastCalledWith(false);
+        await expect(trigger).toHaveFocus();
+      },
+    );
+
+    await step('native alert dialog: open, verify, close — only after web closed', async () => {
+      await userEvent.click(native.getByRole('button', { name: args.triggerLabel }));
+      const dialog = await screen.findByRole('alertdialog', { name: args.title });
+      await expect(within(dialog).getByText(args.description)).toBeVisible();
+      await expect(args.onOpenChange).toHaveBeenLastCalledWith(true);
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Keep editing' }));
+      await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+      await expect(args.onOpenChange).toHaveBeenLastCalledWith(false);
+    });
+  },
 };
 
 export const OpenWebLeaf: Story = {
   name: 'Open (web leaf only)',
-  render: () => (
+  render: (args) => (
     <>
       <SingleLeafNote>
         Single-leaf on purpose — see the file header. This audits the web Popup actually open:
         `role="alertdialog"`, `aria-modal`, and that Escape/backdrop-click do NOT dismiss it.
       </SingleLeafNote>
-      <WithdrawFilingDialogWeb defaultOpen />
+      <WithdrawFilingDialogWeb defaultOpen {...storyContent(args)} />
     </>
   ),
 };
@@ -86,21 +149,43 @@ export const OpenWebLeaf: Story = {
  * nothing else here can.
  *
  * `dialog.native.tsx` never had it — it labels the `<Modal>` and leaves its
- * card roleless. The fix made the alert dialog do both.
+ * card roleless. The fix made the alert dialog do both. The play pins that
+ * fix in an assertion too, not just in axe and the eye: both the outer
+ * react-native-web container and the inner card must carry the title as
+ * their accessible name.
  */
 export const OpenNativeLeaf: Story = {
   name: 'Open (native leaf only)',
-  render: () => (
+  render: (args) => (
     <>
       <SingleLeafNote>
         Single-leaf on purpose — see the file header. Guards the 0.8.3 fix: react-native-web&apos;s
         Modal wraps this card in its own `role=&quot;dialog&quot;`, and that outer element must
         carry the title&apos;s id too, or axe fails it as `aria-dialog-name`.
       </SingleLeafNote>
-      <WithdrawFilingDialogNative defaultOpen />
+      <WithdrawFilingDialogNative defaultOpen {...storyContent(args)} />
     </>
   ),
+  play: async ({ args }) => {
+    await expect(screen.getByRole('dialog', { name: args.title })).toBeInTheDocument();
+    await expect(screen.getByRole('alertdialog', { name: args.title })).toBeInTheDocument();
+  },
 };
+
+/** The content args, minus nothing — a named helper so the four call sites
+ *  can't drift apart one prop at a time. */
+function storyContent(args: AlertDialogArgs) {
+  return {
+    triggerLabel: args.triggerLabel,
+    title: args.title,
+    description: args.description,
+    onOpenChange: args.onOpenChange,
+  };
+}
+
+interface WithdrawFilingDialogProps extends AlertDialogArgs {
+  defaultOpen?: boolean;
+}
 
 /**
  * `Title`/`Description` are direct children of `Popup`, never wrapped, for
@@ -108,16 +193,20 @@ export const OpenNativeLeaf: Story = {
  * though it renders nothing on native (no tap-outside dismissal here) so the
  * call site matches across leaves and across `Dialog`/`AlertDialog`.
  */
-function WithdrawFilingDialogWeb({ defaultOpen }: { defaultOpen?: boolean }) {
+function WithdrawFilingDialogWeb({
+  defaultOpen,
+  triggerLabel,
+  title,
+  description,
+  onOpenChange,
+}: WithdrawFilingDialogProps) {
   return (
-    <AlertDialogWeb.Root defaultOpen={defaultOpen}>
-      <AlertDialogWeb.Trigger>Withdraw filing</AlertDialogWeb.Trigger>
+    <AlertDialogWeb.Root defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
+      <AlertDialogWeb.Trigger>{triggerLabel}</AlertDialogWeb.Trigger>
       <AlertDialogWeb.Backdrop />
       <AlertDialogWeb.Popup>
-        <AlertDialogWeb.Title>Withdraw the Chapter 7 petition?</AlertDialogWeb.Title>
-        <AlertDialogWeb.Description>
-          This cannot be undone once it is submitted to the court.
-        </AlertDialogWeb.Description>
+        <AlertDialogWeb.Title>{title}</AlertDialogWeb.Title>
+        <AlertDialogWeb.Description>{description}</AlertDialogWeb.Description>
         <AlertDialogWeb.Close>Keep editing</AlertDialogWeb.Close>
         {/* No `danger` intent exists on Button — the semantic token set has no
             danger-text pair (see button.props.ts) — so the destructive choice
@@ -128,16 +217,20 @@ function WithdrawFilingDialogWeb({ defaultOpen }: { defaultOpen?: boolean }) {
   );
 }
 
-function WithdrawFilingDialogNative({ defaultOpen }: { defaultOpen?: boolean }) {
+function WithdrawFilingDialogNative({
+  defaultOpen,
+  triggerLabel,
+  title,
+  description,
+  onOpenChange,
+}: WithdrawFilingDialogProps) {
   return (
-    <AlertDialogNative.Root defaultOpen={defaultOpen}>
-      <AlertDialogNative.Trigger>Withdraw filing</AlertDialogNative.Trigger>
+    <AlertDialogNative.Root defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
+      <AlertDialogNative.Trigger>{triggerLabel}</AlertDialogNative.Trigger>
       <AlertDialogNative.Backdrop />
       <AlertDialogNative.Popup>
-        <AlertDialogNative.Title>Withdraw the Chapter 7 petition?</AlertDialogNative.Title>
-        <AlertDialogNative.Description>
-          This cannot be undone once it is submitted to the court.
-        </AlertDialogNative.Description>
+        <AlertDialogNative.Title>{title}</AlertDialogNative.Title>
+        <AlertDialogNative.Description>{description}</AlertDialogNative.Description>
         <AlertDialogNative.Close>Keep editing</AlertDialogNative.Close>
         <ButtonNative intent="primary">Withdraw filing</ButtonNative>
       </AlertDialogNative.Popup>
