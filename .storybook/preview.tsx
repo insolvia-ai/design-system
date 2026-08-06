@@ -3,6 +3,7 @@ import type { Preview } from '@storybook/react-native-web-vite';
 import { MINIMAL_VIEWPORTS } from 'storybook/viewport';
 
 import '../workbench/tailwind.css';
+import { themes } from 'storybook/theming';
 import { applyScheme, type Scheme } from '../workbench/scheme.ts';
 
 /**
@@ -22,6 +23,12 @@ const preview: Preview = {
 
   parameters: {
     controls: { expanded: true },
+
+    // Docs pages render inside the PREVIEW, not the manager, so manager.ts's
+    // theme does not reach them — without this they'd be the one white surface
+    // left in the shell. Stock dark, same as the manager (and for the same
+    // reason — see manager.ts).
+    docs: { theme: themes.dark },
 
     // The stock small/large presets plus one phone-sized entry. The native
     // pane renders what a React Native consumer ships, and that consumer's
