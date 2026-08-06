@@ -1,0 +1,166 @@
+name: PR
+
+# One job for the whole repo, and no `paths:` filter.
+#
+# The monorepo this came from splits its gates per package and guards each one
+# with a changed-paths filter, because a required status check must report on
+# every PR there and an unrelated PR should still be cheap. Neither pressure
+# exists here: there are two packages, they share a toolchain, the token
+# generator writes across both, and the entire suite runs in well under a
+# minute. Splitting it would buy nothing and add a way for a PR that changes
+# tokens to skip the design system's tests.
+on:
+  pull_request:
+  # `main` too, so a merge that somehow lands red is visible on the branch
+  # rather than only in the publish job's fallout.
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Full history: the version gate below diffs against the PR base.
+          fetch-depth: 0
+
+      # Must match the root package.json's `engines.node` (">=24").
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+
+      # `ci`, never `install`: the lockfile is committed precisely so CI
+      # resolves the same tree twice running, and `ci` fails loudly when
+      # package.json and the lockfile have drifted apart.
+      - name: Install
+        run: npm ci
+
+      # Version-bump gate, before anything expensive — a PR that forgot the
+      # bump should be told so in fifteen seconds, not after the test suite.
+      #
+      # Both packages publish on merge to main, and the publish job is
+      # idempotent BY VERSION: it skips cleanly when the manifest's version is
+      # already in the registry. So an unbumped package change merges green,
+      # publishes nothing, and leaves the registry silently stale — the
+      # consuming repo would keep installing the old artifact with no error
+      # anywhere. This step is the only thing standing between that and a
+      # release.
+      - name: Require a version bump for every changed package
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+
+          # Fail loudly if the base COMMIT is missing rather than treating an
+          # unreadable base as "nothing changed" — a guard that cannot see the
+          # diff must not wave the PR through.
+          git cat-file -e "$BASE_SHA^{commit}"
+
+          failed=0
+          for pkg_dir in packages/*/; do
+            pkg_dir="${pkg_dir%/}"
+            manifest="$pkg_dir/package.json"
+
+            if git diff --quiet "$BASE_SHA" HEAD -- "$pkg_dir"; then
+              echo "· $pkg_dir — unchanged."
+              continue
+            fi
+
+            # A missing blob at base means this PR introduces the package. A
+            # first version is a version change by definition.
+            if ! git cat-file -e "$BASE_SHA:$manifest" 2>/dev/null; then
+              echo "· $pkg_dir — introduced by this PR; nothing to compare."
+              continue
+            fi
+
+            base_pkg="$(git show "$BASE_SHA:$manifest")"
+            base_version="$(node -p 'JSON.parse(process.argv[1]).version' "$base_pkg")"
+            head_version="$(node -p "require('./$manifest').version")"
+
+            if [ "$head_version" = "$base_version" ]; then
+              echo "::error file=$manifest::This PR changes $pkg_dir/ but leaves version at $base_version. Both packages publish on merge to main; bump \`version\` — the consuming repo installs the published artifact, so an unbumped change ships nothing."
+              failed=1
+            else
+              echo "· $pkg_dir — $base_version -> $head_version."
+            fi
+          done
+
+          exit "$failed"
+
+      # Before lint/typecheck/test, for the honest failure: if someone
+      # hand-edited a generated file, the error should say "you edited the
+      # wrong file", not surface as a downstream complaint about the edit.
+      - name: Token drift check
+        run: npm run tokens:check
+
+      # Via each package's own script, not `npx eslint` from the root: there is
+      # deliberately no `eslint.config.js` at the repo root (see
+      # eslint.base.js), so ESLint with the root as its cwd would find no
+      # config at all.
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format
+
+      # Granular rather than the root `typecheck` fan-out, so a red X says
+      # WHICH platform broke. The native program is the one this web-only CI
+      # would otherwise never exercise: without it a PR could be green
+      # everywhere and still ship `.native` leaves that fail the moment Metro
+      # resolves them in the app.
+      - name: Typecheck (tokens)
+        run: npm run typecheck --workspace @insolvia-ai/tokens
+
+      - name: Typecheck (design system, web)
+        run: npm run typecheck:web --workspace @insolvia-ai/design-system
+
+      - name: Typecheck (design system, native)
+        run: npm run typecheck:native --workspace @insolvia-ai/design-system
+
+      - name: Typecheck (design system, native tests)
+        run: npm run typecheck:native-test --workspace @insolvia-ai/design-system
+
+      - name: Test
+        run: npm run test
+
+      # The platform-split invariant, machine-checked against the artifact that
+      # actually ships rather than against the working tree.
+      #
+      # `npm pack` applies `files`, so this catches two failures the tests
+      # cannot: a `.web`/`.native` pair that got collapsed (someone added a
+      # build step), and test files leaking into the tarball. Both are silent
+      # in every other check and only surface in a consumer's bundler.
+      - name: Packaged artifact keeps the platform split
+        run: |
+          set -euo pipefail
+          cd packages/design-system
+          files="$(npm pack --dry-run --json | node -e '
+            let s = "";
+            process.stdin.on("data", (d) => (s += d)).on("end", () => {
+              const [pkg] = JSON.parse(s);
+              for (const f of pkg.files) console.log(f.path);
+            });
+          ')"
+
+          web="$(printf "%s\n" "$files" | grep -c "\.web\.tsx$" || true)"
+          native="$(printf "%s\n" "$files" | grep -c "\.native\.tsx$" || true)"
+          tests="$(printf "%s\n" "$files" | grep -Ec "\.test\.tsx?$" || true)"
+
+          echo "web leaves: $web · native leaves: $native · test files: $tests"
+
+          if [ "$web" -eq 0 ] || [ "$native" -eq 0 ]; then
+            echo "::error::The packed tarball is missing a platform leaf ($web web, $native native). This package publishes SOURCE so the consumer's bundler can pick the leaf; a build step that collapses the pair breaks resolution for every consumer."
+            exit 1
+          fi
+
+          if [ "$tests" -ne 0 ]; then
+            echo "::error::$tests test file(s) leaked into the tarball. Check the \`files\` negations in package.json."
+            exit 1
+          fi

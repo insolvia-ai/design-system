@@ -1,8 +1,8 @@
-# insolvia_design_system — agent rules
+# design-system — agent rules
 
 The owned, platform-split design system, published as
 `@insolvia-ai/design-system` (0.6.x). Human docs: [`README.md`](README.md).
-Publishing flow: [`docs/reference/package-publishing.md`](../../docs/reference/package-publishing.md).
+Repo-level rules and the publishing flow: [`../../CLAUDE.md`](../../CLAUDE.md).
 
 - **Three files per component**: `<name>.props.ts` (shared), `<name>.web.tsx`
   (React DOM + Tailwind), `<name>.native.tsx` (RN primitives over
@@ -32,17 +32,19 @@ Publishing flow: [`docs/reference/package-publishing.md`](../../docs/reference/p
 - **No build step, ever.** The package publishes `src/` as-is; a tsup/tsc
   emit would collapse the leaf pairs and break resolution in the consumer's
   bundler. `package.json`'s comment block owns the full reasoning.
-- **Any change here is its OWN PR with a `version` bump** (CI-enforced, same
-  rule as the outgoing package): marketing consumes the PUBLISHED version, the
-  app consumes the workspace symlink. See the `insolvia-design-system-pr`
-  skill. The app's consumption is live, not planned: it resolves this
-  package's **source** through the workspace symlink plus a Metro
-  `resolveRequest` (see `apps/insolvia_app/metro.config.js`), so a merged
-  change reaches the app with no consume PR.
-- **`src/styles/theme.css` is generated** from `packages/insolvia_tokens` —
-  never hand-edit; edit `tokens.json` and `npm run tokens`. Its bytes are
-  byte-frozen against the old package's published copy until the cutover
-  completes, which is also why it sits in `.prettierignore`.
+- **Any change here is its OWN PR with a `version` bump** (CI-enforced). Both
+  consumers — the Expo app and the marketing site, both in
+  `insolvia-ai/insolvia` — install the PUBLISHED version, so nothing you merge
+  reaches either of them until it publishes and they bump. Through 0.5.x the
+  app was a sibling workspace member reading this package's source through a
+  symlink plus a Metro `resolveRequest`, and a merge reached it with no consume
+  PR at all; extracting this package into its own repo is precisely what ended
+  that. Don't try to restore the shortcut — it is the coupling this repo exists
+  to remove.
+- **`src/styles/theme.css` is generated** from `packages/tokens` — never
+  hand-edit; edit `tokens.json` and `npm run tokens` from the repo root. It
+  sits in `.prettierignore` because the generator owns its bytes and Prettier
+  would strip a blank line the generator deliberately emits.
 - **All three typecheck programs must pass** (`npm run typecheck` chains
   them): the web program (`moduleSuffixes: [".web", ""]`), the RN program
   (`[".native", ""]`, real `react-native` types, no DOM lib), and the
@@ -62,10 +64,15 @@ Publishing flow: [`docs/reference/package-publishing.md`](../../docs/reference/p
   that drives the color scheme. A native leaf carrying a11y wiring (Button,
   Field) keeps ≥1 native test — the Field label wiring shipped broken in
   0.2.1 precisely because only the `.web` leaf was tested.
-- **Never declare `react-native` or `@insolvia-ai/tokens` as peerDependencies**,
-  optional or not. GitHub Packages strips `peerDependenciesMeta` from registry
-  metadata, so npm treats an "optional" peer as required and a registry
-  consumer's install 404s on the unpublished tokens package (this broke
-  marketing's Docker build once). The native leaves resolve those imports from
-  the consumer's own dependencies; the package.json `//` comment records the
-  reasoning.
+- **Never declare `react-native` or `@insolvia-ai/tokens` here** — not as
+  dependencies, not as peerDependencies, optional or not. GitHub Packages
+  strips `peerDependenciesMeta` from registry metadata, so npm treats an
+  "optional" peer as required; declaring `react-native` would force every web
+  consumer to install a native renderer it never loads, which broke marketing's
+  Docker build once. `@insolvia-ai/tokens` is published now, so it would no
+  longer 404 the way it did when tokens was private — the *failure* changed,
+  the *rule* did not. The native leaves are the only code importing either, no
+  web resolver can reach them, and their imports resolve from the consumer's
+  own dependencies. The package.json `//` comment records the full reasoning.
+  If a task seems to need a dependency added here, that is the signal to
+  re-read this bullet, not to add it.

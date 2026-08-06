@@ -1,12 +1,14 @@
-# insolvia_design_system
+# @insolvia-ai/design-system
 
 Insolvia's owned, cross-platform design system, published as
 `@insolvia-ai/design-system` (0.6.x). One set of component names serves both
 front-end stacks: the marketing site (React DOM + Tailwind) and the app
 (React Native / Expo). Agent rules: [`CLAUDE.md`](CLAUDE.md).
 
-It succeeded `packages/insolvia_design_system_react` (0.1.x, web-only, Base
-UI), deleted when marketing cut over to 0.2.x.
+It succeeded `insolvia_design_system_react` (0.1.x, web-only, Base UI), deleted
+when marketing cut over to 0.2.x. From 0.6.0 it lives in this repo rather than
+in the `insolvia-ai/insolvia` monorepo — the root [`README.md`](../../README.md)
+has the why.
 
 ## Components
 
@@ -84,19 +86,27 @@ is a candidate to collapse into a single shared file later; anything with
 events, state, or accessibility wiring is a leaf pair from day one — the two
 platforms' event and a11y models do not unify.
 
-## Two consumers, two channels
+## Two consumers, one channel
+
+Both consumers live in `insolvia-ai/insolvia`, and both install this package by
+version from GitHub Packages:
 
 | Consumer                  | Resolves the package via                       |
 | ------------------------- | ---------------------------------------------- |
-| `apps/insolvia_app`       | workspace symlink (root npm workspace member)  |
+| `apps/insolvia_app`       | the **published version** from GitHub Packages |
 | `apps/insolvia_marketing` | the **published version** from GitHub Packages |
 
-The app's channel is live: it consumes this package as **source**, through the
-workspace symlink plus a Metro `resolveRequest` (`apps/insolvia_app/metro.config.js`).
+That is why **any change here is its own PR with a `version` bump**. Nothing
+you merge reaches either surface until it publishes and the consuming repo
+bumps its dependency.
 
-Marketing consuming by version is why **any change here is its own PR with a
-`version` bump** — see the `insolvia-design-system-pr` skill. The app sees
-your change on save; marketing sees nothing until a publish.
+Through 0.5.x that table had two different answers. The app lived in the same
+monorepo as this package and resolved its **source** through a workspace
+symlink plus a Metro `resolveRequest`, so a merge here was live for the app
+immediately — no publish, no version — while marketing still saw nothing until
+a release. One package, two truths, and no way to tell from inside which one
+you were testing against. Collapsing that to a single channel is the whole
+point of the extraction; don't reintroduce a path-based consumer.
 
 ## No build step — the package publishes source
 
@@ -110,7 +120,7 @@ entry and break the pattern.
 
 `src/styles/theme.css` (public specifier
 `@insolvia-ai/design-system/theme.css`) is rendered from
-`packages/insolvia_tokens/tokens.json` — never hand-edit it. Change a value
+`packages/tokens/tokens.json` — never hand-edit it. Change a value
 there, then `npm run tokens` from the repo root; `npm run tokens:check` gates
 drift in CI.
 

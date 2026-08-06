@@ -1,0 +1,111 @@
+name: Publish
+
+# Trigger: push to main (+ manual dispatch as an escape hatch).
+#
+# Push, not dispatch-only, because the consumer is another repo's CI: a version
+# bump merged here must be installable without a human remembering to press a
+# button. The job is a no-op on every push that does not change a version (see
+# the guard below), so "publish on push" costs a couple of cheap registry
+# lookups and never a red X.
+#
+# `workflow_dispatch` stays for re-publishing after a transient registry
+# failure, and for the first publish of a version that landed on main before
+# this workflow existed.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# `packages: write` is the whole privilege set this job needs — it publishes to
+# GitHub Packages, not to any cloud account. No `id-token: write`: there is no
+# OIDC role here.
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: insolvia-design-system-publish
+  cancel-in-progress: false
+
+# Job-wide, not per-step: setup-node's `registry-url` writes an .npmrc whose
+# auth line reads `${NODE_AUTH_TOKEN}` from the environment, and npm fails hard
+# on any config read when a referenced variable is unset — so every npm
+# invocation in this job needs it, the root `npm ci` included.
+env:
+  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: "@insolvia-ai"
+
+      # Root install: the root lockfile is the only lockfile there is. No build
+      # needs it — see below — it is here so any pack-time lifecycle script
+      # runs against the tree the committed lockfile pins, and so `ci` fails
+      # loudly if the manifests and lockfile have drifted apart.
+      - name: Install
+        run: npm ci
+
+      # ORDER MATTERS: tokens before design-system.
+      #
+      # They are independent artifacts, but a design-system release whose
+      # theme.css was regenerated from a token change is only coherent once
+      # that token version is installable. Publishing tokens first means the
+      # registry never shows the second half of a pair without the first.
+      #
+      # NO BUILD STEP, deliberately — do not "fix" this by adding a bundler.
+      # Both packages publish SOURCE (.ts/.tsx). For the design system that is
+      # load-bearing: each component's `.web.tsx` and `.native.tsx` leaves must
+      # survive into the published artifact so the CONSUMER's bundler picks the
+      # leaf by extension — marketing's Vite takes `.web.tsx`, the app's Metro
+      # takes `.native.tsx`. A package-time bundle would collapse that choice
+      # before any consumer got to make it.
+      #
+      # Idempotency guard: a publish job that red-Xes on every unrelated push
+      # to main trains people to ignore CI, so an already-published version is
+      # a clean skip, not a failure. The PR gate is what stops a merge landing
+      # here with a stale version in the first place.
+      #
+      # `npm view` exits non-zero when the version does not exist (E404) —
+      # the normal "please publish" case — so the exit code is swallowed and
+      # the decision is made on whether stdout came back empty. stderr is
+      # discarded: on auth trouble npm can echo the request headers.
+      - name: Publish each package whose version is new
+        run: |
+          set -uo pipefail
+          published=()
+          skipped=()
+
+          for pkg_dir in packages/tokens packages/design-system; do
+            name="$(node -p "require('./$pkg_dir/package.json').name")"
+            version="$(node -p "require('./$pkg_dir/package.json').version")"
+            echo "::group::$name@$version"
+
+            if [ -n "$(npm view "$name@$version" version 2>/dev/null || true)" ]; then
+              echo "$name@$version is already in the registry — nothing to do."
+              skipped+=("$name@$version")
+            else
+              echo "$name@$version is not in the registry — publishing."
+              ( cd "$pkg_dir" && npm publish ) || exit 1
+              published+=("$name@$version")
+            fi
+            echo "::endgroup::"
+          done
+
+          {
+            echo "### Publish"
+            if [ ${#published[@]} -gt 0 ]; then
+              printf -- '- published `%s`\n' "${published[@]}"
+            fi
+            if [ ${#skipped[@]} -gt 0 ]; then
+              printf -- '- skipped (already published) `%s`\n' "${skipped[@]}"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,16 +1,24 @@
-# insolvia_tokens
+# @insolvia-ai/tokens
 
 The **single source of truth** for every Insolvia design token.
 
 Insolvia ships two front-end stacks — React Native (the Expo app) and
 React/Tailwind (marketing and other web surfaces). Hand-maintaining a palette in
 two places guarantees drift, so neither of them owns the values: `tokens.json`
-does, and a small script renders it into both.
+does, and a small script renders it into all three outputs.
 
 ```
-tokens.json  ──┬──▶ packages/insolvia_design_system/src/styles/theme.css
-               └──▶ packages/insolvia_tokens/src/tokens.ts
+tokens.json  ──┬──▶ packages/design-system/src/styles/theme.css   Tailwind v4 custom properties
+               ├──▶ packages/tokens/src/tokens.ts                 typed consts for React Native
+               └──▶ packages/tokens/src/colors.json               the same colours, as data
 ```
+
+`colors.json` is the odd one out and exists for a single reason: Node refuses
+to strip TypeScript types for any file under `node_modules`, so a plain `node`
+script in a *consuming* repo cannot import `tokens.ts` at all. One such
+consumer exists — the Cognito sign-in branding reconciler in
+`insolvia-ai/insolvia` — and it reads the JSON. Metro and Vite have no such
+limit, so the app and the marketing site use `tokens.ts` and the CSS as usual.
 
 ## The rule
 
@@ -39,7 +47,7 @@ no Style Dictionary, no build step, no devDependency of its own). At this token
 count a single readable script beats a configuration-driven pipeline.
 
 What keeps that true is **Node's native TypeScript type-stripping** (Node >=24):
-`npm run tokens` is plain `node packages/insolvia_tokens/tool/generate-tokens.ts`,
+`npm run tokens` is plain `node packages/tokens/tool/generate-tokens.ts`,
 with no loader, no bundler and no compile step. The one cost is that
 type-stripping cannot execute `enum`, `namespace`, or constructor parameter
 properties — `erasableSyntaxOnly` in `tsconfig.base.json` turns using one into a
@@ -102,5 +110,8 @@ Generated or not, `src/tokens.ts` is ordinary source as far as the toolchain is
 concerned: it sits inside the `prettier --check` and `eslint` targets, so the
 generator has to emit Prettier-clean bytes.
 
-The package is private and unpublished; `src/tokens.ts` is exported as source
-and consumed by symlink, so there is no build output and no version gate.
+The package is published to GitHub Packages and its exports point at source, so
+there is still no build output — but there *is* a version gate. Until 0.2.0 it
+was private and every consumer resolved it by workspace symlink; extracting the
+design system moved those consumers into another repo, and the registry is now
+the only way across. Any change here needs a `version` bump in the same PR.

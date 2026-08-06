@@ -1,4 +1,4 @@
-// DO NOT EDIT — generated from packages/insolvia_tokens/tokens.json
+// DO NOT EDIT — generated from packages/tokens/tokens.json
 // Regenerate with: npm run tokens
 
 /**
