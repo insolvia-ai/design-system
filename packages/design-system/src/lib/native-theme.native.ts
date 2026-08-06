@@ -8,8 +8,7 @@
 // Why a hook at all: a StyleSheet.create block runs once at module load, so a
 // color baked into it (or into a module-level `colors.light`) can never follow
 // the OS scheme — that was the 0.2.1 dark-mode regression. Leaves keep layout
-// static in StyleSheet.create and apply colors from this hook at render time,
-// the same split as apps/insolvia_app/src/theme.ts.
+// static in StyleSheet.create and apply colors from this hook at render time.
 import { useColorScheme } from 'react-native';
 
 import { colors, type ColorScheme } from '@insolvia-ai/tokens';

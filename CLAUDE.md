@@ -14,6 +14,36 @@ Each package has its own `CLAUDE.md` (that package's rules — read it before
 editing there) and a `README.md` for humans. One owner per fact — link, never
 restate.
 
+## Catalog — need this? read that
+
+| When you're… | Open |
+|---|---|
+| adding or changing a component | `design-system-component` skill |
+| releasing — version bumps, publishing, getting a change into the app | `design-system-release` skill |
+| opening a PR | `design-system-pr` skill |
+| running or setting anything up | [`scripts/README.md`](scripts/README.md) |
+| **needing to SEE a component** | `./scripts/dev-up.sh` — the workbench renders both leaves side by side |
+| changing token values | [`packages/tokens/CLAUDE.md`](packages/tokens/CLAUDE.md) — edit `tokens.json`, never a generated file |
+| changing how the workbench resolves anything | [`.storybook/main.ts`](.storybook/main.ts) and [`workbench/react-native.ts`](workbench/react-native.ts) |
+
+## Seeing a component
+
+```bash
+./scripts/dev-up.sh
+```
+
+Everything else in this repo is blind. Vitest renders into jsdom and asserts on
+roles and labels; tsc checks types. Neither can see that something is the wrong
+colour, in the wrong place, or painted underneath the thing below it — and that
+last one shipped as the 0.7.1 Select bug, whose report opens *"reported from a
+real browser, and invisible to every test in this package"*.
+
+The workbench renders **both leaves side by side**, which is the only place
+either repo can check the claim this package is built on: that two
+implementations of one design agree. The Scheme toolbar drives both at once —
+see [`workbench/scheme.ts`](workbench/scheme.ts) for why that took more than a
+CSS class.
+
 ## The one rule this repo exists to enforce
 
 **There is exactly one way out of here: publish a version.**

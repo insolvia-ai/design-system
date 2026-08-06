@@ -27,9 +27,26 @@
   "engines": {
     "node": ">=24"
   },
-  "workspaces": ["packages/tokens", "packages/design-system"],
-  "scripts": {
-    "//tokens": [
+  "workspaces": [
+    "packages/tokens",
+    "packages/design-system"
+  ],
+  "//scripts": {
+    "": [
+      "Script commentary lives HERE, beside `scripts`, and never inside it.",
+      "",
+      "The monorepo this came from puts `//name` comment keys among the scripts",
+      "themselves, which npm tolerates. Storybook does not: its build walks the",
+      "`scripts` object calling `.match()` on every value, so an array-valued",
+      "comment key crashes it with `TypeError: s?.match is not a function` —",
+      "from `computeStorybookMetadata`, naming neither package.json nor the key,",
+      "and not skippable with `--disable-telemetry`. Ten minutes to find, once.",
+      "",
+      "Keeping the comments as arrays (readable, multi-line) but moving them out",
+      "of `scripts` costs only adjacency, and this object sits immediately above",
+      "the thing it describes."
+    ],
+    "tokens": [
       "Run with plain `node`, no loader and no build step: Node >=24 strips",
       "TypeScript types natively, so the generator stays dependency-free.",
       "Type-stripping cannot execute `enum`, `namespace`, or parameter",
@@ -42,9 +59,7 @@
       "against the published @insolvia-ai/tokens instead. Adding an output that",
       "writes outside this repo is what that split exists to prevent."
     ],
-    "tokens": "node packages/tokens/tool/generate-tokens.ts",
-    "tokens:check": "node packages/tokens/tool/generate-tokens.ts --check",
-    "//lint": [
+    "lint": [
       "Fans out per member rather than running ESLint once from the root, and",
       "there is deliberately NO `eslint.config.js` at the repo root — the rules",
       "live in `eslint.base.js`, which each member re-exports. ESLint discovers",
@@ -52,17 +67,35 @@
       "any subdirectory with its own ESLint setup. Read eslint.base.js before",
       "changing this."
     ],
+    "ci": [
+      "The whole local gate: token drift, format, lint, typecheck, test.",
+      "Mirrors what .github/workflows/pr.yml runs, so `npm run ci` green",
+      "locally is a fair predictor of a green PR. It does NOT build the",
+      "workbench — CI does that separately, because it is slower than the rest",
+      "of the gate put together and breaks far less often."
+    ],
+    "storybook": [
+      "The component workbench: the only place a component is LOOKED AT rather",
+      "than asserted about. `storybook` is the dev loop (./scripts/dev-up.sh",
+      "wraps it); `storybook:build` produces the static site CI builds to prove",
+      "the workbench still compiles. Read .storybook/main.ts before changing",
+      "either — it explains why the React Native Web framework renders BOTH",
+      "leaves, and workbench/react-native.ts explains the one export it",
+      "substitutes."
+    ]
+  },
+  "scripts": {
+    "tokens": "node packages/tokens/tool/generate-tokens.ts",
+    "tokens:check": "node packages/tokens/tool/generate-tokens.ts --check",
     "lint": "npm run lint --workspaces --if-present",
     "format": "prettier --check packages",
     "format:write": "prettier --write packages",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "//ci": [
-      "The whole local gate: token drift, format, lint, typecheck, test.",
-      "Mirrors what .github/workflows/pr.yml runs, so `npm run ci` green",
-      "locally is a fair predictor of a green PR."
-    ],
-    "ci": "npm run tokens:check && npm run format && npm run lint && npm run typecheck && npm run test"
+    "ci": "npm run tokens:check && npm run format && npm run lint && npm run typecheck && npm run test && npm run test:a11y",
+    "storybook": "storybook dev -p 6006 --no-open",
+    "storybook:build": "storybook build -o storybook-static",
+    "test:a11y": "vitest --project=storybook --run"
   },
   "//devDependencies": [
     "ESLint/Prettier/TypeScript versions match insolvia-ai/insolvia deliberately:",
@@ -73,12 +106,22 @@
   ],
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@storybook/addon-a11y": "^10.5.7",
+    "@storybook/addon-vitest": "^10.5.7",
+    "@storybook/react-native-web-vite": "^10.5.7",
+    "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^24.13.3",
     "eslint": "^9.17.0",
     "globals": "^15.14.0",
     "prettier": "^3.3.3",
+    "storybook": "^10.5.7",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.19.0",
-    "vitest": "^4.1.10"
+    "vite": "^7.3.6",
+    "vitest": "^4.1.10",
+    "@vitest/browser-playwright": "4.1.10",
+    "@vitest/coverage-v8": "4.1.10",
+    "playwright": "latest"
   }
 }

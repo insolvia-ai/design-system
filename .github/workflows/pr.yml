@@ -130,6 +130,38 @@ jobs:
       - name: Test
         run: npm run test
 
+      # Accessibility, gated rather than reported.
+      #
+      # Runs every story as a test in a real Chromium and fails on any axe
+      # violation (`a11y.test: 'error'` in .storybook/preview.tsx). This is the
+      # only check in the repo that sees computed styles and a real
+      # accessibility tree — colour contrast and target size do not exist under
+      # jsdom, where the rest of the suite lives — so it catches a class of
+      # defect the 348 unit tests structurally cannot.
+      #
+      # Playwright's browser download is the slowest step here by far, hence
+      # `--only-shell`: the story tests need Chromium's headless shell and none
+      # of the rest.
+      - name: Install Playwright (Chromium)
+        run: npx playwright install chromium --only-shell --with-deps
+
+      - name: Accessibility (axe, every story)
+        run: npm run test:a11y
+
+      # The workbench is not tested, but it must still COMPILE.
+      #
+      # It is the only place either repo can see a component, and it breaks in
+      # a way nothing else notices: it reaches past the packages' `exports` into
+      # their source, so a moved or renamed file leaves every other check green
+      # and the workbench dead. The person who finds out is whoever next needs
+      # to look at a component, usually while debugging something else.
+      #
+      # A build, not a smoke test — it type-checks nothing (the stories are
+      # outside every tsconfig program) but it does resolve every import and
+      # compile every story, which is the failure being guarded.
+      - name: Workbench builds
+        run: npm run storybook:build
+
       # The platform-split invariant, machine-checked against the artifact that
       # actually ships rather than against the working tree.
       #

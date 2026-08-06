@@ -1,0 +1,21 @@
+/* Tailwind entrypoint for the workbench.
+ *
+ * Deliberately mirrors apps/insolvia_marketing/app/styles/app.css in the
+ * consumer repo — same three directives, same order. If the workbench and the
+ * marketing site ever disagree about how a `.web` leaf looks, the difference
+ * should be in the leaf, never in the two entrypoints.
+ */
+@import 'tailwindcss';
+
+/* The generated design tokens, as CSS custom properties. Consumers import this
+   as `@insolvia-ai/design-system/theme.css`; here it is a relative path,
+   because the workbench reads this repo's source rather than an installed
+   copy. */
+@import '../packages/design-system/src/styles/theme.css';
+
+/* REQUIRED. Tailwind v4 generates only the utilities it can SEE, and it scans
+   your own source — not this repo's other packages. The `.web.tsx` leaves are
+   where the class strings live, so without this line Tailwind emits none of
+   them and every web leaf renders as unstyled HTML while still "working".
+   That is the single most common way this setup breaks. */
+@source "../packages/design-system/src/**/*.{ts,tsx}";

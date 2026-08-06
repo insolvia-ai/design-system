@@ -3,11 +3,11 @@
 // stays on the trigger and the list is addressed through
 // `aria-activedescendant`, so one key handler drives everything.
 //
-// THIS LEAF IS THE ONE THE APP SHIPS, on web included (the resolveRequest
-// override in apps/insolvia_app/metro.config.js), which is why it implements
-// keyboard interaction at all — every other complex widget in this package
-// puts its arrow keys in the `.web` leaf, where the app never sees them. On a
-// real device the key handlers are simply inert.
+// THIS LEAF CAN BE RENDERED ON WEB, by a React Native consumer running
+// react-native-web, which is why it implements keyboard interaction at all —
+// every other complex widget in this package puts its arrow keys in the `.web`
+// leaf. On a real device these key handlers are simply inert, so carrying them
+// costs nothing there.
 //
 // The list renders INLINE and absolutely positioned rather than in a Modal, as
 // Dialog does. A Modal owns focus, and this pattern requires focus to stay on

@@ -33,8 +33,23 @@ dependency to take it.
 ## Getting started
 
 ```bash
-npm install
+./scripts/dev-setup.sh
 ```
+
+Then, to look at components:
+
+```bash
+./scripts/dev-up.sh
+```
+
+That opens the workbench on `http://localhost:6006` — every component with its
+**web leaf and native leaf side by side**, and a toolbar that flips both to
+dark. It is the only place in either repo where you can see whether the two
+implementations of a component actually agree, and the only instrument that
+catches wrong colour, wrong position, or one element painted under another. The
+tests cannot: they assert roles and labels in jsdom.
+
+To run the full gate:
 
 ```bash
 npm run ci

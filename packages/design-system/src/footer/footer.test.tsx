@@ -13,7 +13,7 @@ function SiteFooter() {
       <Footer.Group title="Company">
         <Footer.Link href="/about">About</Footer.Link>
       </Footer.Group>
-      <Footer.Note>© 2026 Insolvia</Footer.Note>
+      <Footer.Note>© 2026 Acme</Footer.Note>
     </Footer.Root>
   );
 }
@@ -38,6 +38,6 @@ describe('Footer', () => {
 
     expect(screen.getAllByRole('listitem')).toHaveLength(3);
     expect(screen.getByRole('link', { name: 'Pricing' })).toHaveAttribute('href', '/pricing');
-    expect(screen.getByText('© 2026 Insolvia')).toBeInTheDocument();
+    expect(screen.getByText('© 2026 Acme')).toBeInTheDocument();
   });
 });

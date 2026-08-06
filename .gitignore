@@ -16,3 +16,7 @@ npm-debug.log*
 .npmrc.local
 
 .DS_Store
+
+# Storybook static build output — CI builds it to prove the workbench still
+# compiles; nothing serves it from here.
+storybook-static/
