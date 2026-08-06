@@ -1,0 +1,35 @@
+# Prettier formats code here, not prose and not machine output.
+
+node_modules/
+dist/
+build/
+
+# Markdown is hand-authored and hand-wrapped throughout this repo, with compact
+# `|---|---|` tables and `*emphasis*`. Prettier rewrites both on sight, which
+# would turn every docs edit into a reformatting diff and bury the actual
+# change.
+*.md
+
+# NOTE — generated code is deliberately NOT ignored here.
+#
+# `packages/tokens/src/tokens.ts` is generated, and it is still held to
+# Prettier and ESLint like any other source: the generator is expected to emit
+# correctly-formatted bytes, and `npm run tokens:check` fails the PR if a
+# hand-edit ever drifts from the source of truth.
+#
+# The trade is real and worth knowing: a Prettier version bump that changes a
+# default can fail CI on a file no human wrote, and the fix is editing the
+# generator's templates — never reformatting the output, which the drift check
+# would immediately reject.
+
+# The token source of truth. Its formatting is reviewed by humans and read by
+# the generator; leave it exactly as committed.
+packages/tokens/tokens.json
+
+# Generated theme.css — the generator owns its bytes, and `npm run
+# tokens:check` fails on any drift. Prettier would strip a blank line the
+# generator deliberately emits, so a reformat trips that check; edit
+# tokens.json and regenerate instead. This is the tokens.ts trade-off resolved
+# the other way: tokens.ts bytes are cheap, theme.css bytes are expensive (see
+# packages/tokens/CLAUDE.md).
+packages/design-system/src/styles/theme.css

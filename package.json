@@ -1,0 +1,84 @@
+{
+  "name": "insolvia-design-system-workspace",
+  "private": true,
+  "type": "module",
+  "//": [
+    "Root of the design-system npm workspace. NOT a shippable package — it",
+    "declares the members and pins the shared toolchain.",
+    "",
+    "Two members, BOTH published to GitHub Packages:",
+    "  packages/tokens         → @insolvia-ai/tokens",
+    "  packages/design-system  → @insolvia-ai/design-system",
+    "",
+    "They were extracted from insolvia-ai/insolvia, where the design system was",
+    "a workspace member the app consumed by SYMLINK — so a design-system change",
+    "reached the app with no publish and no version bump. That is the coupling",
+    "this repo exists to remove: there is now exactly one channel out of here,",
+    "the registry, and every consumer travels it.",
+    "",
+    "tokens is published rather than private (it was private in the monorepo)",
+    "because it no longer shares a workspace with its consumers. The app and",
+    "the Cognito branding generator in insolvia-ai/insolvia both install it.",
+    "",
+    "The member list is EXPLICIT and must stay that way — never `packages/*`.",
+    "Adding a member silently gives it a symlink to the other's source, which",
+    "is how a broken package passes CI here and only breaks after publishing."
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": ["packages/tokens", "packages/design-system"],
+  "scripts": {
+    "//tokens": [
+      "Run with plain `node`, no loader and no build step: Node >=24 strips",
+      "TypeScript types natively, so the generator stays dependency-free.",
+      "Type-stripping cannot execute `enum`, `namespace`, or parameter",
+      "properties — the generator must avoid all three (erasableSyntaxOnly in",
+      "tsconfig.base.json enforces it).",
+      "",
+      "The generator renders tokens.json into this repo's two outputs. The",
+      "THIRD output it used to write — Cognito's managed-login branding under",
+      "infra/ — stayed behind in insolvia-ai/insolvia, which now reconciles it",
+      "against the published @insolvia-ai/tokens instead. Adding an output that",
+      "writes outside this repo is what that split exists to prevent."
+    ],
+    "tokens": "node packages/tokens/tool/generate-tokens.ts",
+    "tokens:check": "node packages/tokens/tool/generate-tokens.ts --check",
+    "//lint": [
+      "Fans out per member rather than running ESLint once from the root, and",
+      "there is deliberately NO `eslint.config.js` at the repo root — the rules",
+      "live in `eslint.base.js`, which each member re-exports. ESLint discovers",
+      "a flat config by walking UP from its cwd, so a root one is also found by",
+      "any subdirectory with its own ESLint setup. Read eslint.base.js before",
+      "changing this."
+    ],
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --check packages",
+    "format:write": "prettier --write packages",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "//ci": [
+      "The whole local gate: token drift, format, lint, typecheck, test.",
+      "Mirrors what .github/workflows/pr.yml runs, so `npm run ci` green",
+      "locally is a fair predictor of a green PR."
+    ],
+    "ci": "npm run tokens:check && npm run format && npm run lint && npm run typecheck && npm run test"
+  },
+  "//devDependencies": [
+    "ESLint/Prettier/TypeScript versions match insolvia-ai/insolvia deliberately:",
+    "these packages are linted and typechecked here but CONSUMED there, and two",
+    "toolchain majors across the boundary would mean source that passes here and",
+    "fails in the consumer. TypeScript is 5.9 rather than the 7.x line:",
+    "`erasableSyntaxOnly` (5.8+) is the feature this workspace depends on."
+  ],
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^24.13.3",
+    "eslint": "^9.17.0",
+    "globals": "^15.14.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.19.0",
+    "vitest": "^4.1.10"
+  }
+}

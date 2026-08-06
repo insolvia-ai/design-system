@@ -1,0 +1,18 @@
+node_modules/
+
+# Nothing here builds — both packages publish TypeScript source (see the root
+# package.json). A dist/ appearing means someone added a bundler step; these
+# two lines keep the artefact out of git while that gets reverted.
+dist/
+build/
+
+# npm debug output
+npm-debug.log*
+*.tsbuildinfo
+
+# Never commit a registry token. The committed .npmrc references
+# ${NODE_AUTH_TOKEN} from the environment and must stay that way — this repo is
+# public.
+.npmrc.local
+
+.DS_Store
