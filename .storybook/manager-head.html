@@ -1,0 +1,57 @@
+<style>
+  /*
+    The cosmetic layer the theme API cannot reach — injected into the MANAGER
+    document only, never a story. Everything here targets Storybook's stable
+    class/attribute hooks (`.sidebar-item`, `.sidebar-subheading`,
+    `data-selected`), not its generated emotion classes; if a hook vanishes in
+    an upgrade the loss is cosmetic and harmless, which is the standard this
+    file must keep: nothing functional, nothing a story depends on.
+
+    Palette notes live in theme.ts — the violet is the shell's accent, chosen
+    because no design-system token uses it.
+  */
+
+  /* Slimmer, quieter scrollbars than the OS default — the stock ones read
+     "web page", not "tool". */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* Section headings ("COMPONENTS") — wider tracking, dimmer, smaller: a
+     label, not an item. */
+  .sidebar-subheading {
+    letter-spacing: 0.18em;
+    font-size: 10px;
+    opacity: 0.75;
+  }
+
+  /* The selected story: a violet gradient pill instead of the flat default —
+     the single strongest "not out-of-the-box" signal in the sidebar, and
+     white-on-violet keeps AA contrast. */
+  #storybook-explorer-tree [data-selected="true"] {
+    background: linear-gradient(90deg, #6c5ce7, #5646c6) !important;
+    border-radius: 6px;
+  }
+
+  /* Hovered-but-unselected rows get a whisper of the same accent. */
+  #storybook-explorer-tree .sidebar-item:not([data-selected="true"]):hover {
+    background: rgba(108, 92, 231, 0.14);
+    border-radius: 6px;
+  }
+
+  /* Breathing room under the wordmark (theme.ts draws it). */
+  .sidebar-header {
+    padding-bottom: 4px;
+  }
+</style>
