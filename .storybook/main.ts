@@ -54,7 +54,7 @@ const config: StorybookConfig = {
     options: {},
   },
 
-  stories: ['../workbench/**/*.stories.@(ts|tsx)'],
+  stories: ['../workbench/**/*.mdx', '../workbench/**/*.stories.@(ts|tsx)'],
 
   addons: [
     // Runs axe against every story, in the browser, on the rendered DOM.
@@ -71,9 +71,78 @@ const config: StorybookConfig = {
     // the a11y checks above from a panel into a gate. See `a11y.test` in
     // preview.tsx.
     '@storybook/addon-vitest',
+
+    // Assembles a docs page per component from the SAME stories the gate above
+    // already runs — JSDoc above a story becomes its description, meta-level
+    // JSDoc the component summary. This is the workbench growing captions, not
+    // a second gallery: nothing here is authored twice, so nothing can drift.
+    //
+    // Two honest limits. The props table comes from react-docgen, which under
+    // this framework resolves imported prop types unreliably — controls are
+    // therefore always declared by hand in `argTypes`, never inferred (if the
+    // tables ever matter more, `typescript: { reactDocgen:
+    // 'react-docgen-typescript' }` here resolves them properly at the cost of
+    // slower startup). And the assembled docs page itself is only
+    // compile-checked by `storybook:build`; addon-vitest tests stories, so axe
+    // never audits the docs page as a whole — each story on it is gated
+    // individually, the page chrome is not.
+    '@storybook/addon-docs',
   ],
 
   viteFinal: async (viteConfig) => {
+    // The `react-native` → workbench shim substitution — done by REWRITING THE
+    // RESOLVED ALIAS TABLE, because every politer mechanism loses:
+    //
+    // 1. A `resolve.alias` entry here loses. The framework's vite-plugin-rnw
+    //    sets `resolve.alias: { 'react-native': 'react-native-web' }` from a
+    //    plugin `config()` hook, and Vite merges plugin config OVER user
+    //    config — so the same-named entry this file used to declare was
+    //    silently clobbered.
+    // 2. A `resolveId` plugin loses too, even with `enforce: 'pre'`. Vite's
+    //    internal alias plugins run before every user plugin, and by the time
+    //    any resolveId hook sees the import, `react-native` has already been
+    //    rewritten to the pre-bundled react-native-web dep.
+    //
+    // Both failures were invisible in a light-preferring browser: the leaves
+    // got react-native-web's REAL `useColorScheme` — which follows the
+    // browser's `prefers-color-scheme` — and "broken, following the OS"
+    // renders identically to "working, store says light". In a dark-preferring
+    // browser every native pane wore the dark palette under a toolbar that
+    // said Light, which is how it was finally caught.
+    //
+    // So the substitution is itself a plugin `config()` hook, on a plugin that
+    // SORTS AFTER vite-plugin-rnw: plugin config hooks run pre → normal →
+    // post, vite-plugin-rnw is `enforce: 'pre'`, this plugin is unenforced,
+    // and the last merge of a key wins. The same clobbering mechanism that
+    // broke the user-config alias, pointed the other way.
+    //
+    // The shim re-exports react-native-web untouched except for
+    // `useColorScheme`, which the Scheme toolbar needs to drive.
+    // react-native-web's Appearance latches a MediaQueryList at module load,
+    // so no `matchMedia` patch can be guaranteed to land first — measured, not
+    // assumed: Storybook injects preview-head.html after its own module
+    // scripts. workbench/react-native.ts has the full reasoning and the limits
+    // of the substitution.
+    const shimPath = join(repoRoot, 'workbench/react-native.ts');
+    viteConfig.plugins = [
+      ...(viteConfig.plugins ?? []),
+      {
+        name: 'workbench:react-native-shim',
+        config() {
+          return { resolve: { alias: { 'react-native': shimPath } } };
+        },
+      },
+    ];
+
+    // `react-native` must NOT be pre-bundled: an optimized copy of the shim
+    // would carry a PRIVATE copy of workbench/scheme.ts, and the toolbar would
+    // notify one store while the leaves read another. Served as source, the
+    // shim's `./scheme` import resolves to the same module preview.tsx uses.
+    viteConfig.optimizeDeps = {
+      ...viteConfig.optimizeDeps,
+      exclude: [...(viteConfig.optimizeDeps?.exclude ?? []), 'react-native'],
+    };
+
     // Tailwind v4, for the `.web` leaves only — they carry utility class
     // strings and nothing else generates them.
     //
@@ -125,17 +194,15 @@ const config: StorybookConfig = {
         '@design-system': join(repoRoot, 'packages/design-system/src'),
         '@tokens': join(repoRoot, 'packages/tokens/src'),
 
-        // Overrides the framework's own `react-native` → `react-native-web`
-        // alias, and must stay AFTER the spread above for that to hold.
-        //
-        // The shim re-exports react-native-web untouched except for
-        // `useColorScheme`, which the Scheme toolbar needs to drive.
-        // react-native-web's Appearance latches a MediaQueryList at module
-        // load, so no `matchMedia` patch can be guaranteed to land first —
-        // measured, not assumed: Storybook injects preview-head.html after its
-        // own module scripts. workbench/react-native.ts has the full reasoning
-        // and the limits of the substitution.
-        'react-native': join(repoRoot, 'workbench/react-native.ts'),
+        // NO `react-native` entry here — that substitution is the resolver
+        // plugin at the top of this function. An alias with that key used to
+        // live here, with a comment claiming spread order made it win over the
+        // framework's own `react-native` → `react-native-web` alias. It did
+        // not: vite-plugin-rnw injects its alias from a plugin `config()`
+        // hook, which Vite merges OVER user config, and the clobber was
+        // invisible in any light-preferring browser. If the shim ever stops
+        // taking effect, suspect the plugin ordering — never reintroduce the
+        // alias entry and call it fixed, because it will look fixed.
       },
 
       // `.native.*` LAST, and this is the subtle part of the whole setup.

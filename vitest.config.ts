@@ -13,6 +13,18 @@ const dirname =
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
   test: {
+    // Coverage is measured over the published source only — the workbench and
+    // config files are infrastructure, and counting them would let scaffolding
+    // pad the number. Reached via `npm run test:coverage` (or the Coverage
+    // toggle in Storybook's testing widget); deliberately NOT part of `npm run
+    // ci` — a threshold nobody has argued for would only teach people to game
+    // it.
+    coverage: {
+      provider: 'v8',
+      include: ['packages/*/src/**'],
+      reporter: ['text', 'html'],
+    },
+
     projects: [
       {
         extends: true,

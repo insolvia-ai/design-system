@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { Preview } from '@storybook/react-native-web-vite';
+import { MINIMAL_VIEWPORTS } from 'storybook/viewport';
 
 import '../workbench/tailwind.css';
 import { applyScheme, type Scheme } from '../workbench/scheme.ts';
@@ -15,8 +16,23 @@ import { applyScheme, type Scheme } from '../workbench/scheme.ts';
  * completely different scheme mechanisms.
  */
 const preview: Preview = {
+  // Every component gets an autodocs page assembled from its stories — see the
+  // addon-docs entry in main.ts for what that buys and what it doesn't.
+  tags: ['autodocs'],
+
   parameters: {
     controls: { expanded: true },
+
+    // The stock small/large presets plus one phone-sized entry. The native
+    // pane renders what a React Native consumer ships, and that consumer's
+    // surface is a phone — a LeafPair story at 390px is the closest this
+    // workbench gets to the device without a simulator.
+    viewport: {
+      options: {
+        phone: { name: 'Phone (390×844)', styles: { width: '390px', height: '844px' } },
+        ...MINIMAL_VIEWPORTS,
+      },
+    },
 
     // The leaf-pair frames draw their own spacing; Storybook's default padding
     // fights it.
@@ -76,7 +92,10 @@ const preview: Preview = {
           // when it is rendered in isolation (docs page, embedded iframe).
           data-theme={scheme}
           style={{
-            minHeight: '100vh',
+            // Full-height in the canvas, but NOT on a docs page — there every
+            // story renders inside an inline block, and 100vh would make each
+            // one viewport-tall.
+            minHeight: context.viewMode === 'docs' ? undefined : '100vh',
             background: 'var(--color-bg)',
             color: 'var(--color-ink)',
           }}
