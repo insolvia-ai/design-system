@@ -33,9 +33,22 @@ const ProgressRoot = ({
   const indeterminate = value === null;
   const percent = progressPercent(value, max);
 
+  // BOTH forms, for the reason spelled out in meter.native.tsx:
+  // react-native-web ignores the nested `accessibilityValue` object, so the
+  // `aria-*` props are what actually reach the DOM on the web build.
+  //
+  // Still OMITTED rather than set-to-undefined when indeterminate — that part
+  // was always right. React Native merges the object it is given, and an
+  // indeterminate bar reporting a value announces progress that is not
+  // happening.
   const accessibilityValueProp = indeterminate
     ? {}
-    : { accessibilityValue: { now: value, min: 0, max } };
+    : {
+        accessibilityValue: { now: value, min: 0, max },
+        'aria-valuenow': value,
+        'aria-valuemin': 0,
+        'aria-valuemax': max,
+      };
 
   return (
     <View

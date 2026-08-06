@@ -45,7 +45,13 @@ const CollapsibleTrigger = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Pressable
       accessibilityRole="button"
+      // See accordion.native.tsx: react-native-web ignores the nested
+      // `accessibilityState`, so the `aria-*` props are what actually reach the
+      // DOM on the web build. `disabled` is the exception it does map, but it
+      // is spelled out here too rather than relying on that asymmetry.
       accessibilityState={{ expanded: open, disabled }}
+      aria-expanded={open}
+      aria-disabled={disabled}
       disabled={disabled}
       onPress={toggle}
       style={styles.trigger}
