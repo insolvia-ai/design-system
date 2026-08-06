@@ -46,16 +46,16 @@ export const Intents: Story = {
 /**
  * Sizes matter here for a reason that is not aesthetic.
  *
- * The consuming app enforces a 44dp minimum touch target (WCAG 2.5.5) and this
- * package's `md` is 40dp — under it. That is why the app's own rules say its
- * buttons are `size="lg"`. Seeing the three sizes together, at real scale, is
- * the cheapest way to keep that fact in view; the a11y panel will not flag it,
- * because 40dp is not a violation of anything axe checks.
+ * WCAG 2.5.5 puts the minimum touch target at 44dp, and this package's `md` is
+ * 40dp — under it. A consumer building for touch therefore wants `lg`, and
+ * seeing the three sizes together at real scale is the cheapest way to keep
+ * that in view. The a11y panel will not flag it: 40dp violates nothing axe
+ * checks, because axe cannot know what the target is for.
  */
 export const Sizes: Story = {
   render: () => (
     <LeafPair
-      note="`md` is 40dp — below the 44dp WCAG 2.5.5 target-size floor the app enforces, which is why the app uses `lg`."
+      note="`md` is 40dp — below the 44dp WCAG 2.5.5 target-size floor, which is why a touch consumer wants `lg`."
       web={
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           {SIZES.map((size) => (

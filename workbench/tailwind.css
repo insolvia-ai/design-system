@@ -1,9 +1,9 @@
 /* Tailwind entrypoint for the workbench.
  *
- * Deliberately mirrors apps/insolvia_marketing/app/styles/app.css in the
- * consumer repo — same three directives, same order. If the workbench and the
- * marketing site ever disagree about how a `.web` leaf looks, the difference
- * should be in the leaf, never in the two entrypoints.
+ * Deliberately the same three directives, in the same order, that a web
+ * consumer's own Tailwind entrypoint uses. If the workbench and a consumer ever
+ * disagree about how a `.web` leaf looks, the difference should be in the leaf,
+ * never in the two entrypoints.
  */
 @import 'tailwindcss';
 

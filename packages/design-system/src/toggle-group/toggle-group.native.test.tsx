@@ -1,7 +1,7 @@
 // NATIVE-leaf tests — see button.native.test.tsx for how the `native` vitest
 // project resolves './toggle-group' to toggle-group.native.tsx (and the
 // sibling './toggle' to toggle.native.tsx) and renders them through
-// react-native-web, the pair the app ships on web. Root itself carries no
+// react-native-web, the pair a React Native consumer ships on web. Root itself carries no
 // a11y wiring of its own (see its file header — there is no native
 // `role="group"` equivalent, so it is a plain View), but it does carry real
 // state wiring: the context every member `Toggle` reads its pressed value

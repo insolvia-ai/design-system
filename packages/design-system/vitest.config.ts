@@ -3,13 +3,13 @@ import { configDefaults, defineConfig } from 'vitest/config';
 // Two projects because the package IS two render targets, and each project's
 // resolver mirrors the consumer bundler it stands in for:
 //
-//   web    — Vite's web-first leaf resolution, exactly as marketing builds:
+//   web    — Vite's web-first leaf resolution, exactly as a web consumer builds:
 //            an extensionless './button' lands on button.web.tsx.
 //   native — Metro's view of the same imports: native-first extensions, plus
 //            `react-native` aliased to react-native-web. That alias is not a
-//            test convenience — it is the production pair the app ships on
+//            test convenience — it is the production pair a React Native consumer ships on
 //            web (react-native-web renders the .native leaves there), so the
-//            native tests assert on the very DOM app-web users get.
+//            native tests assert on the very DOM users of the web build get.
 //
 // The extension lists play the role tsconfig's `moduleSuffixes` plays for tsc;
 // see tsconfig.json / tsconfig.native.json / tsconfig.native.test.json for the

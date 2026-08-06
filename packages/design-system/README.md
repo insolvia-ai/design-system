@@ -1,14 +1,11 @@
 # @insolvia-ai/design-system
 
-Insolvia's owned, cross-platform design system, published as
-`@insolvia-ai/design-system` (0.6.x). One set of component names serves both
-front-end stacks: the marketing site (React DOM + Tailwind) and the app
-(React Native / Expo). Agent rules: [`CLAUDE.md`](CLAUDE.md).
+An owned, cross-platform design system, published as
+`@insolvia-ai/design-system`. One set of component names serves both front-end
+stacks: React DOM + Tailwind on the web, and React Native. Agent rules:
+[`CLAUDE.md`](CLAUDE.md).
 
-It succeeded `insolvia_design_system_react` (0.1.x, web-only, Base UI), deleted
-when marketing cut over to 0.2.x. From 0.6.0 it lives in this repo rather than
-in the `insolvia-ai/insolvia` monorepo — the root [`README.md`](../../README.md)
-has the why.
+It succeeded a web-only predecessor (0.1.x, Base UI), retired at 0.2.x.
 
 ## Components
 
@@ -52,7 +49,7 @@ Every component is three files:
 ```
 src/button/
   button.props.ts    shared: types, variant maps, state hooks, a11y string rules
-  button.web.tsx     React DOM + Tailwind — what marketing renders
+  button.web.tsx     React DOM + Tailwind — what a web consumer renders
   button.native.tsx  React Native primitives over @insolvia-ai/tokens
   index.ts           re-exports the extensionless "./button"
 ```
@@ -60,53 +57,78 @@ src/button/
 The per-component `index.ts` deliberately imports `"./button"` with no
 extension — **the consumer's bundler picks the leaf**:
 
-| Consumer            | Bundler | Leaf          | Why                                                                                                                   |
-| ------------------- | ------- | ------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Marketing site      | Vite    | `.web.tsx`    | Tailwind classes over `theme.css`                                                                                     |
-| App (native, later) | Metro   | `.native.tsx` | RN primitives, tokens values                                                                                          |
-| App (web, today)    | Metro   | `.native.tsx` | react-native-web renders the RN tree — the app has no Tailwind (ADR 0004), so the `.web` leaf would be unstyled there |
+| Consumer | Bundler | Leaf | Why |
+| --- | --- | --- | --- |
+| Web app | Vite | `.web.tsx` | Tailwind classes over `theme.css` |
+| React Native app | Metro | `.native.tsx` | RN primitives, token values |
+| React Native app, on web | Metro | `.native.tsx` | react-native-web renders the RN tree; a consumer with no Tailwind pipeline would get an unstyled `.web` leaf |
 
 The native leaves resolve their **colors at render time** through
 `src/lib/native-theme.native.ts` (`useNativeColors()` — anything but `'dark'`
-resolves to light, mirroring the app's `themeFor`). A color read statically —
+resolves to light). A color read statically —
 `colors.light` at module load, or a color inside `StyleSheet.create` — can
-never follow the OS scheme: 0.2.1 shipped exactly that, and every
-design-system surface stayed light inside a dark app. Only scheme-independent
-layout belongs in `StyleSheet.create`.
+never follow the OS scheme: 0.2.1 shipped exactly that, and every surface
+stayed light inside a dark app. Only scheme-independent layout belongs in
+`StyleSheet.create`.
+
+Consumers override those colors with `ThemeProvider` (see *Theming* below);
+`useNativeColors()` merges the overrides over the token defaults.
 
 The props module is the platform-SHARED third and must never import a
 renderer — no `react-native`, no `react-dom`, no `@base-ui/*`. That rule is
-what keeps react-native-web out of marketing's bundle, so it is machine-
+what keeps react-native-web out of a web consumer's bundle, so it is machine-
 enforced: `eslint.config.js` bans those imports in `**/*.props.ts` (and
-`src/lib/`), and the spike measured the result — a web build from these
-leaves is byte-equivalent to the old package's, zero react-native-web.
+`src/lib/`), and it was measured — a web build from these leaves is
+byte-equivalent to the predecessor package's, with zero react-native-web.
 
 **Litmus test for a new component:** pure data (variant → class/value maps)
 is a candidate to collapse into a single shared file later; anything with
 events, state, or accessibility wiring is a leaf pair from day one — the two
 platforms' event and a11y models do not unify.
 
-## Two consumers, one channel
+## One channel: the registry
 
-Both consumers live in `insolvia-ai/insolvia`, and both install this package by
-version from GitHub Packages:
+Every consumer installs this package **by published version**. That is why
+**any change here is its own PR with a `version` bump** — nothing you merge
+reaches any consumer until it publishes and that consumer bumps its dependency.
 
-| Consumer                  | Resolves the package via                       |
-| ------------------------- | ---------------------------------------------- |
-| `apps/insolvia_app`       | the **published version** from GitHub Packages |
-| `apps/insolvia_marketing` | the **published version** from GitHub Packages |
+It was not always one channel. A consumer once lived in the same monorepo and
+resolved this package's **source** through a workspace symlink, so a merge here
+was live for that reader immediately — no publish, no version — while every
+other consumer saw nothing until a release. One package, two truths, and no way
+to tell from inside which one you were testing against. Don't reintroduce a
+path-based consumer: no `file:`, no `link:`, no workspace member.
 
-That is why **any change here is its own PR with a `version` bump**. Nothing
-you merge reaches either surface until it publishes and the consuming repo
-bumps its dependency.
+## Theming
 
-Through 0.5.x that table had two different answers. The app lived in the same
-monorepo as this package and resolved its **source** through a workspace
-symlink plus a Metro `resolveRequest`, so a merge here was live for the app
-immediately — no publish, no version — while marketing still saw nothing until
-a release. One package, two truths, and no way to tell from inside which one
-you were testing against. Collapsing that to a single channel is the whole
-point of the extraction; don't reintroduce a path-based consumer.
+Nothing here ships one brand. `tokens.json` holds the default theme and both
+platforms have an override seam.
+
+Web — override the semantic custom properties after importing `theme.css`.
+Derived states follow automatically, being `color-mix()` over the base:
+
+```css
+@import '@insolvia-ai/design-system/theme.css';
+:root {
+  --color-primary: #155e63;
+}
+```
+
+React Native — wrap the tree in `ThemeProvider`:
+
+```tsx
+import { ThemeProvider } from '@insolvia-ai/design-system';
+
+<ThemeProvider theme={{ light: { primary: '#155E63' }, dark: { primary: '#7FD1D9' } }}>
+  <App />
+</ThemeProvider>;
+```
+
+Overrides are partial — supply only the roles you change — and speak the
+**semantic** layer only; raw palette names are exported nowhere, which is what
+keeps a re-brand a one-place change. One asymmetry: on native the derived states
+(`primaryHover`, …) are pre-computed, so overriding `primary` alone does not
+move them; override them explicitly. On web they follow.
 
 ## No build step — the package publishes source
 
@@ -142,7 +164,7 @@ plus the DOM lib, since those tests assert on react-native-web's DOM).
 Tests run as two vitest projects (`vitest.config.ts`): `web` is Vitest +
 Testing Library against the `.web` leaves, resolved web-first as Vite does;
 `native` resolves the `.native` leaves native-first as Metro does and aliases
-`react-native` to `react-native-web` — the exact pair the app ships on web —
+`react-native` to `react-native-web` — the exact pair a React Native consumer ships on web —
 rendering them into the same jsdom. `vitest.native.setup.ts` supplies the
 `matchMedia` mock that drives `prefers-color-scheme` in those tests. Props
 modules with real logic keep direct unit tests. Native tests live in

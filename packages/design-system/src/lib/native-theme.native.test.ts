@@ -2,7 +2,7 @@
 // rendered proof (a dark scheme changing actual pixels) lives in
 // button.native.test.tsx / field.native.test.tsx; these pin the resolution
 // rule itself — in particular that every unknown input takes the light arm,
-// mirroring the app's `themeFor`.
+// anything but 'dark' resolves to light.
 import { describe, expect, it } from 'vitest';
 
 import { colors } from '@insolvia-ai/tokens';

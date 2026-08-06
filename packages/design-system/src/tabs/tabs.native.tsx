@@ -63,7 +63,7 @@ const Tab = ({ value, children }: TabProps) => {
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
       // `accessibilityState.selected` is what real iOS/Android accessibility
-      // reads. The react-native-web this package ships (app-web) does NOT
+      // reads. The react-native-web this package ships (the web build) does NOT
       // unpack `accessibilityState` into `aria-*` attributes for `selected` —
       // it only forwards flat `aria-*` props verbatim, the same gap Field's
       // native leaf documents for `aria-describedby`/`aria-invalid`. Both are

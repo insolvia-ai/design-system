@@ -6,7 +6,7 @@
 //
 // One documented exception to "no implicit dismissal": Modal.onRequestClose
 // still closes, because it is the Android hardware back button (Escape on
-// app-web via react-native-web) and the platform requires that back never
+// on web via react-native-web) and the platform requires that back never
 // trap the user. Treat it as the user declining — a caller needing a
 // confirmed choice must handle onOpenChange(false) accordingly.
 import * as React from 'react';

@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.sm,
-    // 44dp, the WCAG 2.5.5 target-size floor the app enforces — deliberately
+    // 44dp, the WCAG 2.5.5 target-size floor — deliberately
     // taller than Field's 40dp control, which is a text input rather than a
     // press target.
     height: 44,

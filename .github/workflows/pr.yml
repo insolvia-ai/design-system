@@ -114,7 +114,7 @@ jobs:
       # WHICH platform broke. The native program is the one this web-only CI
       # would otherwise never exercise: without it a PR could be green
       # everywhere and still ship `.native` leaves that fail the moment Metro
-      # resolves them in the app.
+      # resolves them.
       - name: Typecheck (tokens)
         run: npm run typecheck --workspace @insolvia-ai/tokens
 

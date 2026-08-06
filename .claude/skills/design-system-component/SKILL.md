@@ -8,7 +8,7 @@ description: >-
   packages/design-system/src/, and when deciding whether something can be one
   shared file or must be a leaf pair. Also read it when a leaf will not resolve,
   when a component renders unstyled, or when a change looks right on web and
-  wrong in the app (or the reverse) — those symptoms all trace back to rules
+  wrong on native (or the reverse) — those symptoms all trace back to rules
   here.
 ---
 
@@ -31,7 +31,7 @@ platform for everybody.
 **Props modules must not import a renderer.** No `react-native`,
 `react-native-web`, `react-dom` or `@base-ui/*` in `*.props.ts` or `src/lib/`.
 ESLint enforces it, and it is the rule that keeps react-native-web out of
-marketing's bundle. The `.native.` infix is what exempts a platform leaf under
+a web consumer's bundle. The `.native.` infix is what exempts a platform leaf under
 `src/lib/`; do not weaken the override to make an import work — move the code.
 
 ### One file or a pair?

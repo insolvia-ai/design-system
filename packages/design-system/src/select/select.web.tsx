@@ -180,7 +180,7 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
         </button>
 
         {/* A real form control so an ordinary form post carries the value —
-            the button cannot, and the app's fetch-based submit does not care
+            the button cannot, and a fetch-based submit does not care
             either way. Omitted entirely when there is no name to submit. */}
         {name === undefined ? null : <input type="hidden" name={name} value={state.value ?? ''} />}
 

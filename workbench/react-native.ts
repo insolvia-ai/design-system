@@ -13,11 +13,11 @@
  *
  * ── The honesty question this raises ─────────────────────────────────────────
  *
- * The native pane is supposed to show what the app renders, and this file makes
+ * The native pane is supposed to show what a React Native consumer renders, and this file makes
  * it show something marginally different — one hook swapped. That is a real
  * cost, and it is bounded: `useColorScheme` returns a `'light' | 'dark'` string
  * in both cases, and the design system's `useNativeColors()` treats
- * anything-but-`'dark'` as light, exactly as the app's own `themeFor` does. So
+ * anything-but-`'dark'` as light, the safe arm for an unknown value. So
  * the value flowing into every leaf is the same shape and the same domain; only
  * its source moved, from the OS to a toolbar.
  *
@@ -25,7 +25,7 @@
  * That is fine — that is react-native-web's code, and this repo does not own it.
  *
  * Nothing else may be added to this shim. Every export replaced here is one
- * more way the native pane can lie about what the app renders, and the panes
+ * more way the native pane can lie about what a consumer renders, and the panes
  * only mean anything while they are honest.
  */
 import * as React from 'react';

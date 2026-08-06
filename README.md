@@ -1,4 +1,4 @@
-# Insolvia design system
+# Design system
 
 Two published packages in one npm workspace:
 
@@ -7,28 +7,26 @@ Two published packages in one npm workspace:
 | `@insolvia-ai/design-system` | [`packages/design-system`](packages/design-system) | Platform-split components — one props module, a React DOM + Tailwind web leaf, a React Native leaf |
 | `@insolvia-ai/tokens` | [`packages/tokens`](packages/tokens) | One `tokens.json` rendered into typed TypeScript, Tailwind custom properties, and plain JSON |
 
-Both publish to **GitHub Packages** and are consumed by
-[`insolvia-ai/insolvia`](https://github.com/insolvia-ai/insolvia) — the Expo app
-and the marketing site.
+Both publish to **GitHub Packages**. Agent rules: [`CLAUDE.md`](CLAUDE.md).
 
-Agent rules: [`CLAUDE.md`](CLAUDE.md).
+## One design, two implementations
 
-## Why this is its own repo
+Each component is three files:
 
-The design system used to be a package inside the `insolvia-ai/insolvia`
-monorepo. That gave it two consumers on two *different* channels: the marketing
-site installed the published version from the registry, while the app — a
-sibling workspace member — read the package's **source** through a symlink.
+```
+<name>.props.ts    shared contract — types, variant data, state machines
+<name>.web.tsx     React DOM + Tailwind
+<name>.native.tsx  React Native primitives over the tokens
+```
 
-One package, two truths. A change was simultaneously live (for the app) and
-invisible (for marketing), which made it genuinely difficult to answer "what
-does this package do right now?" without knowing which consumer was asking. The
-usual failure was subtler than a broken build: a change tested fine against the
-app's live source and only surfaced against marketing after a publish.
+The per-component index re-exports the extensionless `./<name>`, and **the
+consumer's bundler picks the leaf** — Vite resolves `.web.tsx`, Metro resolves
+`.native.tsx`. That is why both packages publish `src/` as-is with no build
+step: leaf selection belongs to the consumer, so the pairs must survive into
+the tarball verbatim.
 
-Extracting it removes the second channel. There is now one way for anything
-here to reach a consumer — publish a version — and the consuming repo bumps a
-dependency to take it.
+The claim this rests on is that the two leaves agree. `./scripts/dev-up.sh`
+renders them side by side so you can check it.
 
 ## Getting started
 
@@ -44,10 +42,10 @@ Then, to look at components:
 
 That opens the workbench on `http://localhost:6006` — every component with its
 **web leaf and native leaf side by side**, and a toolbar that flips both to
-dark. It is the only place in either repo where you can see whether the two
-implementations of a component actually agree, and the only instrument that
-catches wrong colour, wrong position, or one element painted under another. The
-tests cannot: they assert roles and labels in jsdom.
+dark. It is the only place you can see whether the two implementations agree,
+and the only check that catches wrong colour, wrong position, or one element
+painted under another. The unit tests cannot: they assert roles and labels in
+jsdom.
 
 To run the full gate:
 
@@ -55,15 +53,47 @@ To run the full gate:
 npm run ci
 ```
 
-`ci` is the full local gate: token drift check, Prettier, ESLint, all three
-TypeScript programs (web, React Native, native-test), and the Vitest suites.
-It mirrors what `.github/workflows/pr.yml` runs.
+That is token drift, Prettier, ESLint, all three TypeScript programs (web,
+React Native, native-test), the Vitest suites, and axe over every story in a
+real browser. It mirrors `.github/workflows/pr.yml`.
 
-To regenerate the token outputs after editing `packages/tokens/tokens.json`:
+## Theming
 
-```bash
-npm run tokens
+Nothing here is meant to ship one brand. `tokens.json` holds the **default**
+theme, and both platforms have an override seam:
+
+**Web** — override the semantic custom properties after importing the
+stylesheet. Derived states follow automatically, because they are `color-mix()`
+over the base:
+
+```css
+@import 'tailwindcss';
+@import '@insolvia-ai/design-system/theme.css';
+
+:root {
+  --color-primary: #155e63;
+}
 ```
+
+**React Native** — wrap the tree in `ThemeProvider`:
+
+```tsx
+import { ThemeProvider } from '@insolvia-ai/design-system';
+
+<ThemeProvider theme={{ light: { primary: '#155E63' }, dark: { primary: '#7FD1D9' } }}>
+  <App />
+</ThemeProvider>;
+```
+
+Overrides are partial — supply only the roles you are changing. Speak the
+**semantic** layer only (`primary`, `bg`, `ink`, `muted`, `line`, `card`,
+`danger`, …); raw palette names are not exported in either direction, which is
+what keeps a re-brand a one-place change.
+
+One asymmetry worth knowing: on native the derived states (`primaryHover`,
+`primaryActive`, …) are pre-computed values, so overriding `primary` alone does
+**not** move them — override them explicitly if they matter. On web they
+follow, because there they really are live blends.
 
 ## Making a change
 
@@ -74,13 +104,11 @@ npm run tokens
 3. Open a PR. CI is the only gate.
 4. On merge, each package whose version is not yet in the registry publishes
    automatically.
-5. To get the change into the app or marketing site, bump the dependency in
-   `insolvia-ai/insolvia`.
 
 ## Consuming these packages
 
-Both live on GitHub Packages, which requires a token for **every** read — even
-for public packages. Consumers commit an `.npmrc` that reads the token from the
+They live on GitHub Packages, which requires a token for **every** read — even
+for public packages. Consumers commit an `.npmrc` that reads it from the
 environment:
 
 ```
@@ -88,6 +116,9 @@ environment:
 //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 ```
 
-and supply `NODE_AUTH_TOKEN` at install time (`secrets.GITHUB_TOKEN` in CI, or
-`gh auth token` with the `read:packages` scope locally). Never commit a real
-token — this repo and its consumer are public.
+and supply `NODE_AUTH_TOKEN` at install time. Never commit a real token.
+
+**Install by version, never by path.** A `file:` or `link:` dependency on a
+local checkout gives one package two simultaneous truths — what the consumer
+reads and what the registry holds — and the two drift the moment either moves.
+To try an unreleased change, publish a prerelease.

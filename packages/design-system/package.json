@@ -1,7 +1,7 @@
 {
   "name": "@insolvia-ai/design-system",
-  "version": "0.7.2",
-  "description": "Insolvia's owned, platform-split design system: one props module per component, a React DOM + Tailwind web leaf, and a React Native leaf over @insolvia-ai/tokens.",
+  "version": "0.8.0",
+  "description": "An owned, platform-split design system: one props module per component, a React DOM + Tailwind web leaf, and a React Native leaf over @insolvia-ai/tokens.",
   "type": "module",
   "license": "UNLICENSED",
   "repository": {
@@ -19,7 +19,7 @@
     "primitives over @insolvia-ai/tokens). The per-component index re-exports",
     "the extensionless './<name>' and the CONSUMER'S bundler picks the leaf:",
     "Vite resolves .web.tsx, Metro resolves .native.tsx (and react-native-web",
-    "renders the .native leaf on app-web — the app has no Tailwind, ADR 0004).",
+    "can render the .native leaf on web too, for a consumer that ships no Tailwind).",
     "",
     "Litmus test for new components: pure data/styling maps may later collapse",
     "to a single shared file; anything with events, state, or a11y wiring is a",
@@ -33,8 +33,8 @@
     "would collapse the pair into one compiled entry and break the pattern.",
     "Do not 'fix' this by adding a build.",
     "",
-    "Two consumers, ONE channel: the app and the marketing site both install",
-    "the PUBLISHED version from GitHub Packages. Through 0.5.x the app was a",
+    "Two consumers, ONE channel: every consumer installs",
+    "the PUBLISHED version from GitHub Packages. Through 0.5.x a consumer was a",
     "sibling workspace member and read this package's source through a symlink,",
     "so a merge reached it with no publish and no version bump — extracting",
     "this package into its own repo is what removed that second channel. Every",
@@ -48,15 +48,16 @@
     "metadata (the tarball carries it; the registry document does not), so npm",
     "treats an 'optional' peer as REQUIRED. Declaring react-native would",
     "therefore force every web consumer to install a native renderer it never",
-    "loads; marketing's Docker build broke on exactly this once.",
+    "loads; a web consumer's container build broke on exactly this once.",
     "",
     "@insolvia-ai/tokens is published now, so declaring it would no longer 404",
     "the way it did when tokens was private — the failure it caused is gone,",
     "the reason to leave it undeclared is not. The native leaves are the only",
     "code that imports it, no web resolver can reach them, and their imports",
-    "resolve from the CONSUMER's own dependencies (the app declares tokens",
-    "itself). Declaring it here would buy documentation and charge every web",
-    "consumer an install. This comment is that documentation instead."
+    "resolve from the CONSUMER's own dependencies (a React Native consumer",
+    "declares tokens itself). Declaring it here would buy documentation and",
+    "charge every web consumer an install. This comment is that documentation",
+    "instead."
   ],
   "files": [
     "src",
@@ -93,20 +94,17 @@
     }
   },
   "//devDependencies": [
-    "react/react-dom/react-native/@types/react are pinned to the EXACT versions",
-    "the app installs, so this workspace dedupes to one copy and typechecks",
-    "against what the consumer actually runs. Keeping them in step is now a",
-    "cross-repo chore rather than a lockfile away: when the app bumps React or",
-    "React Native in insolvia-ai/insolvia, bump it here too, or the native",
+    "react/react-dom/react-native/@types/react are pinned to EXACT versions so",
+    "this workspace dedupes to one copy and the leaves typecheck against a real",
+    "renderer. Keep them in step with what consumers install, or the native",
     "leaves are typechecked against a renderer nobody ships. react-native is",
     "here so `typecheck:native` resolves REAL RN types (RN ships its own since",
     "0.71). vitest itself comes from the root workspace devDependencies.",
     "@insolvia-ai/tokens is `*` because it is the sibling workspace member —",
     "the one place a symlink to it is still correct.",
-    "react-native-web is the native tests' renderer: the vitest `native`",
-    "project aliases react-native to it, which is exactly the pair the app",
-    "ships on web — pinned to the version the app installs so the workspace",
-    "dedupes to one copy."
+    "react-native-web is the native tests' renderer: the vitest `native` project",
+    "aliases react-native to it, the same pair a React Native consumer uses on",
+    "the web."
   ],
   "devDependencies": {
     "@insolvia-ai/tokens": "*",

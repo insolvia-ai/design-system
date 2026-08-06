@@ -89,8 +89,8 @@ export const WithSelection: Story = {
 /**
  * A React Native `Text` rather than a `<p>`, because inside the native pane the
  * surrounding tree is react-native-web — dropping raw DOM in the middle of it
- * would not be what the app renders, and this pane's whole job is to be what
- * the app renders.
+ * would not be what a React Native consumer renders, and this pane's whole job
+ * is to be exactly that.
  */
 function NativeNote() {
   return (

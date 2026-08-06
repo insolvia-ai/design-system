@@ -2,7 +2,7 @@
 // (dialog.props). RN's Modal supplies what the web leaf builds by hand:
 // portal-like hosting, focus containment, and hardware dismissal
 // (onRequestClose — the Android back button; react-native-web maps it to
-// Escape on app-web). The scrim is rendered BY the popup inside the Modal —
+// Escape on web). The scrim is rendered BY the popup inside the Modal —
 // a sibling part outside the Modal element tree could never overlay it — so
 // the Backdrop part here renders nothing and exists only so cross-platform
 // call sites compose identically. Colors resolve from useNativeColors() at

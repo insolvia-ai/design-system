@@ -1,6 +1,6 @@
 // NATIVE-leaf tests — the `native` vitest project resolves './alert-dialog'
 // to alert-dialog.native.tsx and renders it through react-native-web, the
-// pair the app ships on web. react-native-web's Modal renders a portal into
+// pair a consumer ships on web. react-native-web's Modal renders a portal into
 // the document, so `screen` queries reach the modal content as usual.
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

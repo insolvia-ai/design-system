@@ -2,12 +2,11 @@
 #
 # Start the component workbench — Storybook, on http://localhost:6006.
 #
-# This is the "run it" entry point, matching the shape of dev-up.sh in
-# insolvia-ai/insolvia so muscle memory carries across. What it starts is
-# different in kind, though, and worth being clear about: there is no app here.
-# The workbench renders both leaves of each component — the `.web` leaf that
-# marketing ships and the `.native` leaf that the Expo app ships — side by side
-# in one page, which is the only place in either repo that comparison exists.
+# This is the "run it" entry point, and what it starts is worth being clear
+# about: there is no app here. The workbench renders both leaves of each
+# component — the `.web` leaf a web consumer resolves and the `.native` leaf a
+# React Native consumer resolves — side by side in one page, which is the only
+# place that comparison exists.
 #
 # The tests are the other half of the loop and answer a different question.
 # `npm run test` (or `npx vitest --watch` for a live loop) asserts roles,

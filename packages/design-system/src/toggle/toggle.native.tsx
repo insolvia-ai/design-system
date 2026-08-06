@@ -2,7 +2,7 @@
 // exact pressed-state model with the web leaf (toggle.props); what is
 // reimplemented here is the a11y surface. react-native's own AccessibilityRole
 // union DOES include `'togglebutton'`, but this package's only shipped target
-// is app-web (react-native-web) — verified empirically against this repo's
+// is the web build (react-native-web) — verified empirically against this repo's
 // pinned react-native-web@0.21.2: it maps `'togglebutton'` straight through
 // as a non-standard `role="togglebutton"`, which is not a real WAI-ARIA role
 // (unlike `'switch'`/`'radio'`, which ARE, despite the same map not listing
@@ -12,7 +12,7 @@
 // Pressed/disabled are reported BOTH ways, the same split
 // radio-group.native.tsx and switch.native.tsx document: `accessibilityState`
 // for real native platforms, and `aria-pressed` for react-native-web, which
-// is what actually ships (ADR 0004 — web is the only target). This split
+// is what actually ships (web is the only target that ships today). This split
 // matters because react-native-web's DOM prop translation in the installed
 // version does NOT flatten `accessibilityState` into DOM attributes at all —
 // relying on it alone would ship a web toggle with no pressed state exposed.

@@ -7,7 +7,7 @@
 // (unlike aria-describedby/aria-invalid on Field.Control) and is what
 // react-native-web actually writes to the DOM: this version of
 // react-native-web does not derive `aria-checked` from `accessibilityState`,
-// so setting only the latter would leave app-web's DOM (and this leaf's own
+// so setting only the latter would leave the web build's DOM (and this leaf's own
 // tests) with no observable checked state.
 import * as React from 'react';
 import {

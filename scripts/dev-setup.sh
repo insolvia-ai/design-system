@@ -2,17 +2,15 @@
 #
 # Developer bootstrap for the design-system repo.
 #
-# Deliberately much smaller than the equivalent in insolvia-ai/insolvia, which
-# installs Terraform, the AWS CLI, Python and Watchman. None of that is needed
-# here: this repo publishes two npm packages and has no cloud account, no
-# infrastructure and no native build. Node and an install is the whole
-# toolchain. Copying that script's tool list over "for consistency" would make
-# a 30-second setup a 10-minute one for nothing.
+# Deliberately tiny. This repo publishes two npm packages and has no cloud
+# account, no infrastructure and no native build, so Node plus an install is the
+# whole toolchain. Resist growing this to match a consumer's setup script "for
+# consistency" — it would turn a 30-second setup into a 10-minute one for tools
+# nothing here uses.
 #
-# NO REGISTRY TOKEN IS NEEDED to work here, unlike in the consumer repo.
-# @insolvia-ai/tokens is a workspace member, so npm links it from source; every
-# other dependency is public. A token is only required to *consume* these
-# packages, which is the consumer's problem and is documented there.
+# NO REGISTRY TOKEN IS NEEDED to work here. @insolvia-ai/tokens is a workspace
+# member, so npm links it from source; every other dependency is public. A token
+# is only required to *consume* these packages from the registry.
 #
 # IDEMPOTENT: everything is checked before it is done, so re-running is cheap.
 #

@@ -1,6 +1,6 @@
 // NATIVE-leaf tests — see button.native.test.tsx for how the `native` vitest
 // project resolves './field' to field.native.tsx and renders it through
-// react-native-web, the pair the app ships on web. These assertions are the
+// react-native-web, the pair a React Native consumer ships on web. These assertions are the
 // native mirror of field.test.tsx: an unlabelled input is the exact defect the
 // Field pattern exists to prevent, so the association must hold on BOTH leaves.
 import { render, screen } from '@testing-library/react';

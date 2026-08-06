@@ -39,8 +39,8 @@ packages, which is documented where that happens.
 ## What the workbench is for
 
 `dev-up.sh` is not a dev server for an app — there is no app here. It renders
-**both leaves** of each component side by side: the `.web` leaf marketing
-ships, and the `.native` leaf the Expo app ships. That comparison exists
+**both leaves** of each component side by side: the `.web` leaf a web
+consumer resolves, and the `.native` leaf a React Native consumer resolves. That comparison exists
 nowhere else in either repo, and it is the only instrument that catches the
 class of bug the tests structurally cannot see — wrong colour, wrong place,
 painted underneath something. The 0.7.1 Select fix came from a bug report that

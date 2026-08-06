@@ -41,7 +41,7 @@ component.
 - **The version bump, stated.** Which package, from what to what, and whether
   it is a patch or a minor. **Say explicitly when it is a minor**, because these
   are `0.x` packages: `^0.7.1` means `<0.8.0`, so a minor does not reach a
-  consumer until someone widens the range there. Marketing once sat five minors
+  consumer until someone widens the range there. A consumer once sat five minors
   behind without anything surfacing it.
 - **Verification with evidence**, never "tested locally". Test counts before
   and after, which typecheck programs ran, what the workbench showed.
@@ -65,10 +65,9 @@ component.
 ## Consuming the change
 
 A merge here publishes but changes nothing downstream. If the change is meant
-to be visible in the app or the marketing site, say so in the body and open the
-follow-up in `insolvia-ai/insolvia` (its `insolvia-design-system-bump` skill
-covers the manifests and both lockfiles). A PR that says "fixes the button in
-the app" and stops at this repo is only half done.
+to be visible in a consuming application, say so in the body — taking the new
+version is that repo's own change, and a PR that claims to fix something
+user-visible and stops here is only half done.
 
 ## The footer
 

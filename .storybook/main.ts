@@ -24,7 +24,7 @@ const repoRoot = resolve(here, '..');
  *
  * `@storybook/react-native-web-vite` aliases `react-native` to
  * `react-native-web`. That is not a compromise for the `.native` leaves — it is
- * EXACTLY what the Expo app ships on web, so what you see here is what that
+ * exactly what a React Native consumer ships on web, so what you see here is what that
  * consumer renders. And the alias is harmless to the `.web` leaves, which
  * import no renderer at all beyond React DOM.
  *
@@ -77,7 +77,7 @@ const config: StorybookConfig = {
     // Tailwind v4, for the `.web` leaves only — they carry utility class
     // strings and nothing else generates them.
     //
-    // `workbench/tailwind.css` mirrors the marketing site's entrypoint,
+    // `workbench/tailwind.css` mirrors a web consumer's entrypoint,
     // `@source` line included. Without that line Tailwind never scans the
     // package's source, generates none of the utilities the leaves reference,
     // and every web leaf renders unstyled while appearing to work — the

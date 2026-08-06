@@ -12,8 +12,8 @@ import * as React from 'react';
  * different".
  *
  * Both panes are live and interactive, in one page, under one colour scheme.
- * Open a Select in each and you are looking at the two things the app and the
- * marketing site actually render.
+ * Open a Select in each and you are looking at the two things a web consumer
+ * and a React Native consumer actually render.
  *
  * A story that renders only ONE leaf is fine when the point is a state rather
  * than a comparison (an errored Field, a disabled Button) — but a component's
@@ -34,10 +34,13 @@ export function LeafPair({
     <div style={styles.wrap}>
       {note ? <p style={styles.note}>{note}</p> : null}
       <div style={styles.panes}>
-        <Pane label="web leaf" sub="React DOM + Tailwind — what marketing renders">
+        <Pane label="web leaf" sub="React DOM + Tailwind — what a web consumer renders">
           {web}
         </Pane>
-        <Pane label="native leaf" sub="RN primitives via react-native-web — what the app renders">
+        <Pane
+          label="native leaf"
+          sub="RN primitives via react-native-web — what a React Native consumer renders"
+        >
           {native}
         </Pane>
       </div>

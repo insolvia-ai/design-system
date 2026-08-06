@@ -1,6 +1,6 @@
 // NATIVE-leaf tests — see button.native.test.tsx for how the `native` vitest
 // project resolves './collapsible' to collapsible.native.tsx and renders it
-// through react-native-web, the pair the app ships on web.
+// through react-native-web, the pair a React Native consumer ships on web.
 //
 // No assertion on `aria-expanded` here: the pinned react-native-web (0.21.2)
 // only maps `accessibilityState.disabled` to `aria-disabled`/`disabled` (see

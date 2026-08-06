@@ -1,8 +1,8 @@
 // NATIVE-leaf tests. They run in the vitest `native` project, whose resolver
 // is Metro's view of the package (native-first extensions, react-native
 // aliased to react-native-web), so the extensionless './toggle' below lands
-// on toggle.native.tsx and renders through the same react-native-web the app
-// ships on web. Assertions are made on the DOM it emits.
+// on toggle.native.tsx and renders through the same react-native-web a React Native
+// consumer ships on web. Assertions are made on the DOM it emits.
 //
 // The leaf deliberately renders `accessibilityRole="button"` (NOT
 // `"togglebutton"`, despite react-native's own types accepting it) with a

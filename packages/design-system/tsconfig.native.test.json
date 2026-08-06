@@ -9,7 +9,7 @@
     "deliberately has no DOM lib so the SHIPPED native leaves keep",
     "typechecking against React Native's own types alone. skipLibCheck (from",
     "the base) is what lets react-native's ambient types coexist with lib.dom",
-    "here — the same coexistence expo/tsconfig.base relies on in the app."
+    "here — the same coexistence a React Native consumer's own tsconfig relies on."
   ],
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {

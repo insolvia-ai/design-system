@@ -18,7 +18,7 @@
  * same pixel.
  */
 
-/** A color scheme the app can render. Every one is declared in `colors`. */
+/** A color scheme a consumer can render. Every one is declared in `colors`. */
 export type ColorSchemeName = 'light' | 'dark';
 
 /**
@@ -129,9 +129,8 @@ export const colors = {
 } as const satisfies Record<ColorSchemeName, ColorScheme>;
 
 /**
- * Exhaustiveness guard, in the spirit of the no-default-arm switches in
- * `apps/insolvia_app/src/config/environment.ts`: naming a scheme in
- * `ColorSchemeName` without declaring its colors above stops compiling
+ * Exhaustiveness guard: naming a scheme in `ColorSchemeName` without
+ * declaring its colors above stops compiling
  * rather than resolving to `undefined` at runtime.
  */
 type DeclaredScheme = keyof typeof colors;
@@ -140,7 +139,7 @@ const _schemesAreExhaustive: SchemesExhaustive = true;
 
 /**
  * Spacing scale — a 4pt base grid. Use these instead of magic numbers so
- * layout rhythm stays consistent across every Insolvia surface.
+ * layout rhythm stays consistent across every surface.
  */
 export interface Spacing {
   /** 4 — tightest gutter (icon to label). */
