@@ -127,8 +127,30 @@ jobs:
       - name: Typecheck (design system, native tests)
         run: npm run typecheck:native-test --workspace @insolvia-ai/design-system
 
+      # The fourth program: the workbench stories. They are outside every
+      # tsconfig the packages own, so until 0.8.3 nothing typechecked them and
+      # the Button story rendered `intent="danger"` — an intent that does not
+      # exist — as an unstyled button labelled "danger". The a11y step below
+      # cannot see that (an unstyled button violates no axe rule) and
+      # "Workbench builds" cannot either (it transpiles, it does not check
+      # types). See tsconfig.workbench.json.
+      - name: Typecheck (workbench stories)
+        run: npm run typecheck:workbench
+
       - name: Test
         run: npm run test
+
+      # The workbench is the only place in this repo where a component is
+      # LOOKED AT rather than asserted about — `.storybook/main.ts` says so
+      # directly, and it's what the a11y step below actually exercises: every
+      # story, in a real browser, with a real accessibility tree. A component
+      # with no story is invisible to that check, and to a human, at once —
+      # twenty of this package's twenty-two components shipped that way before
+      # anything caught it. This runs `workbench/story-coverage.test.ts` under
+      # plain Node (no browser needed, so it runs before the Playwright install
+      # below rather than after) and fails with the exact missing path.
+      - name: Workbench story coverage
+        run: npm run test:workbench
 
       # Accessibility, gated rather than reported.
       #

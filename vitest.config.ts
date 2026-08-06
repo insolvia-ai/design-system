@@ -31,6 +31,20 @@ export default defineConfig({
           },
         },
       },
+
+      // Plain Node, no browser — kept as its own project rather than folded
+      // into `storybook` because it needs no Playwright/Chromium instance and
+      // must not pay for one. `test:a11y` pins `--project=storybook`, so this
+      // project runs independently under `test:workbench` and the two never
+      // block each other.
+      {
+        extends: true,
+        test: {
+          name: 'workbench',
+          environment: 'node',
+          include: ['workbench/**/*.test.ts'],
+        },
+      },
     ],
   },
 });

@@ -70,6 +70,29 @@
       "workbench \u2014 CI does that separately, because it is slower than the rest",
       "of the gate put together and breaks far less often."
     ],
+    "typecheck:workbench": [
+      "The fourth typecheck program — the stories, which until 0.8.3 no program",
+      "covered. tsconfig.workbench.json has the full reasoning, including why one",
+      "program can hold both leaves and why `react-native` resolves to the real",
+      "package's types rather than to workbench/react-native.ts.",
+      "",
+      "This is not hypothetical tidiness: the Button story shipped",
+      "`intent=\"danger\"`, an intent that does not exist, and rendered an unstyled",
+      "button under that label until this program was added. Neither the axe gate",
+      "nor `storybook:build` can see a wrong prop NAME — the first checks the",
+      "accessibility tree, the second only transpiles."
+    ],
+    "test:workbench": [
+      "A plain-Node Vitest project (see the `workbench` project in",
+      "vitest.config.ts), separate from `test:a11y`'s browser-based `storybook`",
+      "project so this stays cheap. Runs workbench/story-coverage.test.ts, which",
+      "asserts every component under packages/design-system/src/ has a matching",
+      "workbench/<name>.stories.tsx \u2014 the gap .storybook/main.ts already names:",
+      "\"a story is one directory away from its component, so a new component can",
+      "be added without one.\" Placed in `ci` before `test:a11y` on purpose \u2014 a",
+      "missing story is cheap to detect and should fail before the expensive",
+      "browser suite runs, same ordering logic as pr.yml's version-bump gate."
+    ],
     "storybook": [
       "The component workbench: the only place a component is LOOKED AT rather",
       "than asserted about. `storybook` is the dev loop (./scripts/dev-up.sh",
@@ -87,10 +110,12 @@
     "format": "prettier --check packages",
     "format:write": "prettier --write packages",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck:workbench": "tsc -p tsconfig.workbench.json",
     "test": "npm run test --workspaces --if-present",
-    "ci": "npm run tokens:check && npm run format && npm run lint && npm run typecheck && npm run test && npm run test:a11y",
+    "ci": "npm run tokens:check && npm run format && npm run lint && npm run typecheck && npm run typecheck:workbench && npm run test && npm run test:workbench && npm run test:a11y",
     "storybook": "storybook dev -p 6006 --no-open",
     "storybook:build": "storybook build -o storybook-static",
+    "test:workbench": "vitest --project=workbench --run",
     "test:a11y": "vitest --project=storybook --run"
   },
   "//devDependencies": [

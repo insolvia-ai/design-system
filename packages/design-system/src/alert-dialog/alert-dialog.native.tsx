@@ -80,7 +80,25 @@ const AlertDialogPopup = ({ children, style, ...props }: AlertDialogPopupProps) 
   return (
     // onRequestClose still closes — Android back must not trap the user; see
     // the header comment. There is deliberately NO Pressable on the scrim.
-    <Modal transparent visible={open} onRequestClose={() => setOpen(false)}>
+    // `aria-labelledby` goes on the Modal AS WELL AS the card below, and both
+    // are load-bearing. react-native-web's ModalContent renders its container
+    // as `role={active ? 'dialog' : null}` AFTER spreading the props it was
+    // given, so a `role` passed in is discarded (which is why "alertdialog"
+    // can only live on the card) but a label passed in still lands. Without
+    // this line the browser sees an UNNAMED role="dialog" wrapping the named
+    // role="alertdialog" — axe's `aria-dialog-name`, which the a11y gate
+    // fails. dialog.native.tsx never had the bug because it labels the Modal
+    // and leaves its card roleless. Found by workbench/alert-dialog.stories.tsx's
+    // open-native-leaf story — the tests here could always have reached that
+    // container (react-native-web's Modal portals into the document) but none
+    // of them asserted a name on it, because it is a wrapper this leaf never
+    // writes. alert-dialog.native.test.tsx now does. Fixed in 0.8.3.
+    <Modal
+      transparent
+      visible={open}
+      onRequestClose={() => setOpen(false)}
+      aria-labelledby={hasTitle ? titleId : undefined}
+    >
       {/* `${c.ink}80` is the ink token at ~50% alpha (#rrggbbaa) — the scrim
           stays scheme-aware without inventing a new token. */}
       <View style={[styles.overlay, { backgroundColor: `${c.ink}80` }]}>

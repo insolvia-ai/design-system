@@ -44,11 +44,26 @@ export interface AvatarImageProps extends Omit<ImageProps, 'alt'> {
   alt: string;
 }
 
-const AvatarImage = ({ style, onLoad, onError, ...props }: AvatarImageProps) => {
+const AvatarImage = ({ style, onLoad, onError, alt, ...props }: AvatarImageProps) => {
   const { setImageStatus } = useAvatarRootContext('Image');
 
   return (
     <Image
+      alt={alt}
+      // `alt` ALONE is not enough, and the gap is invisible on real React
+      // Native. RN's own Image maps `alt` to the accessibility label, so a
+      // native consumer reads the right name — but react-native-web builds its
+      // hidden `<img>` as `alt={ariaLabel || ''}` (dist/exports/Image), keyed
+      // off accessibilityLabel and never off `alt`. So the SAME leaf that names
+      // the image on a phone rendered it accessibly decorative in a browser,
+      // while the web leaf's own `<img>` carried the real name — one design,
+      // two different accessible names, which is exactly the divergence this
+      // package exists to prevent. Found by workbench/avatar.stories.tsx —
+      // reachable from the native tests all along (they render through
+      // react-native-web too), but nothing asserted the image's NAME, only
+      // that the fallback showed. avatar.native.test.tsx now does.
+      // Fixed in 0.8.3.
+      accessibilityLabel={alt}
       style={[styles.image, style]}
       onLoad={(event) => {
         onLoad?.(event);

@@ -37,6 +37,29 @@ describe('Avatar (native leaf)', () => {
     expect(screen.getByText('AS')).toBeVisible();
   });
 
+  // The 0.8.3 regression, found by workbench/avatar.stories.tsx.
+  //
+  // RN's own Image maps `alt` to the accessibility label, so the leaf read
+  // correctly on a phone — but react-native-web builds its hidden <img> as
+  // `alt={ariaLabel || ''}`, keyed off accessibilityLabel and never off `alt`.
+  // Forwarding only `alt` therefore produced an accessibly DECORATIVE image in
+  // any browser, while the web leaf's own <img> carried the real name: one
+  // design, two different accessible names.
+  //
+  // Nothing structural hid this — these tests render through react-native-web
+  // too, so this assertion was always available. The tests above simply never
+  // asked what the image was CALLED, only whether the fallback showed.
+  it('names the image from `alt`, the way the web leaf does', () => {
+    render(
+      <Avatar.Root>
+        <Avatar.Image source={{ uri: 'https://example.com/andreas.jpg' }} alt="Andreas Savva" />
+        <Avatar.Fallback>AS</Avatar.Fallback>
+      </Avatar.Root>,
+    );
+
+    expect(screen.getByAltText('Andreas Savva')).toBeInTheDocument();
+  });
+
   // The 0.2.1 regression: every native leaf baked in `colors.light` at module
   // load, so a dark-mode app rendered light design-system surfaces. Colors
   // must resolve from the scheme at render time.

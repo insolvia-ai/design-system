@@ -15,7 +15,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const INTENTS = ['primary', 'secondary', 'danger'] as const;
+// The three intents that EXIST. `danger` is not one of them — `button.props.ts`
+// says so and explains why (the semantic token set has no `danger-text` pair).
+// This list said `danger` until 0.8.3, which meant `intentStyles['danger']` was
+// `undefined`, `cn()` dropped it, and the third button rendered with no intent
+// classes at all while the workbench labelled it "danger". Nothing was going to
+// catch that: stories sit outside every tsconfig program, so tsc never sees
+// them, `storybook:build` transpiles without typechecking, and an unstyled
+// button violates no axe rule. Typing a variant name here is not free — keep it
+// in step with `ButtonIntent`.
+const INTENTS = ['primary', 'secondary', 'ghost'] as const;
 const SIZES = ['sm', 'md', 'lg'] as const;
 
 export const Intents: Story = {
