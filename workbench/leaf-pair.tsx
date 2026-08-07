@@ -25,16 +25,38 @@ export function LeafPair({
   web,
   native,
   note,
+  minPaneWidth = 320,
 }: {
   web: React.ReactNode;
   native: React.ReactNode;
   /** Optional: say what to look at, when the difference is subtle. */
   note?: string;
+  /**
+   * How much room this component needs before a pane is worth showing at all.
+   * Below twice this (plus the gap) the panes STACK instead of sitting side by
+   * side.
+   *
+   * A full-width component is the reason this exists. NavBar's bar needs 642px;
+   * at the default 320 the grid keeps two columns down to a 664px canvas, which
+   * gave each pane ~430px and cut the sign-out button off the right of BOTH
+   * panes. Raising the floor for those stories keeps the comparison side by
+   * side on a wide screen and stacks it — still a comparison, just vertical —
+   * when it would otherwise be a lie about how the component looks.
+   *
+   * `min(100%, …)` rather than a bare length so a pane never demands more than
+   * the canvas has and force a horizontal scrollbar on a narrow window.
+   */
+  minPaneWidth?: number;
 }) {
   return (
     <div style={styles.wrap}>
       {note ? <p style={styles.note}>{note}</p> : null}
-      <div style={styles.panes}>
+      <div
+        style={{
+          ...styles.panes,
+          gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${minPaneWidth}px), 1fr))`,
+        }}
+      >
         <Pane
           label="web leaf"
           sub="React DOM + Tailwind — what a web consumer renders"
@@ -137,7 +159,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   panes: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+    // gridTemplateColumns is set per render — see `minPaneWidth`.
     gap: 24,
     alignItems: 'start',
   },

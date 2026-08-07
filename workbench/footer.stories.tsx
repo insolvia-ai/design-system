@@ -34,6 +34,7 @@ const meta = {
   },
   render: (args) => (
     <LeafPair
+      minPaneWidth={480}
       note='Group titles double as landmark names. The web Group is a named `navigation` landmark; the native Group is `accessibilityRole="summary"` — a `region` landmark. Same title, different role. The web Link needs a real `href`; the native Link takes `onPress` instead.'
       web={
         <FooterWeb.Root>

@@ -35,6 +35,7 @@ const meta = {
   },
   render: (args) => (
     <LeafPair
+      minPaneWidth={660}
       note='Web: `<nav aria-label="Main">`, a navigation landmark. Native: `accessibilityRole="header"` renders as an `<h1>` wrapping the whole bar. Same layout, different semantics — see the doc comment above this story.'
       web={
         <NavBarWeb.Root>
