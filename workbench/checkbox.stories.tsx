@@ -182,9 +182,9 @@ function LabelledNative({
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
       <CheckboxNative.Root accessibilityLabel={label} {...props}>
-        <CheckboxNative.Indicator>
-          <Text>{props.indeterminate ? '—' : '✓'}</Text>
-        </CheckboxNative.Indicator>
+        {/* Raw glyph, matching the web call site — see checkbox.native.tsx's
+            Indicator for why a bare <Text> here would paint black. */}
+        <CheckboxNative.Indicator>{props.indeterminate ? '—' : '✓'}</CheckboxNative.Indicator>
       </CheckboxNative.Root>
       <Text>{label}</Text>
     </View>

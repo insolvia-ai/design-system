@@ -74,9 +74,34 @@ type Story = StoryObj<typeof meta>;
  * `DebtTypesWeb`/`DebtTypesNative` below) and that selecting an unlisted
  * member appends it to the shared `onValueChange` array, in both panes.
  */
+/** The checked glyph's rendered colour, read from the deepest node carrying it. */
+function checkGlyphColour(scope: HTMLElement): string {
+  const box = [...scope.querySelectorAll('[role="checkbox"]')].find(
+    (el) => el.getAttribute('aria-checked') === 'true',
+  );
+  if (!box) throw new Error('No checked checkbox in this pane.');
+  const glyph = [...box.querySelectorAll('*')].reverse().find((el) => el.textContent?.trim());
+  return getComputedStyle(glyph ?? box).color;
+}
+
 export const Basic: Story = {
   play: async ({ canvasElement, args, step }) => {
     const { web, native } = pair(canvasElement);
+
+    await step('both leaves paint the tick the same colour', async () => {
+      // Colour does not inherit through a React Native View and
+      // react-native-web's Text defaults to BLACK, so the native tick rendered
+      // rgb(0,0,0) on the primary-filled box while the web one was white —
+      // about 1.6:1, and invisible to every other check here. axe does not read
+      // the box as text for contrast purposes, and the jsdom suite computes no
+      // colour at all. Comparing the two panes is what catches it.
+      const webColour = checkGlyphColour(canvasElement.querySelector('[data-testid="leaf-pair-web"]')!);
+      const nativeColour = checkGlyphColour(
+        canvasElement.querySelector('[data-testid="leaf-pair-native"]')!,
+      );
+      await expect(nativeColour).toBe(webColour);
+      await expect(nativeColour).toBe('rgb(255, 255, 255)');
+    });
 
     await step('web leaf: group is named, selecting a member updates the value', async () => {
       await expect(web.getByRole('group', { name: 'Debt types' })).toBeInTheDocument();
@@ -157,9 +182,10 @@ function DebtTypesNative(props: Partial<React.ComponentProps<typeof CheckboxGrou
         {DEBT_TYPES.map(({ value, label }) => (
           <View key={value} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <CheckboxNative.Root accessibilityLabel={label} value={value}>
-              <CheckboxNative.Indicator>
-                <Text>✓</Text>
-              </CheckboxNative.Indicator>
+              {/* Raw glyph, exactly like the web call site — the native
+                  Indicator colours it. A bare <Text> here inherits nothing and
+                  paints black on the filled box. */}
+              <CheckboxNative.Indicator>✓</CheckboxNative.Indicator>
             </CheckboxNative.Root>
             <Text>{label}</Text>
           </View>
