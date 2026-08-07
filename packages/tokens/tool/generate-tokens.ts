@@ -609,9 +609,14 @@ function renderTypeScript(tokens: JsonObject): string {
     valueType: 'string',
     interfaceDoc: [
       'Type families, as authored: the same CSS family stacks the web surfaces',
-      'use. React Native resolves a single registered family, so until the brand',
-      'fonts land (O4) both roles fall back to the platform UI font — which is',
-      'exactly where the web stacks are today.',
+      'use. React Native resolves a single registered family rather than a',
+      'stack, so a native leaf must NOT pass `heading` through verbatim — it',
+      "maps the role onto each platform's own serif instead. See",
+      'design-system/src/lib/native-typography.native.ts, which owns that',
+      'mapping and the reason no font file ships with either package.',
+      '',
+      '`body` needs no such mapping: this stack already resolves to the',
+      'platform UI family on every target.',
     ],
     keyDoc: 'A type role.',
     value: (body, where) => jsString(asString(body['value'], where)),
@@ -639,7 +644,10 @@ function renderTsRecord(
 
   out.writeln('/**');
   for (const line of spec.interfaceDoc) {
-    out.writeln(` * ${line}`);
+    // A blank doc line is ` *`, never ` * ` — this file is inside `prettier
+    // --check`, and a trailing space is the one byte Prettier would rewrite,
+    // which shows up as token DRIFT rather than as a formatting complaint.
+    out.writeln(line === '' ? ' *' : ` * ${line}`);
   }
   out.writeln(' */');
   out.writeln(`export interface ${spec.interfaceName} {`);

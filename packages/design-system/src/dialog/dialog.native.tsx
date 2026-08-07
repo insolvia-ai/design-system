@@ -13,6 +13,7 @@ import { Modal, Pressable, StyleSheet, Text, View, type ViewProps } from 'react-
 import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
+import { headingFamily } from '../lib/native-typography';
 import {
   DialogRootContext,
   useDialogRootContext,
@@ -155,12 +156,12 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    maxWidth: 448, // the web leaf's max-w-md (28rem)
+    maxWidth: 448, // matches the web leaf's max-w-[28rem]
     borderRadius: radii.lg,
     padding: spacing.lg,
     gap: spacing.md,
   },
-  title: { fontSize: 18, fontWeight: '600' },
+  title: { fontFamily: headingFamily, fontSize: 18, fontWeight: '600' },
   description: { fontSize: 14 },
   close: { alignSelf: 'flex-start', paddingVertical: spacing.xs },
   closeLabel: { fontSize: 14, fontWeight: '500' },

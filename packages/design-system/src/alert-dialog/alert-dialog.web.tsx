@@ -163,7 +163,10 @@ const AlertDialogPopupImpl = React.forwardRef<HTMLDivElement, AlertDialogPopupPr
         tabIndex={-1}
         onKeyDown={handleKeyDown}
         className={cn(
-          'fixed left-1/2 top-1/2 z-50 flex w-full max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-md rounded-lg bg-card p-lg shadow-lg outline-none',
+          // `max-w-[28rem]`, NOT `max-w-md` — a named width utility resolves
+          // against this theme's t-shirt spacing scale, so `max-w-md` is 16px.
+          // dialog.web.tsx has the full reasoning.
+          'fixed left-1/2 top-1/2 z-50 flex w-full max-w-[28rem] -translate-x-1/2 -translate-y-1/2 flex-col gap-md rounded-lg bg-card p-lg shadow-lg outline-none',
           className,
         )}
         {...props}
@@ -227,7 +230,14 @@ const AlertDialogClose = React.forwardRef<
         onClick?.(event);
         if (!event.defaultPrevented) setOpen(false);
       }}
-      className={cn('cursor-pointer', focusRing, disabledStyles, className)}
+      // Matches the native leaf's baked-in Close block — dialog.web.tsx has
+      // the measurements and the reasoning.
+      className={cn(
+        'cursor-pointer self-start py-xs text-sm font-medium text-ink',
+        focusRing,
+        disabledStyles,
+        className,
+      )}
       {...props}
     />
   );

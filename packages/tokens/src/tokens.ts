@@ -203,9 +203,14 @@ export const radii = {
 
 /**
  * Type families, as authored: the same CSS family stacks the web surfaces
- * use. React Native resolves a single registered family, so until the brand
- * fonts land (O4) both roles fall back to the platform UI font — which is
- * exactly where the web stacks are today.
+ * use. React Native resolves a single registered family rather than a
+ * stack, so a native leaf must NOT pass `heading` through verbatim — it
+ * maps the role onto each platform's own serif instead. See
+ * design-system/src/lib/native-typography.native.ts, which owns that
+ * mapping and the reason no font file ships with either package.
+ *
+ * `body` needs no such mapping: this stack already resolves to the
+ * platform UI family on every target.
  */
 export interface Typography {
   /** Display/heading family — apps may override to brand themselves. */

@@ -58,10 +58,13 @@ const singleLeafStyles: Record<string, React.CSSProperties> = {
   },
 };
 
-function SingleLeafNote({ children }: { children: React.ReactNode }) {
+/** The note AND the leaf share one padded wrapper — see the twin in
+ *  `dialog.stories.tsx` for what siblings did to the trigger's position. */
+function SingleLeafFrame({ note, children }: { note: React.ReactNode; children: React.ReactNode }) {
   return (
     <div style={singleLeafStyles.wrap}>
-      <p style={singleLeafStyles.note}>{children}</p>
+      <p style={singleLeafStyles.note}>{note}</p>
+      {children}
     </div>
   );
 }
@@ -121,14 +124,16 @@ export const Basic: Story = {
 export const OpenWebLeaf: Story = {
   name: 'Open (web leaf only)',
   render: (args) => (
-    <>
-      <SingleLeafNote>
-        Single-leaf on purpose — see the file header. This audits the web Popup actually open:
-        `role="alertdialog"`, `aria-modal`, and that Escape/backdrop-click do NOT dismiss it.
-      </SingleLeafNote>
+    <SingleLeafFrame note={'Single-leaf on purpose — see the file header. This audits the web Popup actually open: `role="alertdialog"`, `aria-modal`, and that Escape/backdrop-click do NOT dismiss it.'}>
       <WithdrawFilingDialogWeb defaultOpen {...storyContent(args)} />
-    </>
+    </SingleLeafFrame>
   ),
+  play: async ({ args }) => {
+    // Same computed-width pin as `dialog.stories.tsx` — this card carried the
+    // identical `max-w-md` bug and the identical 0.8.4 fix.
+    const dialog = await screen.findByRole('alertdialog', { name: args.title });
+    await expect(getComputedStyle(dialog).maxWidth).toBe('448px');
+  },
 };
 
 /**
@@ -157,14 +162,9 @@ export const OpenWebLeaf: Story = {
 export const OpenNativeLeaf: Story = {
   name: 'Open (native leaf only)',
   render: (args) => (
-    <>
-      <SingleLeafNote>
-        Single-leaf on purpose — see the file header. Guards the 0.8.3 fix: react-native-web&apos;s
-        Modal wraps this card in its own `role=&quot;dialog&quot;`, and that outer element must
-        carry the title&apos;s id too, or axe fails it as `aria-dialog-name`.
-      </SingleLeafNote>
+    <SingleLeafFrame note={'Single-leaf on purpose — see the file header. Guards the 0.8.3 fix: react-native-web’s Modal wraps this card in its own `role="dialog"`, and that outer element must carry the title’s id too, or axe fails it as `aria-dialog-name`.'}>
       <WithdrawFilingDialogNative defaultOpen {...storyContent(args)} />
-    </>
+    </SingleLeafFrame>
   ),
   play: async ({ args }) => {
     await expect(screen.getByRole('dialog', { name: args.title })).toBeInTheDocument();

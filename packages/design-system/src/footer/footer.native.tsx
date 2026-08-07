@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
+import { headingFamily } from '../lib/native-typography';
 import type { FooterGroupOwnProps } from './footer.props';
 
 const FooterRoot = ({ style, ...props }: ViewProps) => {
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xl,
   },
   group: { flexDirection: 'column', gap: spacing.sm },
-  groupTitle: { fontSize: 14, fontWeight: '600' },
+  groupTitle: { fontFamily: headingFamily, fontSize: 14, fontWeight: '600' },
   groupLinks: { flexDirection: 'column', gap: spacing.xs },
   link: { fontSize: 14 },
   note: {
