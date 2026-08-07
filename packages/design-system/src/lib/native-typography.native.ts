@@ -36,9 +36,16 @@ import { typography } from '@insolvia-ai/tokens';
  * iOS ships Georgia; Android has no Georgia and maps the `serif` generic to
  * Noto Serif. Both are the same call the web stack makes — take the platform's
  * serif — rather than a second opinion about typography.
+ *
+ * The map is exported separately because `Platform.select` collapses it to one
+ * arm at module load, and the arms this platform did NOT take are exactly the
+ * ones nothing here can otherwise see. native-typography.native.test.ts asserts
+ * against it directly.
  */
-export const headingFamily: string = Platform.select({
+export const headingFamilyByPlatform = {
   ios: 'Georgia',
   android: 'serif',
   default: typography.heading,
-});
+} as const;
+
+export const headingFamily: string = Platform.select(headingFamilyByPlatform);
