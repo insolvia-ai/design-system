@@ -28,6 +28,7 @@ import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
 import { useNativeColors } from '../lib/native-theme';
+import { textScale } from '../lib/native-typography';
 import {
   getListboxId,
   getOptionId,
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radii.md,
   },
-  triggerLabel: { flexShrink: 1, fontSize: 14 },
+  triggerLabel: { flexShrink: 1, ...textScale.sm },
   chevron: { fontSize: 12 },
   list: {
     position: 'absolute',
@@ -295,6 +296,6 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
   },
-  optionLabel: { fontSize: 14 },
+  optionLabel: { ...textScale.sm },
   optionLabelSelected: { fontWeight: '500' },
 });

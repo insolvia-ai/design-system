@@ -42,6 +42,31 @@ import { typography } from '@insolvia-ai/tokens';
  * ones nothing here can otherwise see. native-typography.native.test.ts asserts
  * against it directly.
  */
+/**
+ * Size/line-height pairs, matching what the `.web` leaves actually render.
+ *
+ * The web leaves say `text-sm`/`text-base`/`text-lg`, and Tailwind ships a
+ * LINE HEIGHT with each: 12/16, 14/20, 16/24, 18/28 — read off the computed
+ * styles in a browser, not off the docs. The native leaves set `fontSize`
+ * alone, and react-native-web then falls back to `line-height: normal`, which
+ * the browser resolves at roughly 1.2. Every block of native text therefore ran
+ * shorter than the same block on web: the Accordion trigger row measured 52px
+ * against the web leaf's 57, and the gap compounded with every line.
+ *
+ * Applied to flowing TEXT only. A `TextInput` is deliberately left alone —
+ * setting lineHeight on one is a known Android vertical-centring hazard, and
+ * both inputs here have a fixed height that centres the text anyway. So are
+ * glyphs pinned inside a fixed box (the Checkbox tick, the Select chevron, the
+ * Avatar fallback), where a taller line box would fight the box rather than the
+ * text around it.
+ */
+export const textScale = {
+  xs: { fontSize: 12, lineHeight: 16 },
+  sm: { fontSize: 14, lineHeight: 20 },
+  base: { fontSize: 16, lineHeight: 24 },
+  lg: { fontSize: 18, lineHeight: 28 },
+} as const;
+
 export const headingFamilyByPlatform = {
   ios: 'Georgia',
   android: 'serif',

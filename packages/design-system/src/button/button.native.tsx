@@ -7,6 +7,7 @@ import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
+import { textScale } from '../lib/native-typography';
 import type { ButtonIntent, ButtonSize } from './button.props';
 
 export interface ButtonProps extends PressableProps {
@@ -15,9 +16,14 @@ export interface ButtonProps extends PressableProps {
   children?: React.ReactNode;
 }
 
-const sizeHeight: Record<ButtonSize, number> = { sm: 32, md: 40, lg: 48 };
+const sizeHeight: Record<ButtonSize, number> = { sm: 32, md: 44, lg: 48 };
 const sizePadX: Record<ButtonSize, number> = { sm: spacing.md, md: spacing.md, lg: spacing.lg };
-const sizeText: Record<ButtonSize, number> = { sm: 14, md: 14, lg: 16 };
+// Size AND line height, so the label block matches `text-sm`/`text-base` on
+// the web leaf rather than react-native-web's `line-height: normal`.
+const sizeText = { sm: textScale.sm, md: textScale.sm, lg: textScale.base } satisfies Record<
+  ButtonSize,
+  { fontSize: number; lineHeight: number }
+>;
 
 export function Button({
   intent = 'primary',
@@ -57,9 +63,7 @@ export function Button({
       ]}
       {...props}
     >
-      <Text style={[styles.label, { color: intentText[intent], fontSize: sizeText[size] }]}>
-        {children}
-      </Text>
+      <Text style={[styles.label, sizeText[size], { color: intentText[intent] }]}>{children}</Text>
     </Pressable>
   );
 }

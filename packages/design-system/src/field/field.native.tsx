@@ -22,6 +22,7 @@ import {
 import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
+import { textScale } from '../lib/native-typography';
 import {
   FieldContext,
   composeDescribedBy,
@@ -160,7 +161,7 @@ const styles = StyleSheet.create({
   // Any value above 0 clears a sibling View's default context; 30 matches the
   // Select root's own elevation so the two read as one decision.
   rootControlOpen: { zIndex: 30 },
-  label: { fontSize: 14, fontWeight: '500' },
+  label: { ...textScale.sm, fontWeight: '500' },
   control: {
     height: 40,
     width: '100%',
@@ -169,6 +170,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     fontSize: 14,
   },
-  description: { fontSize: 14 },
-  error: { fontSize: 14 },
+  description: { ...textScale.sm },
+  error: { ...textScale.sm },
 });

@@ -26,6 +26,7 @@ import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
+import { textScale } from '../lib/native-typography';
 import { useToggleState, type ToggleOwnProps } from './toggle.props';
 
 // `disabled` is Omit-ed from PressableProps: it declares `boolean | null |
@@ -91,5 +92,5 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
   },
-  label: { fontSize: 14, fontWeight: '500' },
+  label: { ...textScale.sm, fontWeight: '500' },
 });

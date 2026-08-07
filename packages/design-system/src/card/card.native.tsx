@@ -8,7 +8,7 @@ import { StyleSheet, Text, View, type ViewProps } from 'react-native';
 import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { headingFamily } from '../lib/native-typography';
+import { headingFamily, textScale } from '../lib/native-typography';
 import type { CardElevation } from './card.props';
 
 export interface CardProps extends ViewProps {
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
   },
-  title: { fontFamily: headingFamily, fontSize: 18, fontWeight: '600' },
-  body: { fontSize: 14 },
+  title: { fontFamily: headingFamily, ...textScale.lg, fontWeight: '600' },
+  body: { ...textScale.sm },
   footer: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingTop: spacing.sm },
 });

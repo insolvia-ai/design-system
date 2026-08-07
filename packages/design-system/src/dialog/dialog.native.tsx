@@ -13,7 +13,7 @@ import { Modal, Pressable, StyleSheet, Text, View, type ViewProps } from 'react-
 import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { headingFamily } from '../lib/native-typography';
+import { headingFamily, textScale } from '../lib/native-typography';
 import {
   DialogRootContext,
   useDialogRootContext,
@@ -147,7 +147,7 @@ export const Dialog = {
 
 const styles = StyleSheet.create({
   trigger: { alignSelf: 'flex-start' },
-  triggerLabel: { fontSize: 16, fontWeight: '500' },
+  triggerLabel: { ...textScale.base, fontWeight: '500' },
   overlay: {
     flex: 1,
     alignItems: 'center',
@@ -161,8 +161,8 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
   },
-  title: { fontFamily: headingFamily, fontSize: 18, fontWeight: '600' },
-  description: { fontSize: 14 },
+  title: { fontFamily: headingFamily, ...textScale.lg, fontWeight: '600' },
+  description: { ...textScale.sm },
   close: { alignSelf: 'flex-start', paddingVertical: spacing.xs },
-  closeLabel: { fontSize: 14, fontWeight: '500' },
+  closeLabel: { ...textScale.sm, fontWeight: '500' },
 });

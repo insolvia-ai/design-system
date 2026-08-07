@@ -16,7 +16,10 @@ export const intentStyles: Record<ButtonIntent, string> = {
 
 export const sizeStyles: Record<ButtonSize, string> = {
   sm: 'h-8 gap-1.5 px-3 text-sm',
-  md: 'h-10 gap-2 px-4 text-sm',
+  // `h-11` (44px), the WCAG 2.5.5 target-size floor the Select trigger and
+  // DateInput already hold. `sm` stays 32 as a deliberate opt-in to a smaller
+  // target, and `lg` was already past it.
+  md: 'h-11 gap-2 px-4 text-sm',
   lg: 'h-12 gap-2 px-6 text-base',
 };
 

@@ -13,6 +13,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
+import { textScale } from '../lib/native-typography';
 import {
   TabsRootContext,
   useTabsRootContext,
@@ -113,6 +114,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderBottomWidth: 2,
   },
-  tabLabel: { fontSize: 14, fontWeight: '500' },
+  tabLabel: { ...textScale.sm, fontWeight: '500' },
   panel: { paddingVertical: spacing.md },
 });
