@@ -70,6 +70,18 @@ export const Select = ({
   const state = useSelectState({ options, value, defaultValue, onValueChange });
   const { open, setOpen, active, setActive, commit, selected, rootId } = state;
 
+  // Tell the enclosing Field the list is up, so it can elevate itself. The
+  // Select's own `rootOpen` zIndex only orders it against ITS siblings; it
+  // cannot reach past the Field wrapping it. field.props.ts's `controlOpen`
+  // owns the reasoning. Cleanup resets the flag, so an unmount mid-open (a
+  // route change with the list down) cannot strand the Field elevated.
+  const setFieldControlOpen = field?.setControlOpen;
+  React.useEffect(() => {
+    if (!setFieldControlOpen) return undefined;
+    setFieldControlOpen(open);
+    return () => setFieldControlOpen(false);
+  }, [open, setFieldControlOpen]);
+
   const activeRef = React.useRef(active);
   activeRef.current = active;
   const typeahead = useTypeahead(

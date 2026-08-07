@@ -11,6 +11,7 @@ import {
   FieldContext,
   composeDescribedBy,
   useFieldContext,
+  useFieldControlOpen,
   useFieldIds,
   type FieldContextValue,
   type FieldRootOwnProps,
@@ -24,6 +25,10 @@ export interface FieldRootProps
 const FieldRoot = React.forwardRef<HTMLDivElement, FieldRootProps>(
   ({ className, name, invalid = false, children, ...props }, ref) => {
     const ids = useFieldIds();
+    // Provided, not consumed: a plain `position: relative` div with `z-index:
+    // auto` starts no stacking context, so the web Select's list already paints
+    // over what follows the Field. field.props.ts owns the full reasoning.
+    const { controlOpen, setControlOpen } = useFieldControlOpen();
 
     // Which of description/error are present decides `aria-describedby`.
     let hasDescription = false;
@@ -38,6 +43,8 @@ const FieldRoot = React.forwardRef<HTMLDivElement, FieldRootProps>(
       labelId: ids.labelId,
       controlId: ids.controlId,
       describedBy: composeDescribedBy(ids, hasDescription, hasError),
+      controlOpen,
+      setControlOpen,
       invalid,
       name,
       descriptionId: ids.descriptionId,

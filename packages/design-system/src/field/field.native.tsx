@@ -26,6 +26,7 @@ import {
   FieldContext,
   composeDescribedBy,
   useFieldContext,
+  useFieldControlOpen,
   useFieldIds,
   type FieldContextValue,
   type FieldRootOwnProps,
@@ -37,6 +38,7 @@ export interface FieldRootProps extends Omit<ViewProps, 'children'>, FieldRootOw
 
 const FieldRoot = ({ name, invalid = false, children, style, ...props }: FieldRootProps) => {
   const ids = useFieldIds();
+  const { controlOpen, setControlOpen } = useFieldControlOpen();
 
   let hasDescription = false;
   let hasError = false;
@@ -54,11 +56,28 @@ const FieldRoot = ({ name, invalid = false, children, style, ...props }: FieldRo
     name,
     descriptionId: ids.descriptionId,
     errorId: ids.errorId,
+    controlOpen,
+    setControlOpen,
   };
 
   return (
     <FieldContext.Provider value={ctx}>
-      <View style={[styles.root, style]} {...props}>
+      {/* THE WRAPPER carries the elevation while its control is open, and it
+          has to be the wrapper — see `controlOpen` in field.props.ts. A Select
+          inside this Field sets its own root to zIndex 30, but React Native
+          scopes that to its siblings, so it cannot reach past THIS View to the
+          paragraph and submit button that follow the Field. Both elevations are
+          load-bearing and neither is redundant: iOS needs the one here, and
+          Android needs the control's own (its `collapsable` optimisation often
+          flattens wrappers, so the parent's zIndex is not dependable there).
+
+          This closes it for a Select wrapped in a Field, which is how this
+          package expects inputs to be composed. It does NOT close it for an
+          extra wrapper View of a consumer's own — that View starts another
+          stacking context and has to be elevated the same way. That is React
+          Native's layering model rather than a defect here, and the widely used
+          RN dropdowns document exactly the same requirement. */}
+      <View style={[styles.root, controlOpen && styles.rootControlOpen, style]} {...props}>
         {children}
       </View>
     </FieldContext.Provider>
@@ -138,6 +157,9 @@ export const Field = {
 
 const styles = StyleSheet.create({
   root: { flexDirection: 'column', gap: spacing.xs },
+  // Any value above 0 clears a sibling View's default context; 30 matches the
+  // Select root's own elevation so the two read as one decision.
+  rootControlOpen: { zIndex: 30 },
   label: { fontSize: 14, fontWeight: '500' },
   control: {
     height: 40,

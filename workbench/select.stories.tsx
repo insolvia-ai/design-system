@@ -152,6 +152,41 @@ export const Basic: Story = {
  * front of both the human eye and the axe pass, which runs AFTER the play and
  * so audits the open-listbox state on every CI run.
  */
+/**
+ * Assert the open list actually PAINTS over what is under it — not merely that
+ * it is in the document.
+ *
+ * `toBeVisible()` cannot see this. It checks `display`, `visibility`, `opacity`
+ * and attachment, all of which a list buried under a sibling still passes, so
+ * the 0.7.1 stacking bug was free to return the moment the Select was wrapped
+ * in a Field and nothing failed. axe has no opinion about paint order either.
+ * `elementFromPoint` is the only instrument here that does, and it needs real
+ * layout — which is why this lives in the browser-run workbench rather than
+ * beside the leaf in jsdom, where it would silently pass forever.
+ *
+ * Sampled down the list rather than at one point: the bug hid the TOP of the
+ * list under the paragraph and the middle under the submit button, while the
+ * tail below both stayed clear. A single probe picks a winner by luck.
+ */
+function expectPaintsOnTop(list: HTMLElement): void {
+  const box = list.getBoundingClientRect();
+  const covered = [0.1, 0.35, 0.6, 0.85]
+    .map((fraction) => {
+      const y = box.top + box.height * fraction;
+      const hit = document.elementFromPoint(box.left + box.width / 2, y);
+      return hit?.closest('[role="listbox"]') ? null : `${Math.round(fraction * 100)}%`;
+    })
+    .filter(Boolean);
+
+  if (covered.length > 0) {
+    throw new Error(
+      `The open listbox is painted OVER at ${covered.join(', ')} of its height. ` +
+        'Something after the Field is on top of it — the 0.7.1 stacking bug. ' +
+        "Check that Field.Root still elevates while its control is open (field.props.ts's `controlOpen`).",
+    );
+  }
+}
+
 export const OpenInsideAForm: Story = {
   name: 'Open, inside a form (0.7.1 regression)',
   render: () => (
@@ -188,6 +223,7 @@ export const OpenInsideAForm: Story = {
     await step('native list opens and STAYS open for axe and the eye', async () => {
       await userEvent.click(native.getByRole('combobox'));
       await expect(native.getByRole('listbox')).toBeVisible();
+      expectPaintsOnTop(native.getByRole('listbox'));
     });
   },
 };
