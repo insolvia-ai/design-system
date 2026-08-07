@@ -133,7 +133,13 @@ const AccordionPanel = React.forwardRef<HTMLDivElement, React.ComponentPropsWith
         {...props}
       >
         <div className="overflow-hidden">
-          <div className={cn('font-body text-sm text-muted', className)}>{children}</div>
+          {/* `pb-md` matches the native leaf's `panel: { paddingBottom:
+              spacing.md }`. Without it the panel text sat flush against the
+              item's `border-b`: measured 1px of clearance against native's 17,
+              so the rule looked like it was underlining the last line rather
+              than separating two items. Inside `overflow-hidden`, so it still
+              collapses to nothing with the grid-rows animation when closed. */}
+          <div className={cn('pb-md font-body text-sm text-muted', className)}>{children}</div>
         </div>
       </div>
     );

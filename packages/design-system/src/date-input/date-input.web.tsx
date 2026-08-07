@@ -77,7 +77,10 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
           aria-invalid={invalid ? true : undefined}
           onChange={(event) => setText(event.target.value)}
           className={cn(
-            'h-10 w-full rounded-md border border-line bg-card px-sm font-body text-sm text-ink',
+            // `h-11` (44px) to match this component's native leaf, which has
+            // always been 44 — see select.web.tsx for the target-size rule and
+            // why Field.Control stays 40.
+            'h-11 w-full rounded-md border border-line bg-card px-sm font-body text-sm text-ink',
             'placeholder:text-muted',
             focusRing,
             'disabled:cursor-not-allowed disabled:bg-surface-alt disabled:text-muted',

@@ -162,7 +162,15 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
             if (!rootRef.current?.contains(event.relatedTarget as Node | null)) setOpen(false);
           }}
           className={cn(
-            'flex h-10 w-full items-center justify-between gap-sm rounded-md border border-line bg-card px-sm',
+            // `h-11` (44px), NOT `h-10`. The native leaf has carried 44 with a
+            // comment calling it the WCAG 2.5.5 target-size floor, deliberately
+            // taller than Field's 40px control because that is a text input
+            // rather than a press target. The web leaf never applied the same
+            // rule, so one design shipped a press target 4px shorter on the
+            // platform, and the two leaves disagreed for no stated reason.
+            // Field.Control stays 40 on BOTH leaves — it already agrees, and
+            // the distinction above is the reason.
+            'flex h-11 w-full items-center justify-between gap-sm rounded-md border border-line bg-card px-sm',
             'font-body text-sm text-ink',
             focusRing,
             'disabled:cursor-not-allowed disabled:bg-surface-alt disabled:text-muted',
