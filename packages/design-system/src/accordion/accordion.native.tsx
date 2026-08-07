@@ -9,6 +9,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
+import { textScale } from '../lib/native-typography';
 import {
   AccordionItemContext,
   AccordionRootContext,
@@ -112,7 +113,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: spacing.md,
   },
-  triggerLabel: { fontSize: 16, fontWeight: '500' },
+  triggerLabel: { ...textScale.base, fontWeight: '500' },
   panel: { paddingBottom: spacing.md },
-  panelText: { fontSize: 14 },
+  panelText: { ...textScale.sm },
 });

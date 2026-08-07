@@ -13,6 +13,7 @@ import * as React from 'react';
 import {
   Pressable,
   StyleSheet,
+  Text,
   View,
   type PressableProps,
   type StyleProp,
@@ -99,8 +100,32 @@ const CheckboxRoot = ({
 
 const CheckboxIndicator = ({ children }: { children?: React.ReactNode }) => {
   const { checked, indeterminate } = useCheckboxRootContext('Indicator');
+  const c = useNativeColors();
   if (!checked && !indeterminate) return null;
-  return <View style={styles.indicator}>{children}</View>;
+
+  // THE INDICATOR OWNS THE GLYPH'S COLOUR, because on this platform nothing
+  // else can. The web leaf puts `text-primary-text` on its span and CSS
+  // inheritance carries it to whatever is inside; colour does not inherit
+  // through a React Native View, and react-native-web's Text defaults to
+  // BLACK. So a call site passing a bare <Text>✓</Text> — which is what the
+  // workbench did — painted a black tick on the primary-filled box: measured
+  // at rgb(0,0,0) against the web leaf's rgb(255,255,255), roughly 1.6:1
+  // against #0b2a4a. axe never flagged it; the box is not text to a contrast
+  // rule, and the jsdom suite computes no colour at all.
+  //
+  // Only string/number children are wrapped. An icon element passed here keeps
+  // owning its own colour, exactly as it would on the web leaf, where the
+  // inherited `color` is likewise irrelevant to an <svg fill="...">.
+  const isGlyph = typeof children === 'string' || typeof children === 'number';
+  return (
+    <View style={styles.indicator}>
+      {isGlyph ? (
+        <Text style={[styles.indicatorGlyph, { color: c.primaryText }]}>{children}</Text>
+      ) : (
+        children
+      )}
+    </View>
+  );
 };
 
 export const Checkbox = {
@@ -121,4 +146,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // 16, matching what the web leaf's span inherits from the page. Left at
+  // react-native-web's 14px default the tick was visibly smaller than the web
+  // one inside an identically sized box.
+  indicatorGlyph: { fontSize: 16 },
 });

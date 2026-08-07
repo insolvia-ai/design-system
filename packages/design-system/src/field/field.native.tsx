@@ -22,10 +22,12 @@ import {
 import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
+import { textScale } from '../lib/native-typography';
 import {
   FieldContext,
   composeDescribedBy,
   useFieldContext,
+  useFieldControlOpen,
   useFieldIds,
   type FieldContextValue,
   type FieldRootOwnProps,
@@ -37,6 +39,7 @@ export interface FieldRootProps extends Omit<ViewProps, 'children'>, FieldRootOw
 
 const FieldRoot = ({ name, invalid = false, children, style, ...props }: FieldRootProps) => {
   const ids = useFieldIds();
+  const { controlOpen, setControlOpen } = useFieldControlOpen();
 
   let hasDescription = false;
   let hasError = false;
@@ -54,11 +57,28 @@ const FieldRoot = ({ name, invalid = false, children, style, ...props }: FieldRo
     name,
     descriptionId: ids.descriptionId,
     errorId: ids.errorId,
+    controlOpen,
+    setControlOpen,
   };
 
   return (
     <FieldContext.Provider value={ctx}>
-      <View style={[styles.root, style]} {...props}>
+      {/* THE WRAPPER carries the elevation while its control is open, and it
+          has to be the wrapper — see `controlOpen` in field.props.ts. A Select
+          inside this Field sets its own root to zIndex 30, but React Native
+          scopes that to its siblings, so it cannot reach past THIS View to the
+          paragraph and submit button that follow the Field. Both elevations are
+          load-bearing and neither is redundant: iOS needs the one here, and
+          Android needs the control's own (its `collapsable` optimisation often
+          flattens wrappers, so the parent's zIndex is not dependable there).
+
+          This closes it for a Select wrapped in a Field, which is how this
+          package expects inputs to be composed. It does NOT close it for an
+          extra wrapper View of a consumer's own — that View starts another
+          stacking context and has to be elevated the same way. That is React
+          Native's layering model rather than a defect here, and the widely used
+          RN dropdowns document exactly the same requirement. */}
+      <View style={[styles.root, controlOpen && styles.rootControlOpen, style]} {...props}>
         {children}
       </View>
     </FieldContext.Provider>
@@ -75,9 +95,15 @@ const FieldLabel = ({ children }: { children?: React.ReactNode }) => {
   );
 };
 
-const FieldControl = ({ style, ...props }: TextInputProps) => {
+const FieldControl = ({ style, onFocus, onBlur, ...props }: TextInputProps) => {
   const { labelId, controlId, describedBy, invalid } = useFieldContext('Control');
   const c = useNativeColors();
+
+  // React Native has no `:focus` selector, so the focused state is held here
+  // and the ring applied as a style — the web leaf gets the same thing for free
+  // from `focus-visible:` in lib/styles.ts's `focusRing`. A consumer's own
+  // handlers still fire: they are pulled out of `props` and called through.
+  const [focused, setFocused] = React.useState(false);
 
   // `aria-labelledby` is in react-native's types; `aria-describedby` and
   // `aria-invalid` are not — they are web-only, and react-native-web forwards
@@ -98,9 +124,18 @@ const FieldControl = ({ style, ...props }: TextInputProps) => {
       {...webAria}
       accessibilityState={{ disabled: props.editable === false }}
       placeholderTextColor={c.muted}
+      onFocus={(event) => {
+        setFocused(true);
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        setFocused(false);
+        onBlur?.(event);
+      }}
       style={[
         styles.control,
         { borderColor: invalid ? c.danger : c.line, backgroundColor: c.card, color: c.ink },
+        focused && [styles.focusRing, { outlineColor: c.accent }],
         style,
       ]}
       {...props}
@@ -138,7 +173,10 @@ export const Field = {
 
 const styles = StyleSheet.create({
   root: { flexDirection: 'column', gap: spacing.xs },
-  label: { fontSize: 14, fontWeight: '500' },
+  // Any value above 0 clears a sibling View's default context; 30 matches the
+  // Select root's own elevation so the two read as one decision.
+  rootControlOpen: { zIndex: 30 },
+  label: { ...textScale.sm, fontWeight: '500' },
   control: {
     height: 40,
     width: '100%',
@@ -147,6 +185,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     fontSize: 14,
   },
-  description: { fontSize: 14 },
-  error: { fontSize: 14 },
+  // The web leaf's `focusRing`, expressed the way React Native expresses it.
+  //
+  // Tailwind draws that ring as two stacked box-shadows: 2px of `--color-bg`
+  // hugging the control, then 4px of `--color-accent` — which reads as a 2px
+  // gap and then 2px of gold. RN has no box-shadow, but it has had `outline*`
+  // since the style props landed, and `outlineOffset` produces the same gap.
+  // The gap is transparent here rather than painted `--color-bg`; on the page
+  // background those are the same pixels.
+  //
+  // Without this the native control fell through to the BROWSER's default focus
+  // ring under react-native-web — blue, hard against the control, and nothing
+  // to do with this design system. The colour resolves at render time from
+  // `c.accent`, so it follows the scheme like every other native colour.
+  focusRing: { outlineStyle: 'solid', outlineWidth: 2, outlineOffset: 2 },
+  description: { ...textScale.sm },
+  error: { ...textScale.sm },
 });

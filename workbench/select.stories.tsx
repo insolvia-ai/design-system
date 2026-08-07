@@ -12,12 +12,13 @@ import { Button as ButtonWeb } from '@design-system/button/button.web.tsx';
 import { Button as ButtonNative } from '@design-system/button/button.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
-const CHAPTERS = [
-  { value: 'ch7', label: 'Chapter 7 — liquidation' },
-  { value: 'ch13', label: 'Chapter 13 — repayment plan' },
-  { value: 'ch11', label: 'Chapter 11 — reorganisation' },
-  { value: 'ch12', label: 'Chapter 12 — family farmer', disabled: true },
+const STARSHIPS = [
+  { value: 'xwing', label: 'X-wing — starfighter' },
+  { value: 'freighter', label: 'YT-1300 — light freighter' },
+  { value: 'destroyer', label: 'Star Destroyer — capital ship' },
+  { value: 'sailbarge', label: 'Sail barge — pleasure craft', disabled: true },
 ] satisfies readonly SelectOption[];
 
 /**
@@ -40,8 +41,8 @@ const meta = {
   component: SelectWeb,
   parameters: { layout: 'fullscreen' },
   args: {
-    options: CHAPTERS,
-    placeholder: 'Choose a chapter',
+    options: STARSHIPS,
+    placeholder: 'Choose a ship',
     disabled: false,
     defaultValue: null,
     onValueChange: fn(),
@@ -95,9 +96,9 @@ export const Basic: Story = {
       // arg, so a pane that silently drops its keystrokes would otherwise be
       // vouched for by the other pane's earlier call.
       await expect(args.onValueChange).toHaveBeenCalledTimes(1);
-      await expect(args.onValueChange).toHaveBeenLastCalledWith('ch13');
+      await expect(args.onValueChange).toHaveBeenLastCalledWith('freighter');
       await waitFor(() => expect(web.queryByRole('listbox')).not.toBeInTheDocument());
-      await expect(web.getByRole('combobox')).toHaveTextContent('Chapter 13 — repayment plan');
+      await expect(web.getByRole('combobox')).toHaveTextContent('YT-1300 — light freighter');
     });
 
     await step('native leaf: arrows move the highlight, a press commits', async () => {
@@ -109,7 +110,7 @@ export const Basic: Story = {
       // whatever is focused.
       trigger.focus();
       await userEvent.keyboard('{ArrowDown}{ArrowDown}');
-      await expect(trigger.getAttribute('aria-activedescendant')).toMatch(/option-ch13$/);
+      await expect(trigger.getAttribute('aria-activedescendant')).toMatch(/option-freighter$/);
       // Commit by PRESSING the option, not Enter — deliberately, twice over.
       // A press is the interaction a real native consumer has (a phone has no
       // arrow keys), and Enter currently trips a real leaf bug: react-native-web
@@ -117,11 +118,11 @@ export const Basic: Story = {
       // immediately toggled back open by the trigger's own onPress. That fix is
       // a packages/ change with its own release; when it lands, this step
       // should go back to committing with {Enter} to pin it.
-      await userEvent.click(native.getByRole('option', { name: 'Chapter 13 — repayment plan' }));
+      await userEvent.click(native.getByRole('option', { name: 'YT-1300 — light freighter' }));
       await expect(args.onValueChange).toHaveBeenCalledTimes(2);
-      await expect(args.onValueChange).toHaveBeenLastCalledWith('ch13');
+      await expect(args.onValueChange).toHaveBeenLastCalledWith('freighter');
       await waitFor(() => expect(native.queryByRole('listbox')).not.toBeInTheDocument());
-      await expect(native.getByRole('combobox')).toHaveTextContent('Chapter 13 — repayment plan');
+      await expect(native.getByRole('combobox')).toHaveTextContent('YT-1300 — light freighter');
     });
   },
 };
@@ -152,6 +153,41 @@ export const Basic: Story = {
  * front of both the human eye and the axe pass, which runs AFTER the play and
  * so audits the open-listbox state on every CI run.
  */
+/**
+ * Assert the open list actually PAINTS over what is under it — not merely that
+ * it is in the document.
+ *
+ * `toBeVisible()` cannot see this. It checks `display`, `visibility`, `opacity`
+ * and attachment, all of which a list buried under a sibling still passes, so
+ * the 0.7.1 stacking bug was free to return the moment the Select was wrapped
+ * in a Field and nothing failed. axe has no opinion about paint order either.
+ * `elementFromPoint` is the only instrument here that does, and it needs real
+ * layout — which is why this lives in the browser-run workbench rather than
+ * beside the leaf in jsdom, where it would silently pass forever.
+ *
+ * Sampled down the list rather than at one point: the bug hid the TOP of the
+ * list under the paragraph and the middle under the submit button, while the
+ * tail below both stayed clear. A single probe picks a winner by luck.
+ */
+function expectPaintsOnTop(list: HTMLElement): void {
+  const box = list.getBoundingClientRect();
+  const covered = [0.1, 0.35, 0.6, 0.85]
+    .map((fraction) => {
+      const y = box.top + box.height * fraction;
+      const hit = document.elementFromPoint(box.left + box.width / 2, y);
+      return hit?.closest('[role="listbox"]') ? null : `${Math.round(fraction * 100)}%`;
+    })
+    .filter(Boolean);
+
+  if (covered.length > 0) {
+    throw new Error(
+      `The open listbox is painted OVER at ${covered.join(', ')} of its height. ` +
+        'Something after the Field is on top of it — the 0.7.1 stacking bug. ' +
+        "Check that Field.Root still elevates while its control is open (field.props.ts's `controlOpen`).",
+    );
+  }
+}
+
 export const OpenInsideAForm: Story = {
   name: 'Open, inside a form (0.7.1 regression)',
   render: () => (
@@ -188,6 +224,7 @@ export const OpenInsideAForm: Story = {
     await step('native list opens and STAYS open for axe and the eye', async () => {
       await userEvent.click(native.getByRole('combobox'));
       await expect(native.getByRole('listbox')).toBeVisible();
+      expectPaintsOnTop(native.getByRole('listbox'));
     });
   },
 };
@@ -206,7 +243,7 @@ export const Disabled: Story = {
 };
 
 export const WithSelection: Story = {
-  args: { defaultValue: 'ch13' },
+  args: { defaultValue: 'freighter' },
 };
 
 /**
@@ -217,9 +254,9 @@ export const WithSelection: Story = {
  */
 function NativeNote() {
   return (
-    <Text style={{ fontSize: 13, opacity: 0.75 }}>
+    <InkText style={{ fontSize: 13, opacity: 0.75 }}>
       The list above must cover this paragraph when it is open.
-    </Text>
+    </InkText>
   );
 }
 
@@ -238,8 +275,8 @@ function NativeNote() {
 function LabelledWeb(props: Partial<React.ComponentProps<typeof SelectWeb>>) {
   return (
     <FieldWeb.Root>
-      <FieldWeb.Label>Chapter</FieldWeb.Label>
-      <SelectWeb options={CHAPTERS} placeholder="Choose a chapter" {...props} />
+      <FieldWeb.Label>Ship class</FieldWeb.Label>
+      <SelectWeb options={STARSHIPS} placeholder="Choose a ship" {...props} />
     </FieldWeb.Root>
   );
 }
@@ -247,8 +284,8 @@ function LabelledWeb(props: Partial<React.ComponentProps<typeof SelectWeb>>) {
 function LabelledNative(props: Partial<React.ComponentProps<typeof SelectNative>>) {
   return (
     <FieldNative.Root>
-      <FieldNative.Label>Chapter</FieldNative.Label>
-      <SelectNative options={CHAPTERS} placeholder="Choose a chapter" {...props} />
+      <FieldNative.Label>Ship class</FieldNative.Label>
+      <SelectNative options={STARSHIPS} placeholder="Choose a ship" {...props} />
     </FieldNative.Root>
   );
 }

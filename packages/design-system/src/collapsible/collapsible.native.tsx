@@ -11,6 +11,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
+import { textScale } from '../lib/native-typography';
 import {
   CollapsibleRootContext,
   useCollapsibleRootContext,
@@ -85,7 +86,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.sm,
   },
-  triggerLabel: { fontSize: 14, fontWeight: '500' },
+  triggerLabel: { ...textScale.sm, fontWeight: '500' },
   panel: { paddingBottom: spacing.sm },
-  panelText: { fontSize: 14 },
+  panelText: { ...textScale.sm },
 });

@@ -7,6 +7,7 @@ import { Separator as SeparatorNative } from '@design-system/separator/separator
 import type { SeparatorOrientation } from '@design-system/separator/separator.props.ts';
 
 import { LeafPair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
 const ORIENTATIONS = ['horizontal', 'vertical'] as const satisfies readonly SeparatorOrientation[];
 
@@ -40,9 +41,9 @@ const meta = {
       web={
         args.orientation === 'vertical' ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 24 }}>
-            <span style={{ fontSize: 14 }}>Case No. 21-10432</span>
+            <span style={{ fontSize: 14 }}>Transponder 21-10432</span>
             <SeparatorWeb orientation={args.orientation} />
-            <span style={{ fontSize: 14 }}>Chapter 13</span>
+            <span style={{ fontSize: 14 }}>YT-1300</span>
           </div>
         ) : (
           <div style={{ width: 280 }}>
@@ -53,9 +54,9 @@ const meta = {
       native={
         args.orientation === 'vertical' ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, height: 24 }}>
-            <Text style={{ fontSize: 14 }}>Case No. 21-10432</Text>
+            <InkText style={{ fontSize: 14 }}>Transponder 21-10432</InkText>
             <SeparatorNative orientation={args.orientation} />
-            <Text style={{ fontSize: 14 }}>Chapter 13</Text>
+            <InkText style={{ fontSize: 14 }}>YT-1300</InkText>
           </View>
         ) : (
           <View style={{ width: 280 }}>
@@ -100,23 +101,23 @@ export const Orientations: Story = {
             <p style={{ margin: 0, fontSize: 14 }}>Pending review</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 24 }}>
-            <span style={{ fontSize: 14 }}>Case No. 21-10432</span>
+            <span style={{ fontSize: 14 }}>Transponder 21-10432</span>
             <SeparatorWeb orientation="vertical" />
-            <span style={{ fontSize: 14 }}>Chapter 13</span>
+            <span style={{ fontSize: 14 }}>YT-1300</span>
           </div>
         </div>
       }
       native={
         <View style={{ gap: 24, width: 280 }}>
           <View style={{ gap: 12 }}>
-            <Text style={{ fontSize: 14 }}>Filed documents</Text>
+            <InkText style={{ fontSize: 14 }}>Filed documents</InkText>
             <SeparatorNative />
-            <Text style={{ fontSize: 14 }}>Pending review</Text>
+            <InkText style={{ fontSize: 14 }}>Pending review</InkText>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, height: 24 }}>
-            <Text style={{ fontSize: 14 }}>Case No. 21-10432</Text>
+            <InkText style={{ fontSize: 14 }}>Transponder 21-10432</InkText>
             <SeparatorNative orientation="vertical" />
-            <Text style={{ fontSize: 14 }}>Chapter 13</Text>
+            <InkText style={{ fontSize: 14 }}>YT-1300</InkText>
           </View>
         </View>
       }

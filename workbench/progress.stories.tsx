@@ -7,10 +7,11 @@ import { Progress as ProgressWeb } from '@design-system/progress/progress.web.ts
 import { Progress as ProgressNative } from '@design-system/progress/progress.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
 const UPLOADS = [
-  { name: 'Petition.pdf', value: 30 },
-  { name: 'Schedules.pdf', value: 80 },
+  { name: 'star-charts.holo', value: 30 },
+  { name: 'nav-data.holo', value: 80 },
 ];
 
 /**
@@ -42,8 +43,8 @@ const meta = {
   args: {
     value: 30,
     max: 100,
-    label: 'Petition.pdf',
-    ariaLabel: 'Petition.pdf upload progress',
+    label: 'star-charts.holo',
+    ariaLabel: 'star-charts.holo upload progress',
   },
   argTypes: {
     value: { control: { type: 'range', min: 0, max: 100 } },
@@ -62,7 +63,7 @@ const meta = {
       }
       native={
         <View style={{ gap: 6, width: 260 }}>
-          <Text style={{ fontSize: 13 }}>{args.label}</Text>
+          <InkText style={{ fontSize: 13 }}>{args.label}</InkText>
           <ProgressNative.Root
             value={args.value}
             max={args.max}
@@ -127,7 +128,7 @@ export const Determinate: Story = {
         <View style={{ gap: 20, width: 260 }}>
           {UPLOADS.map((upload) => (
             <View key={upload.name} style={{ gap: 6 }}>
-              <Text style={{ fontSize: 13 }}>{upload.name}</Text>
+              <InkText style={{ fontSize: 13 }}>{upload.name}</InkText>
               <ProgressNative.Root
                 value={upload.value}
                 accessibilityLabel={`${upload.name} upload progress`}

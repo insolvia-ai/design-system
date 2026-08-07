@@ -7,6 +7,7 @@ import { Checkbox as CheckboxWeb } from '@design-system/checkbox/checkbox.web.ts
 import { Checkbox as CheckboxNative } from '@design-system/checkbox/checkbox.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
 /**
  * `Checkbox` is a parts object (`Root`/`Indicator`), not a single component —
@@ -32,7 +33,7 @@ const meta = {
   title: 'Components/Checkbox',
   parameters: { layout: 'fullscreen' },
   args: {
-    label: 'Filed for bankruptcy before',
+    label: 'Flown in combat before',
     defaultChecked: false,
     indeterminate: false,
     disabled: false,
@@ -123,16 +124,16 @@ export const States: Story = {
     <LeafPair
       web={
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-          <LabelledWeb label="Filed for bankruptcy before" />
-          <LabelledWeb label="Has a co-debtor" defaultChecked />
-          <LabelledWeb label="Select all listed debts" indeterminate />
+          <LabelledWeb label="Flown in combat before" />
+          <LabelledWeb label="Has a co-pilot" defaultChecked />
+          <LabelledWeb label="Select all listed systems" indeterminate />
         </div>
       }
       native={
         <View style={{ flexDirection: 'row', gap: 24, flexWrap: 'wrap' }}>
-          <LabelledNative label="Filed for bankruptcy before" />
-          <LabelledNative label="Has a co-debtor" defaultChecked />
-          <LabelledNative label="Select all listed debts" indeterminate />
+          <LabelledNative label="Flown in combat before" />
+          <LabelledNative label="Has a co-pilot" defaultChecked />
+          <LabelledNative label="Select all listed systems" indeterminate />
         </View>
       }
     />
@@ -147,14 +148,14 @@ export const States: Story = {
 export const Disabled: Story = {
   render: () => (
     <LeafPair
-      web={<LabelledWeb label="Filing fee waived" disabled defaultChecked />}
-      native={<LabelledNative label="Filing fee waived" disabled defaultChecked />}
+      web={<LabelledWeb label="Docking fee waived" disabled defaultChecked />}
+      native={<LabelledNative label="Docking fee waived" disabled defaultChecked />}
     />
   ),
   play: async ({ canvasElement }) => {
     const { web, native } = pair(canvasElement);
-    await expect(web.getByRole('checkbox', { name: 'Filing fee waived' })).toBeDisabled();
-    await expect(native.getByRole('checkbox', { name: 'Filing fee waived' })).toHaveAttribute(
+    await expect(web.getByRole('checkbox', { name: 'Docking fee waived' })).toBeDisabled();
+    await expect(native.getByRole('checkbox', { name: 'Docking fee waived' })).toHaveAttribute(
       'aria-disabled',
       'true',
     );
@@ -182,11 +183,11 @@ function LabelledNative({
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
       <CheckboxNative.Root accessibilityLabel={label} {...props}>
-        <CheckboxNative.Indicator>
-          <Text>{props.indeterminate ? '—' : '✓'}</Text>
-        </CheckboxNative.Indicator>
+        {/* Raw glyph, matching the web call site — see checkbox.native.tsx's
+            Indicator for why a bare <Text> here would paint black. */}
+        <CheckboxNative.Indicator>{props.indeterminate ? '—' : '✓'}</CheckboxNative.Indicator>
       </CheckboxNative.Root>
-      <Text>{label}</Text>
+      <InkText>{label}</InkText>
     </View>
   );
 }

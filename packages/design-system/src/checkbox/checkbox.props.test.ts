@@ -89,13 +89,13 @@ describe('useCheckboxState (inside a group)', () => {
 
   it('derives checked from group membership, ignoring standalone checked/defaultChecked', () => {
     const group: CheckboxGroupContextValue = {
-      value: ['debts'],
+      value: ['cargo'],
       toggle: vi.fn(),
       disabled: false,
     };
 
     const { result } = renderHook(
-      () => useCheckboxState(false, false, undefined, false, false, 'debts'),
+      () => useCheckboxState(false, false, undefined, false, false, 'cargo'),
       { wrapper: wrapper(group) },
     );
 
@@ -110,20 +110,20 @@ describe('useCheckboxState (inside a group)', () => {
     };
 
     const { result } = renderHook(
-      () => useCheckboxState(undefined, undefined, undefined, false, false, 'income'),
+      () => useCheckboxState(undefined, undefined, undefined, false, false, 'fuel'),
       { wrapper: wrapper(group) },
     );
 
     act(() => result.current.toggle());
 
-    expect(group.toggle).toHaveBeenCalledWith('income');
+    expect(group.toggle).toHaveBeenCalledWith('fuel');
   });
 
   it('is disabled when the group is disabled, even if this checkbox is not', () => {
     const group: CheckboxGroupContextValue = { value: [], toggle: vi.fn(), disabled: true };
 
     const { result } = renderHook(
-      () => useCheckboxState(undefined, undefined, undefined, false, false, 'income'),
+      () => useCheckboxState(undefined, undefined, undefined, false, false, 'fuel'),
       { wrapper: wrapper(group) },
     );
 

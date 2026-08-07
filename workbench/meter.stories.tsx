@@ -7,6 +7,7 @@ import { Meter as MeterWeb } from '@design-system/meter/meter.web.tsx';
 import { Meter as MeterNative } from '@design-system/meter/meter.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
 /**
  * `Meter` is a parts object (`Root`/`Track`/`Indicator`), the same shape as
@@ -37,8 +38,8 @@ const meta = {
     value: 62,
     min: 0,
     max: 100,
-    label: 'Case file storage — 62 of 100 GB',
-    ariaLabel: 'Case file storage used',
+    label: 'Cargo hold — 62 of 100 tonnes',
+    ariaLabel: 'Cargo hold used',
   },
   argTypes: {
     value: { control: { type: 'range', min: 0, max: 100 } },
@@ -63,7 +64,7 @@ const meta = {
       }
       native={
         <View style={{ gap: 6, width: 260 }}>
-          <Text style={{ fontSize: 13 }}>{args.label}</Text>
+          <InkText style={{ fontSize: 13 }}>{args.label}</InkText>
           <MeterNative.Root
             value={args.value}
             min={args.min}
@@ -115,7 +116,7 @@ export const CustomRange: Story = {
     value: 30,
     min: 0,
     max: 60,
-    label: 'Redaction review — 30 of 60 pages',
-    ariaLabel: 'Pages reviewed for redaction',
+    label: 'Hull plating — 30 of 60 plates',
+    ariaLabel: 'Hull plates repaired',
   },
 };

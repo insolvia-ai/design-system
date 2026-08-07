@@ -10,7 +10,7 @@ function Notes() {
   return (
     <Collapsible.Root>
       <Collapsible.Trigger>Show case notes</Collapsible.Trigger>
-      <Collapsible.Panel>Filed jointly, no prior filings.</Collapsible.Panel>
+      <Collapsible.Panel>Flying solo, no prior runs.</Collapsible.Panel>
     </Collapsible.Root>
   );
 }
@@ -27,7 +27,7 @@ describe('Collapsible', () => {
     await user.click(trigger);
 
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByText('Filed jointly, no prior filings.')).toBeVisible();
+    expect(screen.getByText('Flying solo, no prior runs.')).toBeVisible();
   });
 
   it('collapses again on a second activation', async () => {
@@ -48,7 +48,7 @@ describe('Collapsible', () => {
     render(<Notes />);
 
     const trigger = screen.getByRole('button', { name: 'Show case notes' });
-    const panel = screen.getByText('Filed jointly, no prior filings.').closest('[role="region"]');
+    const panel = screen.getByText('Flying solo, no prior runs.').closest('[role="region"]');
 
     expect(panel).not.toBeNull();
     expect(trigger).toHaveAttribute('aria-controls', panel?.id);
@@ -59,7 +59,7 @@ describe('Collapsible', () => {
     render(
       <Collapsible.Root defaultOpen>
         <Collapsible.Trigger>Show case notes</Collapsible.Trigger>
-        <Collapsible.Panel>Filed jointly, no prior filings.</Collapsible.Panel>
+        <Collapsible.Panel>Flying solo, no prior runs.</Collapsible.Panel>
       </Collapsible.Root>,
     );
 
@@ -75,7 +75,7 @@ describe('Collapsible', () => {
     render(
       <Collapsible.Root disabled>
         <Collapsible.Trigger>Show case notes</Collapsible.Trigger>
-        <Collapsible.Panel>Filed jointly, no prior filings.</Collapsible.Panel>
+        <Collapsible.Panel>Flying solo, no prior runs.</Collapsible.Panel>
       </Collapsible.Root>,
     );
 
@@ -102,7 +102,7 @@ describe('Collapsible', () => {
           }}
         >
           <Collapsible.Trigger>Show case notes</Collapsible.Trigger>
-          <Collapsible.Panel>Filed jointly, no prior filings.</Collapsible.Panel>
+          <Collapsible.Panel>Flying solo, no prior runs.</Collapsible.Panel>
         </Collapsible.Root>
       );
     }
@@ -125,7 +125,7 @@ describe('Collapsible', () => {
     render(
       <Collapsible.Root open={false} onOpenChange={onOpenChange}>
         <Collapsible.Trigger>Show case notes</Collapsible.Trigger>
-        <Collapsible.Panel>Filed jointly, no prior filings.</Collapsible.Panel>
+        <Collapsible.Panel>Flying solo, no prior runs.</Collapsible.Panel>
       </Collapsible.Root>,
     );
 

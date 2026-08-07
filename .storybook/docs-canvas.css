@@ -1,0 +1,48 @@
+/* The docs-page canvas must not clip an open overlay — but only while one is
+ * actually open.
+ *
+ * addon-docs frames each inline story in `.sbdocs-preview` (`overflow: hidden`)
+ * wrapping `.docs-story` (`overflow: auto`), both sized to the story's laid-out
+ * height. Anything a component paints OUTSIDE that box gets trimmed at the
+ * frame's edge. Measured on Components/Select: the native list ran 53px past
+ * `.sbdocs-preview`'s bottom and was cut off mid-option, while the web list
+ * ended 11px inside and survived — which is why it read as an intermittent
+ * component bug rather than a container.
+ *
+ * WHY `:has()` AND NOT A BLANKET OVERRIDE. Un-clipping every canvas
+ * unconditionally does not work, and the first attempt at this file proved it:
+ * the escaped list then lost a stacking fight to the chrome BELOW it, and the
+ * "Show code" / "Copy code" toolbar painted straight through the open menu. A
+ * docs page is a column of canvases, so anything escaping one is immediately in
+ * a layering argument with everything after it.
+ *
+ * So the rule fires only for a canvas that currently CONTAINS an open overlay:
+ * that one stops clipping and lifts above both its own toolbar and the sections
+ * after it. Every other canvas keeps addon-docs' own behaviour exactly. Dialog
+ * and AlertDialog need no help here — they portal to document.body and are
+ * `position: fixed`, so no canvas ever clipped them.
+ *
+ * SCOPE. Display only, and only on a docs page: it changes which pixels a
+ * reader sees, never what renders or what a consumer installs. The story canvas
+ * has no clipping ancestor at all, so none of this affects `test:a11y` — those
+ * run stories, not docs pages.
+ *
+ * `!important` is not decoration. Storybook's own rules arrive as runtime
+ * emotion classes at the same single-class specificity and are injected after
+ * this stylesheet, so a plain override loses on source order.
+ */
+.sbdocs-preview:has(.docs-story [role='listbox']) {
+  position: relative;
+  z-index: 5;
+  overflow: visible !important;
+}
+
+/* Lifted separately from the block above: the "Show code" toolbar is a SIBLING
+ * of `.docs-story` inside the same preview, so clearing the preview's own
+ * z-index does nothing for it. This is the rule that stops the toolbar printing
+ * through an open menu. */
+.docs-story:has([role='listbox']) {
+  position: relative;
+  z-index: 1;
+  overflow: visible !important;
+}

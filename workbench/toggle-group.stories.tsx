@@ -1,7 +1,6 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, userEvent } from 'storybook/test';
-import { Text, View } from 'react-native';
 
 import { ToggleGroup as ToggleGroupWeb } from '@design-system/toggle-group/toggle-group.web.tsx';
 import { ToggleGroup as ToggleGroupNative } from '@design-system/toggle-group/toggle-group.native.tsx';
@@ -42,7 +41,7 @@ const meta = {
   },
   render: (args) => (
     <LeafPair
-      note='Native `ToggleGroup.Root` has no `role="group"` equivalent, so `aria-label` there is a prohibited ARIA attribute. The web group is labelled with `aria-label="Text alignment"`; the native pane gets a visible heading instead, and the group itself stays unnamed.'
+      note="Both groups are named the same invisible way — `aria-label` on the Root. Until 0.9.1 only the web one could be, and the native pane carried a visible heading to compensate; that heading was the story's, never the package's."
       web={
         <ToggleGroupWeb.Root
           defaultValue={args.defaultValue}
@@ -57,19 +56,17 @@ const meta = {
         </ToggleGroupWeb.Root>
       }
       native={
-        <View style={{ gap: 8 }}>
-          <Text style={{ fontSize: 12, fontWeight: '600' }}>Text alignment</Text>
-          <ToggleGroupNative.Root
-            defaultValue={args.defaultValue}
-            multiple={args.multiple}
-            disabled={args.disabled}
-            onValueChange={args.onValueChange}
-          >
-            <ToggleNative value="left">Left</ToggleNative>
-            <ToggleNative value="center">Center</ToggleNative>
-            <ToggleNative value="right">Right</ToggleNative>
-          </ToggleGroupNative.Root>
-        </View>
+        <ToggleGroupNative.Root
+          defaultValue={args.defaultValue}
+          multiple={args.multiple}
+          disabled={args.disabled}
+          onValueChange={args.onValueChange}
+          aria-label="Text alignment"
+        >
+          <ToggleNative value="left">Left</ToggleNative>
+          <ToggleNative value="center">Center</ToggleNative>
+          <ToggleNative value="right">Right</ToggleNative>
+        </ToggleGroupNative.Root>
       }
     />
   ),
@@ -105,6 +102,9 @@ export const Basic: Story = {
     });
 
     await step('native leaf: same single-select swap, same handler', async () => {
+      // Named the same as the web group since 0.9.1 — see SingleSelect's doc
+      // comment for what this pane used to render instead.
+      await expect(native.getByRole('group', { name: 'Text alignment' })).toBeInTheDocument();
       await userEvent.click(native.getByRole('button', { name: 'Center' }));
       await expect(args.onValueChange).toHaveBeenCalledTimes(2);
       await expect(args.onValueChange).toHaveBeenLastCalledWith(['center']);
@@ -121,19 +121,24 @@ export const Basic: Story = {
 };
 
 /**
- * `ToggleGroup.Root` cannot be labelled the same way on both leaves. The web
- * Root is `role="group"` and takes `aria-label` correctly; the native Root is
- * a bare `View` with no `role="group"` equivalent in RN (see
- * `toggle-group.native.tsx`'s header), so `accessibilityLabel`/`aria-label`
- * there is a prohibited ARIA attribute — axe's `aria-prohibited-attr`, live in
- * this gate. So: the web pane names the group with `aria-label`; the native
- * pane instead gets a plain visible `<Text>` heading above an unnamed group.
- * That is shown honestly here, not papered over.
+ * Both leaves name the group the same way: `aria-label` on the Root, invisible
+ * on both sides.
+ *
+ * THE REGRESSION STORY for 0.9.1 — keep it. Until then the native Root was a
+ * roleless `View`, so `aria-label` on it was axe's `aria-prohibited-attr` and
+ * the group simply could not be named. This story compensated with a visible
+ * `<Text>` heading above the native pane, which made the workbench look MORE
+ * accessible than the package was: no consumer rendering
+ * `ToggleGroup.Root` ever got that heading, and the a11y gate passed a
+ * component that would have failed in their app. A workbench that patches
+ * around a component gap hides exactly what it exists to show.
  */
 export const SingleSelect: Story = {
   render: () => (
     <LeafPair
-      note='Native `ToggleGroup.Root` has no `role="group"` equivalent, so `aria-label` there is a prohibited ARIA attribute. The web group is labelled with `aria-label="Text alignment"`; the native pane gets a visible heading instead, and the group itself stays unnamed.'
+      note={
+        'Both groups carry `aria-label` on the Root and no visible heading. If a heading ever reappears in the native pane, the native Root has lost its `role="group"` again.'
+      }
       web={
         <ToggleGroupWeb.Root defaultValue={['left']} aria-label="Text alignment">
           <ToggleWeb value="left">Left</ToggleWeb>
@@ -142,23 +147,27 @@ export const SingleSelect: Story = {
         </ToggleGroupWeb.Root>
       }
       native={
-        <View style={{ gap: 8 }}>
-          <Text style={{ fontSize: 12, fontWeight: '600' }}>Text alignment</Text>
-          <ToggleGroupNative.Root defaultValue={['left']}>
-            <ToggleNative value="left">Left</ToggleNative>
-            <ToggleNative value="center">Center</ToggleNative>
-            <ToggleNative value="right">Right</ToggleNative>
-          </ToggleGroupNative.Root>
-        </View>
+        <ToggleGroupNative.Root defaultValue={['left']} aria-label="Text alignment">
+          <ToggleNative value="left">Left</ToggleNative>
+          <ToggleNative value="center">Center</ToggleNative>
+          <ToggleNative value="right">Right</ToggleNative>
+        </ToggleGroupNative.Root>
       }
     />
   ),
+  play: async ({ canvasElement }) => {
+    const { web, native } = pair(canvasElement);
+    // BOTH panes, which is the whole point of the fix — the native assertion
+    // is the one that could not have been written before 0.9.1.
+    await expect(web.getByRole('group', { name: 'Text alignment' })).toBeInTheDocument();
+    await expect(native.getByRole('group', { name: 'Text alignment' })).toBeInTheDocument();
+  },
 };
 
 export const MultiSelect: Story = {
   render: () => (
     <LeafPair
-      note="Same native labelling gap as SingleSelect: only the web group carries an accessible name, so the native pane repeats the visible-heading idiom."
+      note="Multi-select, and the same symmetric labelling as SingleSelect — `aria-label` on both Roots."
       web={
         <ToggleGroupWeb.Root multiple defaultValue={['bold', 'italic']} aria-label="Text style">
           <ToggleWeb value="bold">Bold</ToggleWeb>
@@ -167,14 +176,15 @@ export const MultiSelect: Story = {
         </ToggleGroupWeb.Root>
       }
       native={
-        <View style={{ gap: 8 }}>
-          <Text style={{ fontSize: 12, fontWeight: '600' }}>Text style</Text>
-          <ToggleGroupNative.Root multiple defaultValue={['bold', 'italic']}>
-            <ToggleNative value="bold">Bold</ToggleNative>
-            <ToggleNative value="italic">Italic</ToggleNative>
-            <ToggleNative value="underline">Underline</ToggleNative>
-          </ToggleGroupNative.Root>
-        </View>
+        <ToggleGroupNative.Root
+          multiple
+          defaultValue={['bold', 'italic']}
+          aria-label="Text style"
+        >
+          <ToggleNative value="bold">Bold</ToggleNative>
+          <ToggleNative value="italic">Italic</ToggleNative>
+          <ToggleNative value="underline">Underline</ToggleNative>
+        </ToggleGroupNative.Root>
       }
     />
   ),

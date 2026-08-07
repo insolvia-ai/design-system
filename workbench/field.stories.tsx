@@ -40,10 +40,10 @@ const meta = {
   title: 'Components/Field',
   parameters: { layout: 'fullscreen' },
   args: {
-    label: 'Case number',
-    placeholder: 'e.g. 24-10456',
+    label: 'Transponder code',
+    placeholder: 'e.g. TK-421',
     type: 'text',
-    description: 'Assigned by the clerk’s office once filed.',
+    description: 'Assigned by flight control on departure.',
     errorText: '',
     invalid: false,
     readOnly: false,
@@ -112,8 +112,8 @@ export const Basic: Story = {
  */
 export const Invalid: Story = {
   args: {
-    label: 'Client email',
-    placeholder: 'you@firm.com',
+    label: 'Pilot email',
+    placeholder: 'you@outerrim.com',
     type: 'email',
     defaultValue: 'not-an-email',
     invalid: true,
@@ -154,8 +154,8 @@ export const Invalid: Story = {
 export const ReadOnly: Story = {
   name: 'Disabled / read-only',
   args: {
-    label: 'Filed by',
-    defaultValue: 'Alex Rivera, Esq.',
+    label: 'Logged by',
+    defaultValue: 'Wedge Antilles',
     readOnly: true,
     description: '',
     errorText: '',

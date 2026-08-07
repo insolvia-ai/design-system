@@ -9,12 +9,12 @@ describe('Checkbox', () => {
   it('starts unchecked and toggles checked on click', async () => {
     const user = userEvent.setup();
     render(
-      <Checkbox.Root aria-label="Filed for bankruptcy before">
+      <Checkbox.Root aria-label="Flown in combat before">
         <Checkbox.Indicator>✓</Checkbox.Indicator>
       </Checkbox.Root>,
     );
 
-    const box = screen.getByRole('checkbox', { name: 'Filed for bankruptcy before' });
+    const box = screen.getByRole('checkbox', { name: 'Flown in combat before' });
     expect(box).toHaveAttribute('aria-checked', 'false');
     expect(screen.queryByText('✓')).not.toBeInTheDocument();
 
@@ -29,9 +29,9 @@ describe('Checkbox', () => {
 
   it('toggles via the keyboard (native button semantics, Space and Enter)', async () => {
     const user = userEvent.setup();
-    render(<Checkbox.Root aria-label="Has co-debtor" />);
+    render(<Checkbox.Root aria-label="Has co-pilot" />);
 
-    const box = screen.getByRole('checkbox', { name: 'Has co-debtor' });
+    const box = screen.getByRole('checkbox', { name: 'Has co-pilot' });
     await user.tab();
     expect(box).toHaveFocus();
 
@@ -44,12 +44,12 @@ describe('Checkbox', () => {
 
   it('reports aria-checked="mixed" when indeterminate, and shows the indicator', () => {
     render(
-      <Checkbox.Root aria-label="Select all debts" indeterminate>
+      <Checkbox.Root aria-label="Select all systems" indeterminate>
         <Checkbox.Indicator>—</Checkbox.Indicator>
       </Checkbox.Root>,
     );
 
-    const box = screen.getByRole('checkbox', { name: 'Select all debts' });
+    const box = screen.getByRole('checkbox', { name: 'Select all systems' });
     expect(box).toHaveAttribute('aria-checked', 'mixed');
     expect(screen.getByText('—')).toBeVisible();
   });
@@ -89,19 +89,19 @@ describe('Checkbox', () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();
     render(
-      <CheckboxGroup.Root defaultValue={['debts']} onValueChange={onValueChange}>
-        <Checkbox.Root aria-label="Debts" value="debts" />
-        <Checkbox.Root aria-label="Income" value="income" />
+      <CheckboxGroup.Root defaultValue={['cargo']} onValueChange={onValueChange}>
+        <Checkbox.Root aria-label="Cargo" value="cargo" />
+        <Checkbox.Root aria-label="Fuel" value="fuel" />
       </CheckboxGroup.Root>,
     );
 
-    const debts = screen.getByRole('checkbox', { name: 'Debts' });
-    const income = screen.getByRole('checkbox', { name: 'Income' });
-    expect(debts).toHaveAttribute('aria-checked', 'true');
-    expect(income).toHaveAttribute('aria-checked', 'false');
+    const cargo = screen.getByRole('checkbox', { name: 'Cargo' });
+    const fuel = screen.getByRole('checkbox', { name: 'Fuel' });
+    expect(cargo).toHaveAttribute('aria-checked', 'true');
+    expect(fuel).toHaveAttribute('aria-checked', 'false');
 
-    await user.click(income);
+    await user.click(fuel);
 
-    expect(onValueChange).toHaveBeenCalledWith(['debts', 'income']);
+    expect(onValueChange).toHaveBeenCalledWith(['cargo', 'fuel']);
   });
 });

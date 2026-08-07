@@ -1,9 +1,26 @@
-// NATIVE LEAF — React Native primitives. A single part, Root: bare RN has no
-// `role="group"` DOM equivalent (see accordion.native.tsx's note on elements
-// that simply don't map on native), so this is a plain View that provides
-// ToggleGroupContext to any `Toggle` rendered inside it; the a11y surface
-// lives entirely on each Toggle (`accessibilityRole` + a forwarded
-// `aria-pressed` — see toggle.native.tsx's header for why), not here.
+// NATIVE LEAF — React Native primitives. A single part, Root: a `role="group"`
+// View that provides ToggleGroupContext to any `Toggle` rendered inside it.
+// Per-member a11y still lives on each Toggle (`accessibilityRole` + a
+// forwarded `aria-pressed` — see toggle.native.tsx's header for why); what
+// lives HERE is the group's own name.
+//
+// `role="group"` is load-bearing, not decoration. Until 0.9.1 this was a
+// roleless View, on the stated grounds that RN had no `role="group"`
+// equivalent — which was wrong twice over: RN's `Role` union has included
+// 'group' since the `role` prop landed, and alert-dialog.native.tsx already
+// puts `role="alertdialog"` on a plain View and has react-native-web forward
+// it. The cost of the mistake was real: `aria-label` on a roleless element is
+// axe's `aria-prohibited-attr`, so the group could not be named at all, and
+// the workbench story papered over it with a visible <Text> heading that no
+// consumer of this package ever gets. The gate passed a component that would
+// have failed in a consumer's app.
+//
+// A note on what the label does per platform. On web (react-native-web) it
+// becomes a real `aria-label` on a `role="group"` element — the same contract
+// the .web leaf offers. On iOS/Android a View is not an accessibility element
+// unless `accessible` is set, so the label is inert there rather than wrong;
+// that is RN's model for grouping containers, and it matches what the web leaf
+// promises as closely as the platform allows.
 import * as React from 'react';
 import { StyleSheet, View, type ViewProps } from 'react-native';
 
@@ -30,7 +47,7 @@ const ToggleGroupRoot = ({
   const ctx = useToggleGroupState(value, defaultValue, onValueChange, multiple, disabled);
   return (
     <ToggleGroupContext.Provider value={ctx}>
-      <View style={[styles.root, style]} {...props}>
+      <View role="group" style={[styles.root, style]} {...props}>
         {children}
       </View>
     </ToggleGroupContext.Provider>

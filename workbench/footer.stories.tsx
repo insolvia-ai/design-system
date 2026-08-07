@@ -30,10 +30,11 @@ const meta = {
   args: {
     productTitle: 'Product',
     companyTitle: 'Company',
-    note: '© 2026 Meridian Debt Relief. Not a law firm; not legal advice.',
+    note: '© 2026 Outer Rim Freight. Not affiliated with the Galactic Senate.',
   },
   render: (args) => (
     <LeafPair
+      minPaneWidth={480}
       note='Group titles double as landmark names. The web Group is a named `navigation` landmark; the native Group is `accessibilityRole="summary"` — a `region` landmark. Same title, different role. The web Link needs a real `href`; the native Link takes `onPress` instead.'
       web={
         <FooterWeb.Root>

@@ -71,12 +71,12 @@ describe('DateInput (native leaf)', () => {
         <Field.Root invalid>
           <Field.Label>Date incurred</Field.Label>
           <DateInput />
-          <Field.Error>Enter the date the debt was incurred.</Field.Error>
+          <Field.Error>Enter the date of departure.</Field.Error>
         </Field.Root>,
       );
       const input = screen.getByRole('textbox');
       expect(input).toHaveAttribute('aria-invalid', 'true');
-      expect(input).toHaveAccessibleDescription('Enter the date the debt was incurred.');
+      expect(input).toHaveAccessibleDescription('Enter the date of departure.');
     });
   });
 

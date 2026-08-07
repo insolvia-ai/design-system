@@ -47,4 +47,42 @@ export default [
       ],
     },
   },
+  {
+    // Named WIDTH/HEIGHT utilities are banned, because in this theme they do
+    // not mean what they say.
+    //
+    // theme.css names its spacing scale with t-shirt sizes (`--spacing-md:
+    // 1rem`), and Tailwind v4 resolves a named `max-w-*`/`w-*`/`h-*` from the
+    // spacing namespace AHEAD of its own `--container-*` scale. So `max-w-md`
+    // compiles to `max-width: var(--spacing-md)` — 16px, not the 28rem every
+    // reader assumes. 0.8.4 fixed exactly that in the Dialog and AlertDialog
+    // cards, where the popup collapsed below its own padding.
+    //
+    // Nothing else can catch this: the class is valid Tailwind, tsc never reads
+    // CSS, jsdom computes no layout, and axe passes an overflowing dialog whose
+    // contrast and accessible name are both fine. The failure is only visible
+    // to a human looking at the workbench, which is how it shipped.
+    //
+    // Spacing utilities (`p-lg`, `gap-md`, `py-xs`) are NOT banned — resolving
+    // those against the spacing scale is the whole point. Only the sizing
+    // family lies. Write an explicit length instead: `max-w-[28rem]`.
+    files: ['**/*.web.tsx', '**/*.props.ts', 'src/lib/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'Literal[value=/\\b(?:max-w|min-w|w|max-h|min-h|h|size|basis)-(?:xs|sm|md|lg|xl|xxl)\\b/]',
+          message:
+            "Named width/height utilities resolve against this theme's t-shirt SPACING scale, not Tailwind's container scale — `max-w-md` is 16px, not 28rem. Use an explicit length: `max-w-[28rem]`. (Spacing utilities like `p-lg` and `gap-md` are fine.)",
+        },
+        {
+          selector:
+            'TemplateElement[value.raw=/\\b(?:max-w|min-w|w|max-h|min-h|h|size|basis)-(?:xs|sm|md|lg|xl|xxl)\\b/]',
+          message:
+            "Named width/height utilities resolve against this theme's t-shirt SPACING scale, not Tailwind's container scale — `max-w-md` is 16px, not 28rem. Use an explicit length: `max-w-[28rem]`. (Spacing utilities like `p-lg` and `gap-md` are fine.)",
+        },
+      ],
+    },
+  },
 ];

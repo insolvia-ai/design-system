@@ -8,6 +8,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
+import { headingFamily, textScale } from '../lib/native-typography';
 import type { NavBarLinkOwnProps } from './nav-bar.props';
 
 const NavBarRoot = ({ style, ...props }: ViewProps) => {
@@ -74,9 +75,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  brand: { fontSize: 18, fontWeight: '600' },
+  brand: { fontFamily: headingFamily, ...textScale.lg, fontWeight: '600' },
   links: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-  link: { fontSize: 14 },
+  link: { ...textScale.sm },
   linkActive: { fontWeight: '500' },
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
 });

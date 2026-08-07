@@ -26,16 +26,16 @@ const meta = {
   title: 'Components/Dialog',
   parameters: { layout: 'fullscreen' },
   args: {
-    triggerLabel: 'Add case note',
-    title: 'Add a case note',
-    description: 'Visible to everyone assigned to this filing.',
+    triggerLabel: 'Add mission note',
+    title: 'Log a mission note',
+    description: 'Visible to everyone assigned to this mission.',
     onOpenChange: fn(),
   },
   render: (args) => (
     <LeafPair
       note="Both dialogs render CLOSED. Open one trigger at a time — an open web Popup and an open native Modal cannot share this page (see the file header)."
-      web={<CaseNoteDialogWeb {...storyContent(args)} />}
-      native={<CaseNoteDialogNative {...storyContent(args)} />}
+      web={<MissionNoteDialogWeb {...storyContent(args)} />}
+      native={<MissionNoteDialogNative {...storyContent(args)} />}
     />
   ),
 } satisfies Meta<DialogArgs>;
@@ -110,10 +110,20 @@ const singleLeafStyles: Record<string, React.CSSProperties> = {
   },
 };
 
-function SingleLeafNote({ children }: { children: React.ReactNode }) {
+/**
+ * The note AND the leaf share one padded wrapper.
+ *
+ * They used to be siblings — a padded `<div>` for the note, then the component
+ * loose beside it — which left the trigger flush against the story container's
+ * top-left corner while the note above it sat 24px in. On a docs page, where
+ * the canvas draws a visible border, the button reads as falling out of the
+ * frame. Whatever wraps the note has to wrap the component too.
+ */
+function SingleLeafFrame({ note, children }: { note: React.ReactNode; children: React.ReactNode }) {
   return (
     <div style={singleLeafStyles.wrap}>
-      <p style={singleLeafStyles.note}>{children}</p>
+      <p style={singleLeafStyles.note}>{note}</p>
+      {children}
     </div>
   );
 }
@@ -121,26 +131,42 @@ function SingleLeafNote({ children }: { children: React.ReactNode }) {
 export const OpenWebLeaf: Story = {
   name: 'Open (web leaf only)',
   render: (args) => (
-    <>
-      <SingleLeafNote>
-        Single-leaf on purpose — see the file header. This audits the web Popup actually open: role,
-        aria-modal, and the Title/Description wiring, with axe running against it.
-      </SingleLeafNote>
-      <CaseNoteDialogWeb defaultOpen {...storyContent(args)} />
-    </>
+    <SingleLeafFrame
+      note="Single-leaf on purpose — see the file header. This audits the web Popup actually open: role, aria-modal, and the Title/Description wiring, with axe running against it."
+    >
+      <MissionNoteDialogWeb defaultOpen {...storyContent(args)} />
+    </SingleLeafFrame>
   ),
+  play: async ({ args }) => {
+    const dialog = await screen.findByRole('dialog', { name: args.title });
+
+    // The card's WIDTH, pinned as a computed length — the 0.8.4 fix.
+    //
+    // `max-w-md` compiled to `max-width: var(--spacing-md)` — 16px, not the
+    // 28rem it reads as — because this theme names its spacing scale with
+    // t-shirt sizes and Tailwind v4 prefers that namespace over its own
+    // container scale. The popup collapsed below its own `p-lg` padding and
+    // every word wrapped onto its own line.
+    //
+    // Nothing else in the repo can catch that. tsc never reads CSS, jsdom
+    // computes no layout, and axe passed it happily: an overflowing dialog
+    // still has fine contrast and a valid accessible name. Only a computed
+    // length read in a real browser sees it, which is exactly what this is.
+    //
+    // 448 is the same number the native leaf hard-codes, so this doubles as
+    // the cross-leaf agreement check. Only the web side needs pinning — the
+    // native leaf's `maxWidth: 448` is a literal in `StyleSheet.create`, with
+    // no theme indirection that could silently redefine it.
+    await expect(getComputedStyle(dialog).maxWidth).toBe('448px');
+  },
 };
 
 export const OpenNativeLeaf: Story = {
   name: 'Open (native leaf only)',
   render: (args) => (
-    <>
-      <SingleLeafNote>
-        Single-leaf on purpose — see the file header. This audits the native Modal actually open, as
-        react-native-web renders it.
-      </SingleLeafNote>
-      <CaseNoteDialogNative defaultOpen {...storyContent(args)} />
-    </>
+    <SingleLeafFrame note="Single-leaf on purpose — see the file header. This audits the native Modal actually open, as react-native-web renders it.">
+      <MissionNoteDialogNative defaultOpen {...storyContent(args)} />
+    </SingleLeafFrame>
   ),
 };
 
@@ -155,7 +181,7 @@ function storyContent(args: DialogArgs) {
   };
 }
 
-interface CaseNoteDialogProps extends DialogArgs {
+interface MissionNoteDialogProps extends DialogArgs {
   defaultOpen?: boolean;
 }
 
@@ -168,13 +194,13 @@ interface CaseNoteDialogProps extends DialogArgs {
  * composed even though the native leaf renders it as `null` — the RN `Modal`
  * draws its own scrim — so the call site is identical across leaves.
  */
-function CaseNoteDialogWeb({
+function MissionNoteDialogWeb({
   defaultOpen,
   triggerLabel,
   title,
   description,
   onOpenChange,
-}: CaseNoteDialogProps) {
+}: MissionNoteDialogProps) {
   return (
     <DialogWeb.Root defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
       <DialogWeb.Trigger>{triggerLabel}</DialogWeb.Trigger>
@@ -189,13 +215,13 @@ function CaseNoteDialogWeb({
   );
 }
 
-function CaseNoteDialogNative({
+function MissionNoteDialogNative({
   defaultOpen,
   triggerLabel,
   title,
   description,
   onOpenChange,
-}: CaseNoteDialogProps) {
+}: MissionNoteDialogProps) {
   return (
     <DialogNative.Root defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
       <DialogNative.Trigger>{triggerLabel}</DialogNative.Trigger>

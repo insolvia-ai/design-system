@@ -183,7 +183,18 @@ const DialogPopupImpl = React.forwardRef<HTMLDivElement, DialogPopupProps>(
         tabIndex={-1}
         onKeyDown={handleKeyDown}
         className={cn(
-          'fixed left-1/2 top-1/2 z-50 flex w-full max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-md rounded-lg bg-card p-lg shadow-lg outline-none',
+          // `max-w-[28rem]`, NOT `max-w-md`. theme.css names its spacing scale
+          // with t-shirt sizes (`--spacing-md: 1rem`), and Tailwind v4 resolves
+          // a named `max-w-*` from the spacing namespace ahead of its built-in
+          // `--container-*` scale — so `max-w-md` compiles to
+          // `max-width: var(--spacing-md)`, i.e. 16px, not the 28rem it reads
+          // as. The card then collapsed below its own `p-lg` padding and every
+          // word wrapped onto its own line. Nothing in CI could see it: jsdom
+          // computes no layout, tsc reads no CSS, and axe passes an overflowing
+          // dialog whose contrast and accessible name are both fine. Same trap
+          // for every named width utility (`max-w-sm` is 0.5rem, `max-w-lg`
+          // 1.5rem) — reach for an explicit length here, never a t-shirt size.
+          'fixed left-1/2 top-1/2 z-50 flex w-full max-w-[28rem] -translate-x-1/2 -translate-y-1/2 flex-col gap-md rounded-lg bg-card p-lg shadow-lg outline-none',
           className,
         )}
         {...props}
@@ -245,7 +256,23 @@ const DialogClose = React.forwardRef<HTMLButtonElement, React.ComponentPropsWith
           onClick?.(event);
           if (!event.defaultPrevented) setOpen(false);
         }}
-        className={cn('cursor-pointer', focusRing, disabledStyles, className)}
+        // Typography and box, NOT just interaction styles.
+        //
+        // This used to be a bare button carrying only cursor/focus/disabled, on
+        // the theory that Close is an unstyled slot a consumer fills through
+        // `className`. The native leaf never agreed: it bakes in
+        // `alignSelf: 'flex-start'`, 14px/500 and 4px of vertical padding. So
+        // one design rendered as a 400px-wide centred 16px/400 button on web
+        // and a 45px-wide left-hugging 14px/500 one on native — measured, in
+        // the workbench. These four utilities ARE that native block, so the
+        // two leaves now start from the same place. A consumer's `className`
+        // still overrides, which is the part that was worth keeping.
+        className={cn(
+          'cursor-pointer self-start py-xs text-sm font-medium text-ink',
+          focusRing,
+          disabledStyles,
+          className,
+        )}
         {...props}
       />
     );
