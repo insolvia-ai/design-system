@@ -1,5 +1,5 @@
 // NATIVE LEAF — a React Native TextInput over the same shared mask
-// (date-input.props). This is the leaf the app renders on web, so it is the one
+// (date-input.props). This is the leaf a React Native consumer renders on web, so it is the one
 // that has to be right; it deliberately mirrors Field's own control styling,
 // because a date field sitting next to a text field should not look like a
 // different species.
@@ -97,7 +97,7 @@ export const DateInput = ({
 const styles = StyleSheet.create({
   root: { width: '100%' },
   control: {
-    // 44dp, the WCAG 2.5.5 target-size floor the app enforces. Field's own
+    // 44dp, the WCAG 2.5.5 target-size floor. Field's own
     // control is 40dp; a date input is reached by tap far more often than a
     // long-form text field, so it takes the taller of the two.
     height: 44,

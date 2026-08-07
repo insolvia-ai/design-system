@@ -32,7 +32,16 @@ const MeterRoot = ({ value, min = 0, max = 100, children, style, ...props }: Met
   return (
     <View
       accessibilityRole="progressbar"
+      // BOTH forms. `accessibilityValue` is the correct React Native prop;
+      // react-native-web ignores the nested object completely (it forwards the
+      // flat `accessibilityValueNow`/`aria-valuenow` props instead), so
+      // without the `aria-*` trio below a meter on the web build announces its
+      // role and NO VALUE — which is worse than useless for the one control
+      // whose entire purpose is to report a number.
       accessibilityValue={{ now: value, min, max }}
+      aria-valuenow={value}
+      aria-valuemin={min}
+      aria-valuemax={max}
       style={[styles.root, style]}
       {...props}
     >

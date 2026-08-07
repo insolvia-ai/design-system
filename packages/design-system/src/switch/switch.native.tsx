@@ -6,8 +6,8 @@
 // time (the RN equivalent of the web leaf's data-state Tailwind variant).
 // Checked/disabled are reported BOTH ways — see radio-group.native.tsx's
 // header comment for why `aria-checked`/`aria-disabled` (not
-// `accessibilityState` alone) are what the app-web build actually renders
-// through react-native-web, which is the only target that ships (ADR 0004).
+// `accessibilityState` alone) are what the web build actually renders
+// through react-native-web, which is the only target that ships today.
 import { Pressable, StyleSheet, View, type PressableProps } from 'react-native';
 
 import { radii } from '@insolvia-ai/tokens';

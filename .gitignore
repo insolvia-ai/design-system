@@ -16,3 +16,11 @@ npm-debug.log*
 .npmrc.local
 
 .DS_Store
+
+# Storybook static build output — CI builds it to prove the workbench still
+# compiles, and pages.yml builds its own copy to deploy; nothing serves the
+# local one.
+storybook-static/
+
+# Vitest coverage report (npm run test:coverage) — generated, never committed.
+coverage/

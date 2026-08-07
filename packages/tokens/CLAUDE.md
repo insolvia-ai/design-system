@@ -12,15 +12,14 @@ The single source of truth for every design token, published as
   `npm run tokens:check` (fails the PR on drift, naming the file you edited).
   If `git diff` is non-empty after `npm run tokens`, the *generator* is wrong —
   never reconcile by editing a generated file.
-- **There used to be a fourth output, and it is now in another repo.** Cognito's
-  managed-login branding (`infra/modules/auth/managed-login-settings.json`)
-  lives in `insolvia-ai/insolvia`, which reconciles it against the *published*
-  `colors.json`. Never re-add an output that writes outside this repo: a
-  published package cannot be allowed to depend on a consumer's directory
-  layout, and the generator would silently no-op wherever that path is absent.
+- **Never add an output that writes outside this repo.** One did once, into a
+  consumer's tree, which meant the generator encoded that reader's directory
+  layout — so it silently no-opped for everyone else, and a published package
+  depended on where one consumer kept its files. Consumers render their own
+  outputs from the published tokens.
 - **`colors.json` exists because Node will not strip types under
-  `node_modules`.** A plain `node` script in a consumer repo — the Cognito
-  reconciler is the one that exists — cannot import `tokens.ts` at all
+  `node_modules`.** A plain `node` script in a consumer with no
+  bundler — cannot import `tokens.ts` at all
   (`ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`); Metro and Vite can, which is
   why only that consumer is affected. It is the same values `tokens.ts` emits,
   rendered through the same helpers. The alternative was a second copy of the
@@ -53,5 +52,5 @@ The single source of truth for every design token, published as
   property or a runtime fallback.
 - **This package is published and version-gated** (it was neither until 0.2.0,
   when it left the monorepo). Any change here is its own PR with a `version`
-  bump — the app and the Cognito reconciler both install it from the registry,
+  bump — consumers install it from the registry,
   and an unbumped change publishes nothing and silently rots.

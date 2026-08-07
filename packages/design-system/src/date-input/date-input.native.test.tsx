@@ -1,5 +1,5 @@
 // NATIVE-leaf tests, run in the vitest `native` project — react-native aliased
-// to react-native-web, the pair the app ships on web. This is the leaf the app
+// to react-native-web, the pair a React Native consumer ships on web. This is the leaf a consumer
 // actually renders, so the masking and validity behaviour is asserted here too
 // rather than assumed to carry over from the shared module.
 import { render, screen } from '@testing-library/react';

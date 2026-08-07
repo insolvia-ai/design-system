@@ -114,7 +114,7 @@ jobs:
       # WHICH platform broke. The native program is the one this web-only CI
       # would otherwise never exercise: without it a PR could be green
       # everywhere and still ship `.native` leaves that fail the moment Metro
-      # resolves them in the app.
+      # resolves them.
       - name: Typecheck (tokens)
         run: npm run typecheck --workspace @insolvia-ai/tokens
 
@@ -127,8 +127,62 @@ jobs:
       - name: Typecheck (design system, native tests)
         run: npm run typecheck:native-test --workspace @insolvia-ai/design-system
 
+      # The fourth program: the workbench stories. They are outside every
+      # tsconfig the packages own, so until 0.8.3 nothing typechecked them and
+      # the Button story rendered `intent="danger"` — an intent that does not
+      # exist — as an unstyled button labelled "danger". The a11y step below
+      # cannot see that (an unstyled button violates no axe rule) and
+      # "Workbench builds" cannot either (it transpiles, it does not check
+      # types). See tsconfig.workbench.json.
+      - name: Typecheck (workbench stories)
+        run: npm run typecheck:workbench
+
       - name: Test
         run: npm run test
+
+      # The workbench is the only place in this repo where a component is
+      # LOOKED AT rather than asserted about — `.storybook/main.ts` says so
+      # directly, and it's what the a11y step below actually exercises: every
+      # story, in a real browser, with a real accessibility tree. A component
+      # with no story is invisible to that check, and to a human, at once —
+      # twenty of this package's twenty-two components shipped that way before
+      # anything caught it. This runs `workbench/story-coverage.test.ts` under
+      # plain Node (no browser needed, so it runs before the Playwright install
+      # below rather than after) and fails with the exact missing path.
+      - name: Workbench story coverage
+        run: npm run test:workbench
+
+      # Accessibility, gated rather than reported.
+      #
+      # Runs every story as a test in a real Chromium and fails on any axe
+      # violation (`a11y.test: 'error'` in .storybook/preview.tsx). This is the
+      # only check in the repo that sees computed styles and a real
+      # accessibility tree — colour contrast and target size do not exist under
+      # jsdom, where the rest of the suite lives — so it catches a class of
+      # defect the 348 unit tests structurally cannot.
+      #
+      # Playwright's browser download is the slowest step here by far, hence
+      # `--only-shell`: the story tests need Chromium's headless shell and none
+      # of the rest.
+      - name: Install Playwright (Chromium)
+        run: npx playwright install chromium --only-shell --with-deps
+
+      - name: Accessibility (axe, every story)
+        run: npm run test:a11y
+
+      # The workbench is not tested, but it must still COMPILE.
+      #
+      # It is the only place either repo can see a component, and it breaks in
+      # a way nothing else notices: it reaches past the packages' `exports` into
+      # their source, so a moved or renamed file leaves every other check green
+      # and the workbench dead. The person who finds out is whoever next needs
+      # to look at a component, usually while debugging something else.
+      #
+      # A build, not a smoke test — it type-checks nothing (the stories are
+      # outside every tsconfig program) but it does resolve every import and
+      # compile every story, which is the failure being guarded.
+      - name: Workbench builds
+        run: npm run storybook:build
 
       # The platform-split invariant, machine-checked against the artifact that
       # actually ships rather than against the working tree.

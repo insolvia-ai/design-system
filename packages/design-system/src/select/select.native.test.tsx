@@ -1,7 +1,7 @@
 // NATIVE-leaf tests, run in the vitest `native` project — native-first
 // resolution with react-native aliased to react-native-web, the exact pair the
 // app ships on web. That makes these the tests that matter for this component:
-// the app never renders the `.web` leaf, so its keyboard grammar would be
+// a React Native consumer never renders the `.web` leaf, so its keyboard grammar would be
 // unreachable in the product if it lived only there.
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

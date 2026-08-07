@@ -5,7 +5,7 @@
 // The one addition is this package's load-bearing rule, machine-enforced: a
 // `*.props.ts` module is the platform-SHARED third of a component and must
 // never import a renderer. One react-native import in a props file would drag
-// react-native-web into marketing's bundle; one react-dom import would break
+// react-native-web into a web consumer's bundle; one react-dom import would break
 // the native leaves. The leaves themselves import their own platform freely —
 // the ban is scoped to the shared modules only.
 import base from '../../eslint.base.js';
@@ -18,7 +18,7 @@ export default [
     // the same `.native.` infix that routes them to Metro (and to
     // tsconfig.native.json's moduleSuffixes) is what exempts them here,
     // because a leaf imports its own renderer by definition. The web typecheck
-    // and marketing's Vite cannot resolve a `.native.` file at all, so the
+    // and a web consumer's Vite cannot resolve a `.native.` file at all, so the
     // exemption cannot leak react-native into a web bundle. Every props file
     // and every extensionless (shared) lib module stays fenced.
     ignores: ['src/lib/**/*.native.ts'],
@@ -40,7 +40,7 @@ export default [
             {
               group: ['@base-ui/*'],
               message:
-                'Base UI was retired with insolvia_design_system_react; nothing here may depend on it.',
+                'Base UI was retired with the predecessor package; nothing here may depend on it.',
             },
           ],
         },

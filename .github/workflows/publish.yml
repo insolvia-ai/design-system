@@ -24,7 +24,7 @@ permissions:
   packages: write
 
 concurrency:
-  group: insolvia-design-system-publish
+  group: design-system-publish
   cancel-in-progress: false
 
 # Job-wide, not per-step: setup-node's `registry-url` writes an .npmrc whose
@@ -65,7 +65,7 @@ jobs:
       # Both packages publish SOURCE (.ts/.tsx). For the design system that is
       # load-bearing: each component's `.web.tsx` and `.native.tsx` leaves must
       # survive into the published artifact so the CONSUMER's bundler picks the
-      # leaf by extension — marketing's Vite takes `.web.tsx`, the app's Metro
+      # leaf by extension — a web consumer's Vite takes `.web.tsx`, a React Native consumer's Metro
       # takes `.native.tsx`. A package-time bundle would collapse that choice
       # before any consumer got to make it.
       #

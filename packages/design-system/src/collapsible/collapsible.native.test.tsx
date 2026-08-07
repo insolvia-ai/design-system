@@ -1,15 +1,15 @@
 // NATIVE-leaf tests — see button.native.test.tsx for how the `native` vitest
 // project resolves './collapsible' to collapsible.native.tsx and renders it
-// through react-native-web, the pair the app ships on web.
+// through react-native-web, the pair a React Native consumer ships on web.
 //
-// No assertion on `aria-expanded` here: the pinned react-native-web (0.21.2)
-// only maps `accessibilityState.disabled` to `aria-disabled`/`disabled` (see
-// its AccessibilityUtil/isDisabled.js) — `expanded` is not translated to
-// `aria-expanded` in this version, even though accordion.native.tsx sets the
-// same `accessibilityState={{ expanded: open }}` prop. The Pressable still
-// carries the semantically-correct RN prop for real native rendering; the
-// open/closed state is instead verified the way it is actually observable in
-// this DOM — via the panel mounting and unmounting.
+// `aria-expanded` IS asserted here now. It did not used to be, and the note
+// that stood in its place was correct about the mechanism and wrong about the
+// conclusion: react-native-web really does ignore the nested
+// `accessibilityState`, but the fix for that is to set `aria-expanded`
+// explicitly — which is what checkbox.native.tsx and switch.native.tsx had
+// always done — rather than to stop testing the state. For as long as that
+// note stood, the trigger announced no expanded state at all on the web build
+// (WCAG 4.1.2), and the mount/unmount assertion below could not see it.
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -29,6 +29,20 @@ function Notes() {
 }
 
 describe('Collapsible (native leaf)', () => {
+  it('reports its expanded state to assistive tech', async () => {
+    // The regression guard for the note above: react-native-web drops the
+    // nested `accessibilityState`, so this passes only while the leaf also
+    // sets `aria-expanded` explicitly.
+    const user = userEvent.setup();
+    render(<Notes />);
+
+    const trigger = screen.getByRole('button', { name: 'Show case notes' });
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  });
+
   it('renders the trigger as a button, unmounts the panel while closed, and mounts it on press', async () => {
     const user = userEvent.setup();
 

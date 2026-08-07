@@ -5,7 +5,7 @@
 // are reported BOTH ways: `accessibilityState` for real native platforms, and
 // the `aria-checked`/`aria-disabled` props (real, typed RN props — no cast
 // needed, see AccessibilityProps) for react-native-web, which is what
-// actually ships (ADR 0004 — web is the only target). This split matters:
+// actually ships (web is the only target that ships today). This split matters:
 // react-native-web's DOM prop translation in the installed version reads
 // `aria-checked`/`aria-disabled` (or their `accessibility*` aliases) but does
 // NOT flatten the `accessibilityState` object into DOM attributes, so relying

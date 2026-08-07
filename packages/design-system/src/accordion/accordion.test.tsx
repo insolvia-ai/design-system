@@ -9,7 +9,7 @@ function Faq() {
     <Accordion.Root>
       <Accordion.Item value="cost">
         <Accordion.Header>
-          <Accordion.Trigger>What does Insolvia cost?</Accordion.Trigger>
+          <Accordion.Trigger>What does it cost?</Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel>Flat per-seat pricing, billed annually.</Accordion.Panel>
       </Accordion.Item>
@@ -23,7 +23,7 @@ describe('Accordion', () => {
 
     render(<Faq />);
 
-    const trigger = screen.getByRole('button', { name: 'What does Insolvia cost?' });
+    const trigger = screen.getByRole('button', { name: 'What does it cost?' });
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
 
     await user.click(trigger);
@@ -37,7 +37,7 @@ describe('Accordion', () => {
 
     render(<Faq />);
 
-    const trigger = screen.getByRole('button', { name: 'What does Insolvia cost?' });
+    const trigger = screen.getByRole('button', { name: 'What does it cost?' });
 
     await user.click(trigger);
     expect(trigger).toHaveAttribute('aria-expanded', 'true');

@@ -1,6 +1,6 @@
 // NATIVE-leaf tests — see button.native.test.tsx for how the `native` vitest
 // project resolves './radio-group' to radio-group.native.tsx and renders it
-// through react-native-web, the pair the app ships on web. `aria-checked`/
+// through react-native-web, the pair a React Native consumer ships on web. `aria-checked`/
 // `aria-disabled` are asserted directly (not `accessibilityState`) because
 // that is what actually reaches the DOM through react-native-web — see the
 // header comment in radio-group.native.tsx for why.

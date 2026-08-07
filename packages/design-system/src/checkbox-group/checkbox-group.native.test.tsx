@@ -1,6 +1,6 @@
 // NATIVE-leaf tests — resolves './checkbox-group' to checkbox-group.native.tsx
 // and './checkbox' to checkbox.native.tsx (both leaves), rendered through
-// react-native-web the same way the app ships on web. Pins the role="group"
+// react-native-web the same way a React Native consumer ships on web. Pins the role="group"
 // wiring and that group membership actually reaches each checkbox's
 // aria-checked state, not just its own props.
 import { render, screen } from '@testing-library/react';

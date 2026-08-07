@@ -6,7 +6,7 @@ import { NavBar } from './nav-bar';
 function Nav() {
   return (
     <NavBar.Root>
-      <NavBar.Brand href="/">Insolvia</NavBar.Brand>
+      <NavBar.Brand href="/">Acme</NavBar.Brand>
       <NavBar.Links>
         <NavBar.Link href="/features" active>
           Features

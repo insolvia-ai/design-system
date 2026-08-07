@@ -29,3 +29,11 @@ export { Switch } from './switch';
 export { Tabs } from './tabs';
 export { Toggle } from './toggle';
 export { ToggleGroup } from './toggle-group';
+
+// Theming. `ThemeProvider` is renderer-free and exported from the shared side
+// on purpose, so a cross-platform consumer writes one provider rather than
+// branching on platform. On web it is inert — `theme.css`'s custom properties
+// are the override seam there — and on native it is the ONLY way to change a
+// colour without forking the package. See src/lib/theme.ts.
+export { ThemeProvider, useThemeOverrides } from './lib/theme';
+export type { ThemeOverrides } from './lib/theme';

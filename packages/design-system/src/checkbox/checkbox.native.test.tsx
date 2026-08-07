@@ -1,6 +1,6 @@
 // NATIVE-leaf tests — see button.native.test.tsx for how the `native` vitest
 // project resolves './checkbox' to checkbox.native.tsx and renders it through
-// react-native-web, the pair the app ships on web. These pin the role/state
+// react-native-web, the pair a React Native consumer ships on web. These pin the role/state
 // wiring (accessibilityRole="checkbox" + aria-checked incl. "mixed") and the
 // dark-mode color-resolution regression the whole package tests for.
 import { render, screen } from '@testing-library/react';

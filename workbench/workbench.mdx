@@ -1,0 +1,53 @@
+{/* The workbench's front page — the one hand-authored docs page in this repo.
+    Everything else under Docs is assembled by autodocs from the stories
+    themselves (see the addon-docs entry in .storybook/main.ts); this page
+    exists to explain how to READ those pages, and it stays deliberately
+    short so it cannot drift far from the truth. */}
+
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Workbench" />
+
+# The workbench
+
+This is the only place in this repo where a component is **looked at** rather
+than asserted about. Every other check is blind: unit tests render one leaf
+into jsdom and assert on roles; four tsc programs check types. None of them can
+see that something is the wrong colour, in the wrong place, or painted
+underneath the thing below it — the 0.7.1 Select bug was exactly that, and its
+report opens *"reported from a real browser, and invisible to every test in
+this package."*
+
+## Two panes, one design
+
+Every component in `@insolvia-ai/design-system` is two implementations of one
+design: a `.web.tsx` leaf (React DOM + Tailwind — what a web consumer's
+bundler resolves) and a `.native.tsx` leaf (React Native primitives — what a
+React Native consumer resolves, rendered here through react-native-web, which
+is exactly what that consumer ships on web). The package's central claim is
+that the two agree, and the side-by-side panes in every story are the only
+place that claim can be checked at all.
+
+**web leaf** and **native leaf** labels on the panes say which is which. An
+overlay spilling past a pane's frame is correct and informative — the frame
+never clips, precisely so an open listbox or tooltip stays visible.
+
+## The toolbar
+
+- **Scheme** drives BOTH leaves at once — CSS custom properties for the web
+  leaf, a `useColorScheme()` substitution for the native one. Flip it on every
+  component you touch; a native leaf that resolves colours at module load
+  instead of render is invisible in light mode and obvious in dark
+  (`workbench/scheme.ts` has the whole story).
+- **Viewport** matters most for the native pane: a React Native consumer's
+  surface is a phone, and the 390px preset is the closest this workbench gets
+  to one without a simulator.
+
+## Stories are also the tests
+
+Every story here runs as a browser test (`npm run test:a11y`): its play
+function drives both panes, and axe then audits the DOM the play left behind —
+which is why interactive stories deliberately end in their open or expanded
+state. A story that fails axe fails CI. The docs page you are reading a
+component on is assembled from those same gated stories; nothing on it is
+authored twice.

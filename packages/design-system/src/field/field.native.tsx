@@ -3,7 +3,7 @@
 // association INVERTS: the web leaf points the label at the control with
 // <label htmlFor>; here the label Text carries nativeID={labelId} and the
 // control points back at it with aria-labelledby — the pair react-native-web
-// emits as a correctly associated label/input on app-web. aria-describedby is
+// emits as a correctly associated label/input on web. aria-describedby is
 // composed from ONLY the description/error ids actually rendered (each part
 // carries its nativeID), aria-invalid mirrors the web leaf, and the
 // render-as-select/textarea hatch has no RN analogue so it is dropped.

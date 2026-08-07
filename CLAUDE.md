@@ -1,9 +1,8 @@
 # design-system — agent guide
 
-Insolvia's design system and its design tokens, as **two published npm
-packages** in one workspace. Everything here ships to consumers in
-[`insolvia-ai/insolvia`](https://github.com/insolvia-ai/insolvia) through the
-GitHub Packages registry, and through nothing else.
+A design system and its design tokens, as **two published npm packages** in one
+workspace. Everything here reaches consumers through the GitHub Packages
+registry, and through nothing else.
 
 ```
 packages/tokens          @insolvia-ai/tokens          one JSON source → TS, CSS, JSON
@@ -14,63 +13,99 @@ Each package has its own `CLAUDE.md` (that package's rules — read it before
 editing there) and a `README.md` for humans. One owner per fact — link, never
 restate.
 
-## The one rule this repo exists to enforce
+## This repo knows nothing about its consumers
 
-**There is exactly one way out of here: publish a version.**
+**Do not name a consumer anywhere in this repo** — not in a comment, not in a
+doc, not in a config. No app names, no repository names, no product names, no
+"what a particular consumer does". The published packages are the whole interface,
+and a consumer's bundler, directory layout and release cadence are none of this
+repo's business.
 
-Until 0.5.x the design system was a member of the `insolvia-ai/insolvia` npm
-workspace. The Expo app consumed its **source** through a workspace symlink
-plus a Metro `resolveRequest`, while the marketing site consumed the
-**published** version. The same package therefore had two different truths at
-once — a local edit was already live for one consumer and invisible to the
-other — and no amount of care inside the package could reconcile them.
+This is not tidiness. Two concrete failures come from breaking it:
 
-So: **never add a path-based or symlink channel to a consumer.** If a task
-seems to need one, it is the task that is wrong.
+- A generated file once landed in a consumer's tree, which meant the generator
+  encoded one reader's directory layout and silently produced nothing for
+  anyone else.
+- Reasoning written as "what our app does" stops being checkable the moment
+  that app changes, and nobody here can tell.
 
-The corollary, which is where changes here usually go astray:
+Write the platform instead of the product: "a React Native consumer", "a web
+consumer", "the consumer's bundler". Ecosystem facts are fine and useful —
+Metro resolves `.native`, Vite resolves `.web`, react-native-web renders RN
+primitives in a browser — because those are true of anyone.
 
-- **Do not add dependencies to `@insolvia-ai/design-system`.** Not
-  dependencies, not peerDependencies, optional or otherwise. GitHub Packages
-  strips `peerDependenciesMeta` from registry metadata, so npm promotes an
-  "optional" peer to a required one and every web consumer is forced to install
-  a native renderer it never loads. `react-native` and `@insolvia-ai/tokens`
-  are imported only by `.native` leaves, which no web resolver can reach, and
-  they resolve from the consumer's own dependencies.
-  [`packages/design-system/package.json`](packages/design-system/package.json)'s
-  comment block owns the full reasoning — read it before touching that
-  manifest.
+The one permitted exception is the npm scope and repository owner,
+`@insolvia-ai` / `insolvia-ai/design-system`, which are addresses rather than
+claims about who consumes what.
+
+## Catalog — need this? read that
+
+| When you're… | Open |
+|---|---|
+| adding or changing a component | `design-system-component` skill |
+| releasing — version bumps, publishing | `design-system-release` skill |
+| opening a PR | `design-system-pr` skill |
+| running or setting anything up | [`scripts/README.md`](scripts/README.md) |
+| **needing to SEE a component** | `./scripts/dev-up.sh` — both leaves, side by side |
+| changing token values | [`packages/tokens/CLAUDE.md`](packages/tokens/CLAUDE.md) — edit `tokens.json`, never a generated file |
+| changing how the workbench resolves anything | [`.storybook/main.ts`](.storybook/main.ts) and [`workbench/react-native.ts`](workbench/react-native.ts) |
+
+## Seeing a component
+
+```bash
+./scripts/dev-up.sh
+```
+
+Merges to `main` also publish the built workbench to GitHub Pages
+(`.github/workflows/pages.yml`) — same stories, same gates, no checkout
+needed. The local script is for work in progress; the URL is for looking at
+what shipped.
+
+Everything else here is blind. Vitest renders into jsdom and asserts on roles
+and labels; tsc checks types. Neither can see that something is the wrong
+colour, in the wrong place, or painted underneath the thing below it — and that
+last one shipped as the 0.7.1 Select bug, whose report opens *"reported from a
+real browser, and invisible to every test in this package"*.
+
+The workbench renders **both leaves side by side**, which is the only place the
+claim this package rests on — that two implementations of one design agree —
+can be checked at all. The Scheme toolbar drives both at once; see
+[`workbench/scheme.ts`](workbench/scheme.ts) for why that took more than a CSS
+class.
 
 ## Always
 
-- This repo is **public** — never commit secrets, credentials, or customer
-  data. The committed `.npmrc` in consumers reads `${NODE_AUTH_TOKEN}` from the
-  environment; a real token must never be written into a tracked file.
+- This repo is **public** — never commit secrets or credentials. The `.npmrc`
+  pattern consumers use reads `${NODE_AUTH_TOKEN}` from the environment; a real
+  token must never be written into a tracked file.
 - Never commit to `main` — work on a branch and open a PR. CI is the only gate.
 - **Any change to a package needs that package's `version` bumped in the same
-  PR.** CI fails the PR otherwise. Both packages publish on merge to `main`,
-  and the publish job is idempotent by version: an unbumped change merges
-  green, publishes nothing, and silently rots the registry.
+  PR.** CI fails it otherwise. Both packages publish on merge to `main`, and
+  the publish is idempotent by version: an unbumped change merges green,
+  publishes nothing, and silently rots the registry.
 - **Both packages publish SOURCE, and neither has a build step.** That is
-  load-bearing for the design system — leaf resolution happens in the
-  *consumer's* bundler, so the `.web.tsx`/`.native.tsx` pairs must survive into
-  the tarball verbatim. A tsup/tsc emit would collapse each pair into one entry
-  and break the pattern. Do not "fix" this by adding a bundler.
-- `npm run ci` at the root runs the whole gate locally — token drift, format,
-  lint, all three typecheck programs, tests. Green locally is a fair predictor
-  of a green PR.
+  load-bearing for the components: leaf resolution happens in the *consumer's*
+  bundler, so the `.web.tsx`/`.native.tsx` pairs must survive into the tarball
+  verbatim. A tsup/tsc emit collapses each pair and breaks resolution. Do not
+  "fix" this by adding a bundler.
+- **Nothing ships one brand.** `tokens.json` is the default theme; both
+  platforms have an override seam (CSS custom properties on web,
+  `ThemeProvider` on native — see `src/lib/theme.ts`). Components speak the
+  semantic layer only, never raw palette names, which is what keeps a re-brand
+  a one-place change.
+- `npm run ci` runs the whole gate locally — token drift, format, lint, all
+  three typecheck programs, tests, and axe over every story.
 
 ## Pre-extraction history
 
 Both packages were grafted in with `git subtree`, so every commit that shaped
 them is here. Because the paths moved, a path-limited `git log -- packages/…`
-stops at the graft commit; plain `git log` shows the whole story, and the graft
-commit names the source SHA in `insolvia-ai/insolvia`.
+stops at the graft commit; plain `git log` shows the whole story.
 
 ## What is deliberately NOT here
 
-| Thing | Where it lives | Why |
-|---|---|---|
-| Cognito managed-login branding | `insolvia-ai/insolvia`, `infra/modules/auth/` | It is that repo's infrastructure. It reconciles against the **published** `@insolvia-ai/tokens/colors.json`; the generator here must never write outside this repo. |
-| The app, the marketing site | `insolvia-ai/insolvia` | They are consumers. Their bundler config, not this repo's, decides which leaf resolves. |
-| A component gallery / Storybook | nowhere yet | Not built. Don't add one as a side effect of another task. |
+| Thing | Why |
+|---|---|
+| Any knowledge of who consumes this | See above. The registry is the interface. |
+| A build step | The consumer's bundler picks the leaf; a build would decide for it. |
+| A separately-authored component gallery | The workbench IS the gallery: autodocs assembles each component's docs page from the same stories the a11y gate runs, and Pages serves that same build. One source of truth — a hand-written gallery or MDX-per-component site would be a second one, free to drift. (`workbench/workbench.mdx` is the single exception: the front page explaining how to read the rest.) |

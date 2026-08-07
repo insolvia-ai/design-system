@@ -5,9 +5,9 @@ import { disabledStyles, focusRing } from '../lib/styles';
 export type ButtonIntent = 'primary' | 'secondary' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-// Marketing needs exactly three weights of call-to-action. There is no `danger`
+// Consumers need exactly three weights of call-to-action. There is no `danger`
 // intent because the semantic token set has no `danger-text` pair, and a
-// marketing page has nothing destructive to offer.
+// a marketing-style page has nothing destructive to offer.
 export const intentStyles: Record<ButtonIntent, string> = {
   primary: 'bg-primary text-primary-text hover:bg-primary-hover active:bg-primary-active',
   secondary: 'bg-surface-alt text-ink hover:bg-line active:bg-line',

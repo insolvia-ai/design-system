@@ -66,7 +66,16 @@ const AccordionTrigger = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Pressable
       accessibilityRole="button"
+      // BOTH forms, and the duplication is required — same reasoning as
+      // checkbox.native.tsx. `accessibilityState` is the correct React Native
+      // prop and is what a real device reads; react-native-web does NOT derive
+      // `aria-expanded` from it (its createDOMProps handles the flat
+      // `accessibilityExpanded`/`aria-expanded` props and ignores the nested
+      // object entirely). Setting only the RN form means that on the web build
+      // the trigger announces no expanded state at all — WCAG 4.1.2, and
+      // invisible to any test that only checks the panel mounting.
       accessibilityState={{ expanded: open }}
+      aria-expanded={open}
       onPress={() => toggle(value)}
       style={styles.trigger}
     >

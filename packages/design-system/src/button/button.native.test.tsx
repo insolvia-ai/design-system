@@ -1,8 +1,8 @@
 // NATIVE-leaf tests. They run in the vitest `native` project, whose resolver
 // is Metro's view of the package (native-first extensions, react-native
 // aliased to react-native-web), so the extensionless './button' below lands on
-// button.native.tsx and renders through the same react-native-web the app
-// ships on web. Assertions are made on the DOM it emits.
+// button.native.tsx and renders through the same react-native-web a React Native
+// consumer ships on web. Assertions are made on the DOM it emits.
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';

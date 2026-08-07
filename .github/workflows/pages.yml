@@ -1,0 +1,60 @@
+name: Pages
+
+# Publishes the built workbench to GitHub Pages on every merge to main.
+#
+# The workbench is the only place a component is LOOKED AT, and until this
+# existed the only way to look was a local `./scripts/dev-up.sh`. A published
+# URL makes the side-by-side leaf comparison — the claim this whole repo rests
+# on — visible to anyone with the link, PR reviewers and consumers included,
+# with no checkout and no toolchain.
+#
+# This is the same `storybook:build` output pr.yml already produces as a
+# compile check; here it is served instead of discarded. Nothing new is
+# authored for it: the docs pages are assembled from the same stories the a11y
+# gate runs, so this site cannot drift from what CI verified. (One-time repo
+# setup: Settings → Pages → Source must be "GitHub Actions".)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time, never cancelled mid-flight — same shape as the publish
+# workflow's concurrency guard, and for the same reason: a half-replaced site
+# is worse than a briefly stale one.
+concurrency:
+  group: design-system-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy workbench
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      # Must match the root package.json's `engines.node` (">=24").
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build workbench
+        run: npm run storybook:build
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: storybook-static
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
