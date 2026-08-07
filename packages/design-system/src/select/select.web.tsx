@@ -216,7 +216,16 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
                     if (!option.disabled) commit(option.value);
                   }}
                   className={cn(
-                    'cursor-pointer px-sm py-xs',
+                    // `min-h-[44px]` + centring, matching the native leaf's
+                    // `minHeight: 44` / `justifyContent: 'center'` exactly.
+                    // The padding was never the difference — both leaves are
+                    // 4px/8px — but without a floor these rows came out 28px
+                    // against native's 44px, so one design produced visibly
+                    // different lists and a tap target a third smaller on the
+                    // platform more likely to be touched. 44 is the figure the
+                    // native leaf already committed to; the web leaf simply
+                    // had no floor at all.
+                    'flex min-h-[44px] cursor-pointer items-center px-sm py-xs',
                     option.value === active && 'bg-surface-alt',
                     isSelected && 'font-medium',
                     option.disabled && 'cursor-not-allowed text-muted',
