@@ -7,6 +7,7 @@ import { Tabs as TabsWeb } from '@design-system/tabs/tabs.web.tsx';
 import { Tabs as TabsNative } from '@design-system/tabs/tabs.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
 /**
  * `Tabs.Root` requires `defaultValue` — deliberately: there is no reliable
@@ -63,13 +64,13 @@ const meta = {
             <TabsNative.Tab value="history">History</TabsNative.Tab>
           </TabsNative.List>
           <TabsNative.Panel value="content">
-            <Text>Draft language for the assignment clause.</Text>
+            <InkText>Draft language for the assignment clause.</InkText>
           </TabsNative.Panel>
           <TabsNative.Panel value="comments">
-            <Text>2 open comments from collaborators.</Text>
+            <InkText>2 open comments from collaborators.</InkText>
           </TabsNative.Panel>
           <TabsNative.Panel value="history">
-            <Text>Last edited 3 minutes ago.</Text>
+            <InkText>Last edited 3 minutes ago.</InkText>
           </TabsNative.Panel>
         </TabsNative.Root>
       }

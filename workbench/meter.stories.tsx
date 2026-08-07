@@ -7,6 +7,7 @@ import { Meter as MeterWeb } from '@design-system/meter/meter.web.tsx';
 import { Meter as MeterNative } from '@design-system/meter/meter.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
 /**
  * `Meter` is a parts object (`Root`/`Track`/`Indicator`), the same shape as
@@ -63,7 +64,7 @@ const meta = {
       }
       native={
         <View style={{ gap: 6, width: 260 }}>
-          <Text style={{ fontSize: 13 }}>{args.label}</Text>
+          <InkText style={{ fontSize: 13 }}>{args.label}</InkText>
           <MeterNative.Root
             value={args.value}
             min={args.min}

@@ -9,6 +9,7 @@ import { Checkbox as CheckboxWeb } from '@design-system/checkbox/checkbox.web.ts
 import { Checkbox as CheckboxNative } from '@design-system/checkbox/checkbox.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
 const CARGO_TYPES = [
   { value: 'spice', label: 'Spice crates' },
@@ -177,7 +178,7 @@ function CargoManifestWeb(props: Partial<React.ComponentProps<typeof CheckboxGro
 function CargoManifestNative(props: Partial<React.ComponentProps<typeof CheckboxGroupNative.Root>>) {
   return (
     <View style={{ gap: 8 }}>
-      <Text style={{ fontWeight: '600' }}>Cargo manifest</Text>
+      <InkText style={{ fontWeight: '600' }}>Cargo manifest</InkText>
       <CheckboxGroupNative.Root accessibilityLabel="Cargo manifest" {...props}>
         {CARGO_TYPES.map(({ value, label }) => (
           <View key={value} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -187,7 +188,7 @@ function CargoManifestNative(props: Partial<React.ComponentProps<typeof Checkbox
                   paints black on the filled box. */}
               <CheckboxNative.Indicator>✓</CheckboxNative.Indicator>
             </CheckboxNative.Root>
-            <Text>{label}</Text>
+            <InkText>{label}</InkText>
           </View>
         ))}
       </CheckboxGroupNative.Root>

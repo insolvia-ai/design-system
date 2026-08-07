@@ -7,6 +7,7 @@ import { Card as CardNative } from '@design-system/card/card.native.tsx';
 import type { CardElevation } from '@design-system/card/card.props.ts';
 
 import { LeafPair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
 // The two elevations that EXIST — tied to `CardElevation` with `satisfies` so
 // a typo here is a `typecheck:workbench` failure, not a card that quietly
@@ -61,7 +62,7 @@ const meta = {
           <CardNative.Title>{args.title}</CardNative.Title>
           <CardNative.Body>{args.body}</CardNative.Body>
           <CardNative.Footer>
-            <Text style={{ fontSize: 13 }}>{args.footerNote}</Text>
+            <InkText style={{ fontSize: 13 }}>{args.footerNote}</InkText>
           </CardNative.Footer>
         </CardNative.Root>
       }

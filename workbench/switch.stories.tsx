@@ -7,6 +7,7 @@ import { Switch as SwitchWeb } from '@design-system/switch/switch.web.tsx';
 import { Switch as SwitchNative } from '@design-system/switch/switch.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
 /**
  * `Switch` is a parts object (`Root`/`Thumb`), not a single component — so
@@ -179,7 +180,7 @@ function LabelledNative({
       <SwitchNative.Root accessibilityLabel={label} {...props}>
         <SwitchNative.Thumb />
       </SwitchNative.Root>
-      <Text>{label}</Text>
+      <InkText>{label}</InkText>
     </View>
   );
 }

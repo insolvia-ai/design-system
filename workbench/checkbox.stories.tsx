@@ -7,6 +7,7 @@ import { Checkbox as CheckboxWeb } from '@design-system/checkbox/checkbox.web.ts
 import { Checkbox as CheckboxNative } from '@design-system/checkbox/checkbox.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
 /**
  * `Checkbox` is a parts object (`Root`/`Indicator`), not a single component —
@@ -186,7 +187,7 @@ function LabelledNative({
             Indicator for why a bare <Text> here would paint black. */}
         <CheckboxNative.Indicator>{props.indeterminate ? '—' : '✓'}</CheckboxNative.Indicator>
       </CheckboxNative.Root>
-      <Text>{label}</Text>
+      <InkText>{label}</InkText>
     </View>
   );
 }

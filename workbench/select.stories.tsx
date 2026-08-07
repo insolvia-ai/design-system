@@ -12,6 +12,7 @@ import { Button as ButtonWeb } from '@design-system/button/button.web.tsx';
 import { Button as ButtonNative } from '@design-system/button/button.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
 const STARSHIPS = [
   { value: 'xwing', label: 'X-wing — starfighter' },
@@ -253,9 +254,9 @@ export const WithSelection: Story = {
  */
 function NativeNote() {
   return (
-    <Text style={{ fontSize: 13, opacity: 0.75 }}>
+    <InkText style={{ fontSize: 13, opacity: 0.75 }}>
       The list above must cover this paragraph when it is open.
-    </Text>
+    </InkText>
   );
 }
 

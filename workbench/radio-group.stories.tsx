@@ -7,6 +7,7 @@ import { RadioGroup as RadioGroupWeb } from '@design-system/radio-group/radio-gr
 import { RadioGroup as RadioGroupNative } from '@design-system/radio-group/radio-group.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
 const STARSHIPS = [
   { value: 'xwing', label: 'X-wing — starfighter' },
@@ -157,7 +158,7 @@ function StarshipNative(props: Partial<React.ComponentProps<typeof RadioGroupNat
           <RadioGroupNative.Item accessibilityLabel={label} value={value}>
             <RadioGroupNative.Indicator />
           </RadioGroupNative.Item>
-          <Text>{label}</Text>
+          <InkText>{label}</InkText>
         </View>
       ))}
     </RadioGroupNative.Root>

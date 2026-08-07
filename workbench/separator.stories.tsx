@@ -7,6 +7,7 @@ import { Separator as SeparatorNative } from '@design-system/separator/separator
 import type { SeparatorOrientation } from '@design-system/separator/separator.props.ts';
 
 import { LeafPair } from './leaf-pair.tsx';
+import { InkText } from './ink-text.tsx';
 
 const ORIENTATIONS = ['horizontal', 'vertical'] as const satisfies readonly SeparatorOrientation[];
 
@@ -53,9 +54,9 @@ const meta = {
       native={
         args.orientation === 'vertical' ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, height: 24 }}>
-            <Text style={{ fontSize: 14 }}>Transponder 21-10432</Text>
+            <InkText style={{ fontSize: 14 }}>Transponder 21-10432</InkText>
             <SeparatorNative orientation={args.orientation} />
-            <Text style={{ fontSize: 14 }}>YT-1300</Text>
+            <InkText style={{ fontSize: 14 }}>YT-1300</InkText>
           </View>
         ) : (
           <View style={{ width: 280 }}>
@@ -109,14 +110,14 @@ export const Orientations: Story = {
       native={
         <View style={{ gap: 24, width: 280 }}>
           <View style={{ gap: 12 }}>
-            <Text style={{ fontSize: 14 }}>Filed documents</Text>
+            <InkText style={{ fontSize: 14 }}>Filed documents</InkText>
             <SeparatorNative />
-            <Text style={{ fontSize: 14 }}>Pending review</Text>
+            <InkText style={{ fontSize: 14 }}>Pending review</InkText>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, height: 24 }}>
-            <Text style={{ fontSize: 14 }}>Transponder 21-10432</Text>
+            <InkText style={{ fontSize: 14 }}>Transponder 21-10432</InkText>
             <SeparatorNative orientation="vertical" />
-            <Text style={{ fontSize: 14 }}>YT-1300</Text>
+            <InkText style={{ fontSize: 14 }}>YT-1300</InkText>
           </View>
         </View>
       }
