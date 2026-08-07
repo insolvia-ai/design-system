@@ -8,10 +8,10 @@ import { RadioGroup as RadioGroupNative } from '@design-system/radio-group/radio
 
 import { LeafPair, pair } from './leaf-pair.tsx';
 
-const CHAPTERS = [
-  { value: 'ch7', label: 'Chapter 7 — liquidation' },
-  { value: 'ch13', label: 'Chapter 13 — repayment plan' },
-  { value: 'ch11', label: 'Chapter 11 — reorganisation' },
+const STARSHIPS = [
+  { value: 'xwing', label: 'X-wing — starfighter' },
+  { value: 'freighter', label: 'YT-1300 — light freighter' },
+  { value: 'destroyer', label: 'Star Destroyer — capital ship' },
 ];
 
 /**
@@ -35,7 +35,7 @@ const meta = {
   title: 'Components/RadioGroup',
   parameters: { layout: 'fullscreen' },
   args: {
-    defaultValue: 'ch13',
+    defaultValue: 'freighter',
     disabled: false,
     onValueChange: fn(),
   },
@@ -46,14 +46,14 @@ const meta = {
     <LeafPair
       note="Web: roving tabindex, arrow keys move the selection. Native: tap-to-select only — there is no keyboard to rove."
       web={
-        <ChapterWeb
+        <StarshipWeb
           defaultValue={args.defaultValue}
           disabled={args.disabled}
           onValueChange={args.onValueChange}
         />
       }
       native={
-        <ChapterNative
+        <StarshipNative
           defaultValue={args.defaultValue}
           disabled={args.disabled}
           onValueChange={args.onValueChange}
@@ -82,28 +82,28 @@ export const Basic: Story = {
     const { web, native } = pair(canvasElement);
 
     await step('web: click selects, and an arrow key roves the selection', async () => {
-      const ch7 = web.getByRole('radio', { name: 'Chapter 7 — liquidation' });
-      await userEvent.click(ch7);
-      await expect(ch7).toHaveAttribute('aria-checked', 'true');
-      await expect(ch7).toHaveFocus();
+      const xwing = web.getByRole('radio', { name: 'X-wing — starfighter' });
+      await userEvent.click(xwing);
+      await expect(xwing).toHaveAttribute('aria-checked', 'true');
+      await expect(xwing).toHaveFocus();
       await expect(args.onValueChange).toHaveBeenCalledTimes(1);
-      await expect(args.onValueChange).toHaveBeenLastCalledWith('ch7');
+      await expect(args.onValueChange).toHaveBeenLastCalledWith('xwing');
 
       await userEvent.keyboard('{ArrowDown}');
-      const ch13 = web.getByRole('radio', { name: 'Chapter 13 — repayment plan' });
-      await expect(ch13).toHaveAttribute('aria-checked', 'true');
-      await expect(ch13).toHaveFocus();
+      const freighter = web.getByRole('radio', { name: 'YT-1300 — light freighter' });
+      await expect(freighter).toHaveAttribute('aria-checked', 'true');
+      await expect(freighter).toHaveFocus();
       await expect(args.onValueChange).toHaveBeenCalledTimes(2);
-      await expect(args.onValueChange).toHaveBeenLastCalledWith('ch13');
+      await expect(args.onValueChange).toHaveBeenLastCalledWith('freighter');
     });
 
     await step('native: tap-to-select only — no keyboard to rove', async () => {
-      const ch11 = native.getByRole('radio', { name: 'Chapter 11 — reorganisation' });
-      await userEvent.click(ch11);
-      await expect(ch11).toHaveAttribute('aria-checked', 'true');
+      const destroyer = native.getByRole('radio', { name: 'Star Destroyer — capital ship' });
+      await userEvent.click(destroyer);
+      await expect(destroyer).toHaveAttribute('aria-checked', 'true');
       // Continues the SAME shared handler from the web step above.
       await expect(args.onValueChange).toHaveBeenCalledTimes(3);
-      await expect(args.onValueChange).toHaveBeenLastCalledWith('ch11');
+      await expect(args.onValueChange).toHaveBeenLastCalledWith('destroyer');
     });
   },
 };
@@ -120,9 +120,9 @@ export const Disabled: Story = {
   args: { disabled: true },
   play: async ({ canvasElement }) => {
     const { web, native } = pair(canvasElement);
-    const webItem = web.getByRole('radio', { name: 'Chapter 7 — liquidation' });
+    const webItem = web.getByRole('radio', { name: 'X-wing — starfighter' });
     await expect(webItem).toBeDisabled();
-    const nativeItem = native.getByRole('radio', { name: 'Chapter 7 — liquidation' });
+    const nativeItem = native.getByRole('radio', { name: 'X-wing — starfighter' });
     await expect(nativeItem).toHaveAttribute('aria-disabled', 'true');
   },
 };
@@ -134,10 +134,10 @@ export const Disabled: Story = {
  * `role="radiogroup"`, native is `accessibilityRole="radiogroup"`, neither a
  * toggle field itself).
  */
-function ChapterWeb(props: Partial<React.ComponentProps<typeof RadioGroupWeb.Root>>) {
+function StarshipWeb(props: Partial<React.ComponentProps<typeof RadioGroupWeb.Root>>) {
   return (
-    <RadioGroupWeb.Root aria-label="Bankruptcy chapter" {...props}>
-      {CHAPTERS.map(({ value, label }) => (
+    <RadioGroupWeb.Root aria-label="Ship class" {...props}>
+      {STARSHIPS.map(({ value, label }) => (
         <div key={value} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <RadioGroupWeb.Item aria-label={label} value={value}>
             <RadioGroupWeb.Indicator />
@@ -149,10 +149,10 @@ function ChapterWeb(props: Partial<React.ComponentProps<typeof RadioGroupWeb.Roo
   );
 }
 
-function ChapterNative(props: Partial<React.ComponentProps<typeof RadioGroupNative.Root>>) {
+function StarshipNative(props: Partial<React.ComponentProps<typeof RadioGroupNative.Root>>) {
   return (
-    <RadioGroupNative.Root accessibilityLabel="Bankruptcy chapter" {...props}>
-      {CHAPTERS.map(({ value, label }) => (
+    <RadioGroupNative.Root accessibilityLabel="Ship class" {...props}>
+      {STARSHIPS.map(({ value, label }) => (
         <View key={value} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <RadioGroupNative.Item accessibilityLabel={label} value={value}>
             <RadioGroupNative.Indicator />

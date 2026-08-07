@@ -30,16 +30,16 @@ const meta = {
   title: 'Components/AlertDialog',
   parameters: { layout: 'fullscreen' },
   args: {
-    triggerLabel: 'Withdraw filing',
-    title: 'Withdraw the Chapter 7 petition?',
-    description: 'This cannot be undone once it is submitted to the court.',
+    triggerLabel: 'Abort mission',
+    title: 'Abort the Yavin mission?',
+    description: 'This cannot be undone once the fleet has jumped to hyperspace.',
     onOpenChange: fn(),
   },
   render: (args) => (
     <LeafPair
       note="Both alert dialogs render CLOSED. Open one trigger at a time — an open web Popup and an open native Modal cannot share this page (see the file header)."
-      web={<WithdrawFilingDialogWeb {...storyContent(args)} />}
-      native={<WithdrawFilingDialogNative {...storyContent(args)} />}
+      web={<AbortMissionDialogWeb {...storyContent(args)} />}
+      native={<AbortMissionDialogNative {...storyContent(args)} />}
     />
   ),
 } satisfies Meta<AlertDialogArgs>;
@@ -84,7 +84,7 @@ function SingleLeafFrame({ note, children }: { note: React.ReactNode; children: 
  * panes entirely, so the play reaches them through `screen`, not `pair()`.
  * It also checks the contract that makes this component an ALERT dialog
  * rather than a plain one — Escape does NOT dismiss it; only the explicit
- * "Keep editing" choice does.
+ * "Keep planning" choice does.
  */
 export const Basic: Story = {
   play: async ({ canvasElement, args, step }) => {
@@ -102,7 +102,7 @@ export const Basic: Story = {
         // an explicit choice (see the leaf's own header comment).
         await userEvent.keyboard('{Escape}');
         await expect(screen.getByRole('alertdialog')).toBeVisible();
-        await userEvent.click(within(dialog).getByRole('button', { name: 'Keep editing' }));
+        await userEvent.click(within(dialog).getByRole('button', { name: 'Keep planning' }));
         await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
         await expect(args.onOpenChange).toHaveBeenLastCalledWith(false);
         await expect(trigger).toHaveFocus();
@@ -114,7 +114,7 @@ export const Basic: Story = {
       const dialog = await screen.findByRole('alertdialog', { name: args.title });
       await expect(within(dialog).getByText(args.description)).toBeVisible();
       await expect(args.onOpenChange).toHaveBeenLastCalledWith(true);
-      await userEvent.click(within(dialog).getByRole('button', { name: 'Keep editing' }));
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Keep planning' }));
       await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
       await expect(args.onOpenChange).toHaveBeenLastCalledWith(false);
     });
@@ -125,7 +125,7 @@ export const OpenWebLeaf: Story = {
   name: 'Open (web leaf only)',
   render: (args) => (
     <SingleLeafFrame note={'Single-leaf on purpose — see the file header. This audits the web Popup actually open: `role="alertdialog"`, `aria-modal`, and that Escape/backdrop-click do NOT dismiss it.'}>
-      <WithdrawFilingDialogWeb defaultOpen {...storyContent(args)} />
+      <AbortMissionDialogWeb defaultOpen {...storyContent(args)} />
     </SingleLeafFrame>
   ),
   play: async ({ args }) => {
@@ -163,7 +163,7 @@ export const OpenNativeLeaf: Story = {
   name: 'Open (native leaf only)',
   render: (args) => (
     <SingleLeafFrame note={'Single-leaf on purpose — see the file header. Guards the 0.8.3 fix: react-native-web’s Modal wraps this card in its own `role="dialog"`, and that outer element must carry the title’s id too, or axe fails it as `aria-dialog-name`.'}>
-      <WithdrawFilingDialogNative defaultOpen {...storyContent(args)} />
+      <AbortMissionDialogNative defaultOpen {...storyContent(args)} />
     </SingleLeafFrame>
   ),
   play: async ({ args }) => {
@@ -183,7 +183,7 @@ function storyContent(args: AlertDialogArgs) {
   };
 }
 
-interface WithdrawFilingDialogProps extends AlertDialogArgs {
+interface AbortMissionDialogProps extends AlertDialogArgs {
   defaultOpen?: boolean;
 }
 
@@ -193,13 +193,13 @@ interface WithdrawFilingDialogProps extends AlertDialogArgs {
  * though it renders nothing on native (no tap-outside dismissal here) so the
  * call site matches across leaves and across `Dialog`/`AlertDialog`.
  */
-function WithdrawFilingDialogWeb({
+function AbortMissionDialogWeb({
   defaultOpen,
   triggerLabel,
   title,
   description,
   onOpenChange,
-}: WithdrawFilingDialogProps) {
+}: AbortMissionDialogProps) {
   return (
     <AlertDialogWeb.Root defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
       <AlertDialogWeb.Trigger>{triggerLabel}</AlertDialogWeb.Trigger>
@@ -207,23 +207,23 @@ function WithdrawFilingDialogWeb({
       <AlertDialogWeb.Popup>
         <AlertDialogWeb.Title>{title}</AlertDialogWeb.Title>
         <AlertDialogWeb.Description>{description}</AlertDialogWeb.Description>
-        <AlertDialogWeb.Close>Keep editing</AlertDialogWeb.Close>
+        <AlertDialogWeb.Close>Keep planning</AlertDialogWeb.Close>
         {/* No `danger` intent exists on Button — the semantic token set has no
             danger-text pair (see button.props.ts) — so the destructive choice
             is `primary`, same as any other confirming action. */}
-        <ButtonWeb intent="primary">Withdraw filing</ButtonWeb>
+        <ButtonWeb intent="primary">Abort mission</ButtonWeb>
       </AlertDialogWeb.Popup>
     </AlertDialogWeb.Root>
   );
 }
 
-function WithdrawFilingDialogNative({
+function AbortMissionDialogNative({
   defaultOpen,
   triggerLabel,
   title,
   description,
   onOpenChange,
-}: WithdrawFilingDialogProps) {
+}: AbortMissionDialogProps) {
   return (
     <AlertDialogNative.Root defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
       <AlertDialogNative.Trigger>{triggerLabel}</AlertDialogNative.Trigger>
@@ -231,8 +231,8 @@ function WithdrawFilingDialogNative({
       <AlertDialogNative.Popup>
         <AlertDialogNative.Title>{title}</AlertDialogNative.Title>
         <AlertDialogNative.Description>{description}</AlertDialogNative.Description>
-        <AlertDialogNative.Close>Keep editing</AlertDialogNative.Close>
-        <ButtonNative intent="primary">Withdraw filing</ButtonNative>
+        <AlertDialogNative.Close>Keep planning</AlertDialogNative.Close>
+        <ButtonNative intent="primary">Abort mission</ButtonNative>
       </AlertDialogNative.Popup>
     </AlertDialogNative.Root>
   );

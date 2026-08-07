@@ -27,7 +27,7 @@ const meta = {
   title: 'Components/Switch',
   parameters: { layout: 'fullscreen' },
   args: {
-    label: 'Email me case updates',
+    label: 'Email me mission updates',
     defaultChecked: false,
     disabled: false,
     onCheckedChange: fn(),
@@ -111,14 +111,14 @@ export const States: Story = {
     <LeafPair
       web={
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <LabelledWeb label="Email me case updates" />
-          <LabelledWeb label="Text me court reminders" defaultChecked />
+          <LabelledWeb label="Email me mission updates" />
+          <LabelledWeb label="Transmit hyperspace alerts" defaultChecked />
         </div>
       }
       native={
         <View style={{ gap: 16 }}>
-          <LabelledNative label="Email me case updates" />
-          <LabelledNative label="Text me court reminders" defaultChecked />
+          <LabelledNative label="Email me mission updates" />
+          <LabelledNative label="Transmit hyperspace alerts" defaultChecked />
         </View>
       }
     />
@@ -134,11 +134,11 @@ export const Disabled: Story = {
   render: () => (
     <LeafPair
       web={
-        <LabelledWeb label="Paperless statements (required by the court)" disabled defaultChecked />
+        <LabelledWeb label="Holonet statements (required by the fleet)" disabled defaultChecked />
       }
       native={
         <LabelledNative
-          label="Paperless statements (required by the court)"
+          label="Holonet statements (required by the fleet)"
           disabled
           defaultChecked
         />
@@ -148,10 +148,10 @@ export const Disabled: Story = {
   play: async ({ canvasElement }) => {
     const { web, native } = pair(canvasElement);
     await expect(
-      web.getByRole('switch', { name: 'Paperless statements (required by the court)' }),
+      web.getByRole('switch', { name: 'Holonet statements (required by the fleet)' }),
     ).toBeDisabled();
     await expect(
-      native.getByRole('switch', { name: 'Paperless statements (required by the court)' }),
+      native.getByRole('switch', { name: 'Holonet statements (required by the fleet)' }),
     ).toHaveAttribute('aria-disabled', 'true');
   },
 };

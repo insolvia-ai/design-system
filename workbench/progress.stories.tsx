@@ -9,8 +9,8 @@ import { Progress as ProgressNative } from '@design-system/progress/progress.nat
 import { LeafPair, pair } from './leaf-pair.tsx';
 
 const UPLOADS = [
-  { name: 'Petition.pdf', value: 30 },
-  { name: 'Schedules.pdf', value: 80 },
+  { name: 'star-charts.holo', value: 30 },
+  { name: 'nav-data.holo', value: 80 },
 ];
 
 /**
@@ -42,8 +42,8 @@ const meta = {
   args: {
     value: 30,
     max: 100,
-    label: 'Petition.pdf',
-    ariaLabel: 'Petition.pdf upload progress',
+    label: 'star-charts.holo',
+    ariaLabel: 'star-charts.holo upload progress',
   },
   argTypes: {
     value: { control: { type: 'range', min: 0, max: 100 } },

@@ -37,8 +37,8 @@ const meta = {
   parameters: { layout: 'fullscreen' },
   args: {
     elevation: 'raised',
-    title: 'Chapter 7 in minutes',
-    body: 'Schedules, means test, and the petition, all from one intake.',
+    title: 'Hyperspace in minutes',
+    body: 'Nav computer, star charts, and jump solutions, from one console.',
     footerNote: 'Included in every plan',
   },
   argTypes: {

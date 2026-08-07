@@ -7,24 +7,24 @@ import { Accordion as AccordionNative } from '@design-system/accordion/accordion
 
 import { LeafPair, pair } from './leaf-pair.tsx';
 
-const CHAPTERS = [
+const STARSHIPS = [
   {
-    value: 'ch7',
-    trigger: 'Chapter 7 — liquidation',
+    value: 'xwing',
+    trigger: 'X-wing — starfighter',
     panel:
-      'A trustee sells non-exempt assets to pay creditors; most cases close in three to five months.',
+      'A single-seat fighter with S-foils that lock into attack position before a run.',
   },
   {
-    value: 'ch13',
-    trigger: 'Chapter 13 — repayment plan',
+    value: 'freighter',
+    trigger: 'YT-1300 — light freighter',
     panel:
-      'The debtor keeps assets and repays creditors from income over a three- to five-year plan.',
+      'A stock Corellian hauler, modified well past its original specification for speed.',
   },
   {
-    value: 'ch11',
-    trigger: 'Chapter 11 — reorganisation',
+    value: 'destroyer',
+    trigger: 'Star Destroyer — capital ship',
     panel:
-      'Typically a business continues operating while it renegotiates debts under court supervision.',
+      'A wedge-shaped capital ship, over a mile long, built to be seen before it is fought.',
   },
 ] as const;
 
@@ -51,7 +51,7 @@ const meta = {
   title: 'Components/Accordion',
   parameters: { layout: 'fullscreen' },
   args: {
-    defaultValue: ['ch13'],
+    defaultValue: ['freighter'],
     openMultiple: true,
   },
   argTypes: {
@@ -64,10 +64,10 @@ const meta = {
   render: (args) => (
     <LeafPair
       web={
-        <ChaptersAccordionWeb defaultValue={args.defaultValue} openMultiple={args.openMultiple} />
+        <StarshipsAccordionWeb defaultValue={args.defaultValue} openMultiple={args.openMultiple} />
       }
       native={
-        <ChaptersAccordionNative
+        <StarshipsAccordionNative
           defaultValue={args.defaultValue}
           openMultiple={args.openMultiple}
         />
@@ -83,10 +83,10 @@ type Story = StoryObj<typeof meta>;
  * Every trigger label below is distinct. The web `Panel` is
  * `role="region" aria-labelledby={triggerId}` — a landmark — and a duplicate
  * role+name across landmarks is what `landmark-unique` fires on. Three
- * chapters, three different names, keeps this green; reusing "Details" for
+ * ships, three different names, keeps this green; reusing "Details" for
  * every item would not.
  *
- * The play opens a SECOND chapter alongside the one `defaultValue` already
+ * The play opens a SECOND ship alongside the one `defaultValue` already
  * opens — `openMultiple` defaults to `true`, so both stay open — and checks
  * each leaf reports it the way its own a11y wiring does: `aria-expanded` on
  * the trigger in both, a named `region` landmark on the web panel (native has
@@ -97,24 +97,24 @@ export const Basic: Story = {
   play: async ({ canvasElement, step }) => {
     const { web, native } = pair(canvasElement);
 
-    await step('web leaf: opening a second chapter leaves both expanded', async () => {
-      const ch7 = web.getByRole('button', { name: 'Chapter 7 — liquidation' });
-      await userEvent.click(ch7);
-      await expect(ch7).toHaveAttribute('aria-expanded', 'true');
-      await expect(web.getByRole('region', { name: 'Chapter 7 — liquidation' })).toBeVisible();
-      // Chapter 13, opened by `defaultValue`, is still open too.
+    await step('web leaf: opening a second ship leaves both expanded', async () => {
+      const xwing = web.getByRole('button', { name: 'X-wing — starfighter' });
+      await userEvent.click(xwing);
+      await expect(xwing).toHaveAttribute('aria-expanded', 'true');
+      await expect(web.getByRole('region', { name: 'X-wing — starfighter' })).toBeVisible();
+      // YT-1300, opened by `defaultValue`, is still open too.
       await expect(
-        web.getByRole('button', { name: 'Chapter 13 — repayment plan' }),
+        web.getByRole('button', { name: 'YT-1300 — light freighter' }),
       ).toHaveAttribute('aria-expanded', 'true');
     });
 
     await step('native leaf: same toggle, reported through accessibilityState', async () => {
-      const ch7 = native.getByRole('button', { name: 'Chapter 7 — liquidation' });
-      await userEvent.click(ch7);
-      await expect(ch7).toHaveAttribute('aria-expanded', 'true');
+      const xwing = native.getByRole('button', { name: 'X-wing — starfighter' });
+      await userEvent.click(xwing);
+      await expect(xwing).toHaveAttribute('aria-expanded', 'true');
       await expect(
         native.getByText(
-          'A trustee sells non-exempt assets to pay creditors; most cases close in three to five months.',
+          'A single-seat fighter with S-foils that lock into attack position before a run.',
         ),
       ).toBeVisible();
     });
@@ -123,23 +123,23 @@ export const Basic: Story = {
 
 /**
  * `openMultiple` defaults to `true` — `Basic` above already exercises that
- * by leaving room to open a second chapter alongside Chapter 13. This story
+ * by leaving room to open a second ship alongside the YT-1300. This story
  * is the other end: `openMultiple={false}` means opening one item closes
- * whichever was open, so at most one chapter's detail is ever visible. The
- * play opens Chapter 13 and checks Chapter 7 (open by `defaultValue`) closes
+ * whichever was open, so at most one ship's detail is ever visible. The
+ * play opens the YT-1300 and checks the X-wing (open by `defaultValue`) closes
  * with it, in both leaves.
  */
 export const SingleOpen: Story = {
   name: 'Single open (openMultiple=false)',
-  args: { defaultValue: ['ch7'], openMultiple: false },
+  args: { defaultValue: ['xwing'], openMultiple: false },
   render: (args) => (
     <LeafPair
-      note="openMultiple={false} — opening a chapter here closes whichever one was open. Try opening a second one."
+      note="openMultiple={false} — opening a ship here closes whichever one was open. Try opening a second one."
       web={
-        <ChaptersAccordionWeb defaultValue={args.defaultValue} openMultiple={args.openMultiple} />
+        <StarshipsAccordionWeb defaultValue={args.defaultValue} openMultiple={args.openMultiple} />
       }
       native={
-        <ChaptersAccordionNative
+        <StarshipsAccordionNative
           defaultValue={args.defaultValue}
           openMultiple={args.openMultiple}
         />
@@ -149,23 +149,23 @@ export const SingleOpen: Story = {
   play: async ({ canvasElement, step }) => {
     const { web, native } = pair(canvasElement);
 
-    await step('web leaf: opening Chapter 13 closes Chapter 7', async () => {
-      await userEvent.click(web.getByRole('button', { name: 'Chapter 13 — repayment plan' }));
+    await step('web leaf: opening the YT-1300 closes the X-wing', async () => {
+      await userEvent.click(web.getByRole('button', { name: 'YT-1300 — light freighter' }));
       await expect(
-        web.getByRole('button', { name: 'Chapter 13 — repayment plan' }),
+        web.getByRole('button', { name: 'YT-1300 — light freighter' }),
       ).toHaveAttribute('aria-expanded', 'true');
-      await expect(web.getByRole('button', { name: 'Chapter 7 — liquidation' })).toHaveAttribute(
+      await expect(web.getByRole('button', { name: 'X-wing — starfighter' })).toHaveAttribute(
         'aria-expanded',
         'false',
       );
     });
 
     await step('native leaf: same exclusivity', async () => {
-      await userEvent.click(native.getByRole('button', { name: 'Chapter 13 — repayment plan' }));
+      await userEvent.click(native.getByRole('button', { name: 'YT-1300 — light freighter' }));
       await expect(
-        native.getByRole('button', { name: 'Chapter 13 — repayment plan' }),
+        native.getByRole('button', { name: 'YT-1300 — light freighter' }),
       ).toHaveAttribute('aria-expanded', 'true');
-      await expect(native.getByRole('button', { name: 'Chapter 7 — liquidation' })).toHaveAttribute(
+      await expect(native.getByRole('button', { name: 'X-wing — starfighter' })).toHaveAttribute(
         'aria-expanded',
         'false',
       );
@@ -173,7 +173,7 @@ export const SingleOpen: Story = {
   },
 };
 
-function ChaptersAccordionWeb({
+function StarshipsAccordionWeb({
   defaultValue,
   openMultiple,
 }: {
@@ -182,7 +182,7 @@ function ChaptersAccordionWeb({
 }) {
   return (
     <AccordionWeb.Root defaultValue={defaultValue} openMultiple={openMultiple}>
-      {CHAPTERS.map((c) => (
+      {STARSHIPS.map((c) => (
         <AccordionWeb.Item key={c.value} value={c.value}>
           <AccordionWeb.Header>
             <AccordionWeb.Trigger>{c.trigger}</AccordionWeb.Trigger>
@@ -194,7 +194,7 @@ function ChaptersAccordionWeb({
   );
 }
 
-function ChaptersAccordionNative({
+function StarshipsAccordionNative({
   defaultValue,
   openMultiple,
 }: {
@@ -203,7 +203,7 @@ function ChaptersAccordionNative({
 }) {
   return (
     <AccordionNative.Root defaultValue={defaultValue} openMultiple={openMultiple}>
-      {CHAPTERS.map((c) => (
+      {STARSHIPS.map((c) => (
         <AccordionNative.Item key={c.value} value={c.value}>
           <AccordionNative.Header>
             <AccordionNative.Trigger>{c.trigger}</AccordionNative.Trigger>

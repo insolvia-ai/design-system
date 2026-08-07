@@ -13,11 +13,11 @@ import { Button as ButtonNative } from '@design-system/button/button.native.tsx'
 
 import { LeafPair, pair } from './leaf-pair.tsx';
 
-const CHAPTERS = [
-  { value: 'ch7', label: 'Chapter 7 — liquidation' },
-  { value: 'ch13', label: 'Chapter 13 — repayment plan' },
-  { value: 'ch11', label: 'Chapter 11 — reorganisation' },
-  { value: 'ch12', label: 'Chapter 12 — family farmer', disabled: true },
+const STARSHIPS = [
+  { value: 'xwing', label: 'X-wing — starfighter' },
+  { value: 'freighter', label: 'YT-1300 — light freighter' },
+  { value: 'destroyer', label: 'Star Destroyer — capital ship' },
+  { value: 'sailbarge', label: 'Sail barge — pleasure craft', disabled: true },
 ] satisfies readonly SelectOption[];
 
 /**
@@ -40,8 +40,8 @@ const meta = {
   component: SelectWeb,
   parameters: { layout: 'fullscreen' },
   args: {
-    options: CHAPTERS,
-    placeholder: 'Choose a chapter',
+    options: STARSHIPS,
+    placeholder: 'Choose a ship',
     disabled: false,
     defaultValue: null,
     onValueChange: fn(),
@@ -95,9 +95,9 @@ export const Basic: Story = {
       // arg, so a pane that silently drops its keystrokes would otherwise be
       // vouched for by the other pane's earlier call.
       await expect(args.onValueChange).toHaveBeenCalledTimes(1);
-      await expect(args.onValueChange).toHaveBeenLastCalledWith('ch13');
+      await expect(args.onValueChange).toHaveBeenLastCalledWith('freighter');
       await waitFor(() => expect(web.queryByRole('listbox')).not.toBeInTheDocument());
-      await expect(web.getByRole('combobox')).toHaveTextContent('Chapter 13 — repayment plan');
+      await expect(web.getByRole('combobox')).toHaveTextContent('YT-1300 — light freighter');
     });
 
     await step('native leaf: arrows move the highlight, a press commits', async () => {
@@ -109,7 +109,7 @@ export const Basic: Story = {
       // whatever is focused.
       trigger.focus();
       await userEvent.keyboard('{ArrowDown}{ArrowDown}');
-      await expect(trigger.getAttribute('aria-activedescendant')).toMatch(/option-ch13$/);
+      await expect(trigger.getAttribute('aria-activedescendant')).toMatch(/option-freighter$/);
       // Commit by PRESSING the option, not Enter — deliberately, twice over.
       // A press is the interaction a real native consumer has (a phone has no
       // arrow keys), and Enter currently trips a real leaf bug: react-native-web
@@ -117,11 +117,11 @@ export const Basic: Story = {
       // immediately toggled back open by the trigger's own onPress. That fix is
       // a packages/ change with its own release; when it lands, this step
       // should go back to committing with {Enter} to pin it.
-      await userEvent.click(native.getByRole('option', { name: 'Chapter 13 — repayment plan' }));
+      await userEvent.click(native.getByRole('option', { name: 'YT-1300 — light freighter' }));
       await expect(args.onValueChange).toHaveBeenCalledTimes(2);
-      await expect(args.onValueChange).toHaveBeenLastCalledWith('ch13');
+      await expect(args.onValueChange).toHaveBeenLastCalledWith('freighter');
       await waitFor(() => expect(native.queryByRole('listbox')).not.toBeInTheDocument());
-      await expect(native.getByRole('combobox')).toHaveTextContent('Chapter 13 — repayment plan');
+      await expect(native.getByRole('combobox')).toHaveTextContent('YT-1300 — light freighter');
     });
   },
 };
@@ -242,7 +242,7 @@ export const Disabled: Story = {
 };
 
 export const WithSelection: Story = {
-  args: { defaultValue: 'ch13' },
+  args: { defaultValue: 'freighter' },
 };
 
 /**
@@ -274,8 +274,8 @@ function NativeNote() {
 function LabelledWeb(props: Partial<React.ComponentProps<typeof SelectWeb>>) {
   return (
     <FieldWeb.Root>
-      <FieldWeb.Label>Chapter</FieldWeb.Label>
-      <SelectWeb options={CHAPTERS} placeholder="Choose a chapter" {...props} />
+      <FieldWeb.Label>Ship class</FieldWeb.Label>
+      <SelectWeb options={STARSHIPS} placeholder="Choose a ship" {...props} />
     </FieldWeb.Root>
   );
 }
@@ -283,8 +283,8 @@ function LabelledWeb(props: Partial<React.ComponentProps<typeof SelectWeb>>) {
 function LabelledNative(props: Partial<React.ComponentProps<typeof SelectNative>>) {
   return (
     <FieldNative.Root>
-      <FieldNative.Label>Chapter</FieldNative.Label>
-      <SelectNative options={CHAPTERS} placeholder="Choose a chapter" {...props} />
+      <FieldNative.Label>Ship class</FieldNative.Label>
+      <SelectNative options={STARSHIPS} placeholder="Choose a ship" {...props} />
     </FieldNative.Root>
   );
 }

@@ -30,7 +30,7 @@ const meta = {
   title: 'Components/NavBar',
   parameters: { layout: 'fullscreen' },
   args: {
-    brand: 'Meridian',
+    brand: 'Outer Rim',
     actionLabel: 'Sign out',
   },
   render: (args) => (
@@ -43,8 +43,8 @@ const meta = {
             <NavBarWeb.Link href="/overview" active>
               Overview
             </NavBarWeb.Link>
-            <NavBarWeb.Link href="/documents">Documents</NavBarWeb.Link>
-            <NavBarWeb.Link href="/deadlines">Deadlines</NavBarWeb.Link>
+            <NavBarWeb.Link href="/documents">Manifests</NavBarWeb.Link>
+            <NavBarWeb.Link href="/deadlines">Departures</NavBarWeb.Link>
           </NavBarWeb.Links>
           <NavBarWeb.Actions>
             <ButtonWeb size="sm" intent="secondary">
@@ -60,8 +60,8 @@ const meta = {
             <NavBarNative.Link active onPress={() => {}}>
               Overview
             </NavBarNative.Link>
-            <NavBarNative.Link onPress={() => {}}>Documents</NavBarNative.Link>
-            <NavBarNative.Link onPress={() => {}}>Deadlines</NavBarNative.Link>
+            <NavBarNative.Link onPress={() => {}}>Manifests</NavBarNative.Link>
+            <NavBarNative.Link onPress={() => {}}>Departures</NavBarNative.Link>
           </NavBarNative.Links>
           <NavBarNative.Actions>
             <ButtonNative size="sm" intent="secondary" onPress={() => {}}>

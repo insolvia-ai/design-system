@@ -37,7 +37,7 @@ const meta = {
   parameters: { layout: 'fullscreen' },
   args: {
     size: 'md',
-    initials: 'MC',
+    initials: 'LO',
   },
   argTypes: {
     size: { control: 'inline-radio', options: [...SIZES] },
@@ -127,7 +127,7 @@ const BROKEN_URL = 'https://avatar-fixture.invalid/does-not-exist.jpg';
  * RN's own `Image` does map `alt` to the accessibility label. Only the
  * react-native-web rendering diverged, and only a browser shows that. Fixed in
  * 0.8.3 by forwarding `alt` to `accessibilityLabel` as well; both panes now
- * name the image "Maria Chen".
+ * name the image "Leia Organa".
  */
 export const WithImage: Story = {
   name: 'With image (src vs source — see note)',
@@ -136,13 +136,13 @@ export const WithImage: Story = {
       note="Web Image takes `src`; native Image takes RN's `source={{ uri }}` — a real API divergence between the leaves, not a story artifact."
       web={
         <AvatarWeb.Root size="lg">
-          <AvatarWeb.Image src={PIXEL} alt="Maria Chen" />
+          <AvatarWeb.Image src={PIXEL} alt="Leia Organa" />
           <AvatarWeb.Fallback>MC</AvatarWeb.Fallback>
         </AvatarWeb.Root>
       }
       native={
         <AvatarNative.Root size="lg">
-          <AvatarNative.Image source={{ uri: PIXEL }} alt="Maria Chen" />
+          <AvatarNative.Image source={{ uri: PIXEL }} alt="Leia Organa" />
           <AvatarNative.Fallback>MC</AvatarNative.Fallback>
         </AvatarNative.Root>
       }
@@ -153,7 +153,7 @@ export const WithImage: Story = {
 /**
  * A genuinely broken URL rather than a faked error state — `.invalid` never
  * resolves, so both leaves' real onError handlers fire and the fallback
- * initials stay showing, the same way a client's photo failing to load would
+ * initials stay showing, the same way a pilot's photo failing to load would
  * behave in either a web or a React Native consumer.
  */
 export const FallbackOnError: Story = {
@@ -161,13 +161,13 @@ export const FallbackOnError: Story = {
     <LeafPair
       web={
         <AvatarWeb.Root size="lg">
-          <AvatarWeb.Image src={BROKEN_URL} alt="David Okafor" />
+          <AvatarWeb.Image src={BROKEN_URL} alt="Lando Calrissian" />
           <AvatarWeb.Fallback>DO</AvatarWeb.Fallback>
         </AvatarWeb.Root>
       }
       native={
         <AvatarNative.Root size="lg">
-          <AvatarNative.Image source={{ uri: BROKEN_URL }} alt="David Okafor" />
+          <AvatarNative.Image source={{ uri: BROKEN_URL }} alt="Lando Calrissian" />
           <AvatarNative.Fallback>DO</AvatarNative.Fallback>
         </AvatarNative.Root>
       }

@@ -26,16 +26,16 @@ const meta = {
   title: 'Components/Dialog',
   parameters: { layout: 'fullscreen' },
   args: {
-    triggerLabel: 'Add case note',
-    title: 'Add a case note',
-    description: 'Visible to everyone assigned to this filing.',
+    triggerLabel: 'Add mission note',
+    title: 'Log a mission note',
+    description: 'Visible to everyone assigned to this mission.',
     onOpenChange: fn(),
   },
   render: (args) => (
     <LeafPair
       note="Both dialogs render CLOSED. Open one trigger at a time — an open web Popup and an open native Modal cannot share this page (see the file header)."
-      web={<CaseNoteDialogWeb {...storyContent(args)} />}
-      native={<CaseNoteDialogNative {...storyContent(args)} />}
+      web={<MissionNoteDialogWeb {...storyContent(args)} />}
+      native={<MissionNoteDialogNative {...storyContent(args)} />}
     />
   ),
 } satisfies Meta<DialogArgs>;
@@ -134,7 +134,7 @@ export const OpenWebLeaf: Story = {
     <SingleLeafFrame
       note="Single-leaf on purpose — see the file header. This audits the web Popup actually open: role, aria-modal, and the Title/Description wiring, with axe running against it."
     >
-      <CaseNoteDialogWeb defaultOpen {...storyContent(args)} />
+      <MissionNoteDialogWeb defaultOpen {...storyContent(args)} />
     </SingleLeafFrame>
   ),
   play: async ({ args }) => {
@@ -165,7 +165,7 @@ export const OpenNativeLeaf: Story = {
   name: 'Open (native leaf only)',
   render: (args) => (
     <SingleLeafFrame note="Single-leaf on purpose — see the file header. This audits the native Modal actually open, as react-native-web renders it.">
-      <CaseNoteDialogNative defaultOpen {...storyContent(args)} />
+      <MissionNoteDialogNative defaultOpen {...storyContent(args)} />
     </SingleLeafFrame>
   ),
 };
@@ -181,7 +181,7 @@ function storyContent(args: DialogArgs) {
   };
 }
 
-interface CaseNoteDialogProps extends DialogArgs {
+interface MissionNoteDialogProps extends DialogArgs {
   defaultOpen?: boolean;
 }
 
@@ -194,13 +194,13 @@ interface CaseNoteDialogProps extends DialogArgs {
  * composed even though the native leaf renders it as `null` — the RN `Modal`
  * draws its own scrim — so the call site is identical across leaves.
  */
-function CaseNoteDialogWeb({
+function MissionNoteDialogWeb({
   defaultOpen,
   triggerLabel,
   title,
   description,
   onOpenChange,
-}: CaseNoteDialogProps) {
+}: MissionNoteDialogProps) {
   return (
     <DialogWeb.Root defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
       <DialogWeb.Trigger>{triggerLabel}</DialogWeb.Trigger>
@@ -215,13 +215,13 @@ function CaseNoteDialogWeb({
   );
 }
 
-function CaseNoteDialogNative({
+function MissionNoteDialogNative({
   defaultOpen,
   triggerLabel,
   title,
   description,
   onOpenChange,
-}: CaseNoteDialogProps) {
+}: MissionNoteDialogProps) {
   return (
     <DialogNative.Root defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
       <DialogNative.Trigger>{triggerLabel}</DialogNative.Trigger>

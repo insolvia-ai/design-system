@@ -30,7 +30,7 @@ const meta = {
   args: {
     productTitle: 'Product',
     companyTitle: 'Company',
-    note: '© 2026 Meridian Debt Relief. Not a law firm; not legal advice.',
+    note: '© 2026 Outer Rim Freight. Not affiliated with the Galactic Senate.',
   },
   render: (args) => (
     <LeafPair

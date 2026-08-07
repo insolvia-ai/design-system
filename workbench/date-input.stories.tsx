@@ -83,7 +83,7 @@ type Story = StoryObj<typeof meta>;
 export const Basic: Story = {
   render: (args) => (
     <LeafPair
-      note="The native control is 44dp tall — the WCAG 2.5.5 target-size floor, since a date field is reached by tap far more often than a long-form text field. The web control stays at Field's usual 40dp. Deliberate; see date-input.native.tsx."
+      note="The native control is 44dp tall — the WCAG 2.5.5 target-size floor, since a date field is reached by tap far more often than a long-form text field. The web control matches it since 0.9.6; Field's own text control stays at 40dp, which is the other half of the same rule. See date-input.native.tsx."
       web={
         <LabelledWeb
           defaultValue={args.defaultValue}
@@ -173,7 +173,7 @@ export const Disabled: Story = {
 function LabelledWeb(props: Partial<React.ComponentProps<typeof DateInputWeb>>) {
   return (
     <FieldWeb.Root>
-      <FieldWeb.Label>Date debt incurred</FieldWeb.Label>
+      <FieldWeb.Label>Date of departure</FieldWeb.Label>
       <DateInputWeb {...props} />
     </FieldWeb.Root>
   );
@@ -182,7 +182,7 @@ function LabelledWeb(props: Partial<React.ComponentProps<typeof DateInputWeb>>) 
 function LabelledNative(props: Partial<React.ComponentProps<typeof DateInputNative>>) {
   return (
     <FieldNative.Root>
-      <FieldNative.Label>Date debt incurred</FieldNative.Label>
+      <FieldNative.Label>Date of departure</FieldNative.Label>
       <DateInputNative {...props} />
     </FieldNative.Root>
   );

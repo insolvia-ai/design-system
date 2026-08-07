@@ -37,8 +37,8 @@ const meta = {
     value: 62,
     min: 0,
     max: 100,
-    label: 'Case file storage — 62 of 100 GB',
-    ariaLabel: 'Case file storage used',
+    label: 'Cargo hold — 62 of 100 tonnes',
+    ariaLabel: 'Cargo hold used',
   },
   argTypes: {
     value: { control: { type: 'range', min: 0, max: 100 } },
@@ -115,7 +115,7 @@ export const CustomRange: Story = {
     value: 30,
     min: 0,
     max: 60,
-    label: 'Redaction review — 30 of 60 pages',
-    ariaLabel: 'Pages reviewed for redaction',
+    label: 'Hull plating — 30 of 60 plates',
+    ariaLabel: 'Hull plates repaired',
   },
 };
