@@ -18,11 +18,9 @@ describe('Checkbox (native leaf)', () => {
     const user = userEvent.setup();
     const onCheckedChange = vi.fn();
 
-    render(
-      <Checkbox.Root aria-label="Filed for bankruptcy before" onCheckedChange={onCheckedChange} />,
-    );
+    render(<Checkbox.Root aria-label="Flown in combat before" onCheckedChange={onCheckedChange} />);
 
-    const box = screen.getByRole('checkbox', { name: 'Filed for bankruptcy before' });
+    const box = screen.getByRole('checkbox', { name: 'Flown in combat before' });
     expect(box).toHaveAttribute('aria-checked', 'false');
 
     await user.click(box);
@@ -32,9 +30,9 @@ describe('Checkbox (native leaf)', () => {
   });
 
   it('reports aria-checked="mixed" when indeterminate', () => {
-    render(<Checkbox.Root aria-label="Select all debts" indeterminate />);
+    render(<Checkbox.Root aria-label="Select all systems" indeterminate />);
 
-    const box = screen.getByRole('checkbox', { name: 'Select all debts' });
+    const box = screen.getByRole('checkbox', { name: 'Select all systems' });
     expect(box).toHaveAttribute('aria-checked', 'mixed');
   });
 
@@ -63,14 +61,14 @@ describe('Checkbox (native leaf)', () => {
 
     render(
       <CheckboxGroup.Root defaultValue={[]} onValueChange={onValueChange}>
-        <Checkbox.Root aria-label="Debts" value="debts" />
+        <Checkbox.Root aria-label="Cargo" value="cargo" />
       </CheckboxGroup.Root>,
     );
 
-    const box = screen.getByRole('checkbox', { name: 'Debts' });
+    const box = screen.getByRole('checkbox', { name: 'Cargo' });
     await user.click(box);
 
-    expect(onValueChange).toHaveBeenCalledWith(['debts']);
+    expect(onValueChange).toHaveBeenCalledWith(['cargo']);
   });
 
   // The 0.2.1 regression: every native leaf baked in `colors.light` at module

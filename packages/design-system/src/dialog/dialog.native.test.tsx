@@ -18,7 +18,7 @@ function DeleteDraft() {
       <Dialog.Backdrop />
       <Dialog.Popup>
         <Dialog.Title>Delete this draft?</Dialog.Title>
-        <Dialog.Description>The draft filing is removed permanently.</Dialog.Description>
+        <Dialog.Description>The draft flight plan is discarded permanently.</Dialog.Description>
         <Dialog.Close>Cancel</Dialog.Close>
       </Dialog.Popup>
     </Dialog.Root>
@@ -38,7 +38,7 @@ describe('Dialog (native leaf)', () => {
     // rendered Title's nativeID in the emitted DOM.
     expect(screen.getByRole('dialog', { name: 'Delete this draft?' })).toBeInTheDocument();
     expect(screen.getByText('Delete this draft?')).toBeInTheDocument();
-    expect(screen.getByText('The draft filing is removed permanently.')).toBeInTheDocument();
+    expect(screen.getByText('The draft flight plan is discarded permanently.')).toBeInTheDocument();
   });
 
   it('closes from the Close part', async () => {

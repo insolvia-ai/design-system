@@ -19,12 +19,12 @@ describe('Card (native leaf)', () => {
   it('announces its title as a heading', () => {
     render(
       <Card.Root>
-        <Card.Title>Chapter 7 in minutes</Card.Title>
-        <Card.Body>Schedules, means test, and the petition.</Card.Body>
+        <Card.Title>Hyperspace in minutes</Card.Title>
+        <Card.Body>Nav computer, star charts, and jump solutions.</Card.Body>
       </Card.Root>,
     );
 
-    expect(screen.getByRole('heading', { name: 'Chapter 7 in minutes' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Hyperspace in minutes' })).toBeInTheDocument();
   });
 
   it('renders body and footer content', () => {

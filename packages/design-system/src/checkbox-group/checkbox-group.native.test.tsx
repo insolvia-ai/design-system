@@ -13,45 +13,45 @@ import { CheckboxGroup } from './checkbox-group';
 describe('CheckboxGroup (native leaf)', () => {
   it('renders a role="group" wrapper', () => {
     render(
-      <CheckboxGroup.Root aria-label="Debt types">
-        <Checkbox.Root aria-label="Credit card" value="credit-card" />
+      <CheckboxGroup.Root aria-label="Cargo manifest">
+        <Checkbox.Root aria-label="Spice crates" value="spice" />
       </CheckboxGroup.Root>,
     );
 
-    expect(screen.getByRole('group', { name: 'Debt types' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Cargo manifest' })).toBeInTheDocument();
   });
 
   it('honours defaultValue and updates a member on press', async () => {
     const user = userEvent.setup();
 
     render(
-      <CheckboxGroup.Root aria-label="Debt types" defaultValue={['credit-card']}>
-        <Checkbox.Root aria-label="Credit card" value="credit-card" />
-        <Checkbox.Root aria-label="Medical" value="medical" />
+      <CheckboxGroup.Root aria-label="Cargo manifest" defaultValue={['spice']}>
+        <Checkbox.Root aria-label="Spice crates" value="spice" />
+        <Checkbox.Root aria-label="Bacta tanks" value="bacta" />
       </CheckboxGroup.Root>,
     );
 
-    const creditCard = screen.getByRole('checkbox', { name: 'Credit card' });
-    const medical = screen.getByRole('checkbox', { name: 'Medical' });
-    expect(creditCard).toHaveAttribute('aria-checked', 'true');
-    expect(medical).toHaveAttribute('aria-checked', 'false');
+    const spice = screen.getByRole('checkbox', { name: 'Spice crates' });
+    const bacta = screen.getByRole('checkbox', { name: 'Bacta tanks' });
+    expect(spice).toHaveAttribute('aria-checked', 'true');
+    expect(bacta).toHaveAttribute('aria-checked', 'false');
 
-    await user.click(medical);
+    await user.click(bacta);
 
-    expect(medical).toHaveAttribute('aria-checked', 'true');
+    expect(bacta).toHaveAttribute('aria-checked', 'true');
   });
 
   it('disables every member checkbox when the group is disabled', () => {
     render(
-      <CheckboxGroup.Root aria-label="Debt types" disabled>
-        <Checkbox.Root aria-label="Credit card" value="credit-card" />
+      <CheckboxGroup.Root aria-label="Cargo manifest" disabled>
+        <Checkbox.Root aria-label="Spice crates" value="spice" />
       </CheckboxGroup.Root>,
     );
 
     // react-native-web renders `disabled` as a div with `aria-disabled`, not
     // a real `<button disabled>` — see checkbox.native.test.tsx for the same
     // note on `toBeDisabled()` not applying here.
-    expect(screen.getByRole('checkbox', { name: 'Credit card' })).toHaveAttribute(
+    expect(screen.getByRole('checkbox', { name: 'Spice crates' })).toHaveAttribute(
       'aria-disabled',
       'true',
     );

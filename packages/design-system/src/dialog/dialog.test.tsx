@@ -11,7 +11,7 @@ function DeleteDraft() {
       <Dialog.Backdrop />
       <Dialog.Popup>
         <Dialog.Title>Delete this draft?</Dialog.Title>
-        <Dialog.Description>The draft filing is removed permanently.</Dialog.Description>
+        <Dialog.Description>The draft flight plan is discarded permanently.</Dialog.Description>
         <Dialog.Close>Cancel</Dialog.Close>
         <button type="button">Delete</button>
       </Dialog.Popup>
@@ -43,14 +43,14 @@ describe('Dialog', () => {
 
     const dialog = screen.getByRole('dialog');
     const title = screen.getByText('Delete this draft?');
-    const description = screen.getByText('The draft filing is removed permanently.');
+    const description = screen.getByText('The draft flight plan is discarded permanently.');
 
     // The attributes must point at ids that exist in the rendered DOM…
     expect(dialog).toHaveAttribute('aria-labelledby', title.id);
     expect(dialog).toHaveAttribute('aria-describedby', description.id);
     // …and the association must resolve to a real accessible name/description.
     expect(dialog).toHaveAccessibleName('Delete this draft?');
-    expect(dialog).toHaveAccessibleDescription('The draft filing is removed permanently.');
+    expect(dialog).toHaveAccessibleDescription('The draft flight plan is discarded permanently.');
   });
 
   it('moves focus into the popup on open and returns it to the trigger on close', async () => {

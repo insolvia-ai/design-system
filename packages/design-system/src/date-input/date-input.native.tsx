@@ -5,8 +5,9 @@
 // different species.
 //
 // No DateTimePicker, on native or web. The dates this collects are historical
-// (a debt incurred in 2016, a prior filing in 2011), and a wheel or calendar is
-// the slowest way to reach those — see the note in date-input.props. It also
+// (a departure logged in 2016, a registration from 2011), and a wheel or
+// calendar is the slowest way to reach those — see the note in
+// date-input.props. It also
 // keeps the component free of a native module, which matters for a package that
 // declares no react-native dependency of its own.
 import * as React from 'react';

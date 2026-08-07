@@ -169,30 +169,30 @@ describe('Select', () => {
     it('is named by the field label', () => {
       render(
         <Field.Root>
-          <Field.Label>Filing district</Field.Label>
+          <Field.Label>Destination system</Field.Label>
           <Select options={DISTRICTS} />
         </Field.Root>,
       );
-      expect(screen.getByRole('combobox', { name: 'Filing district' })).toBeTruthy();
+      expect(screen.getByRole('combobox', { name: 'Destination system' })).toBeTruthy();
     });
 
     it('takes the field description and invalid state', () => {
       render(
         <Field.Root invalid>
-          <Field.Label>Filing district</Field.Label>
+          <Field.Label>Destination system</Field.Label>
           <Select options={DISTRICTS} />
-          <Field.Error>A filing district is required.</Field.Error>
+          <Field.Error>A destination system is required.</Field.Error>
         </Field.Root>,
       );
       const combobox = screen.getByRole('combobox');
       expect(combobox).toHaveAttribute('aria-invalid', 'true');
-      expect(combobox).toHaveAccessibleDescription('A filing district is required.');
+      expect(combobox).toHaveAccessibleDescription('A destination system is required.');
     });
 
     it('submits under the field name without being asked twice', () => {
       const { container } = render(
         <Field.Root name="district">
-          <Field.Label>Filing district</Field.Label>
+          <Field.Label>Destination system</Field.Label>
           <Select options={DISTRICTS} value="ny" />
         </Field.Root>,
       );

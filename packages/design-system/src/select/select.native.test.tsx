@@ -111,24 +111,24 @@ describe('Select (native leaf)', () => {
       // what react-native-web can express — Field's native leaf establishes it.
       render(
         <Field.Root>
-          <Field.Label>Filing district</Field.Label>
+          <Field.Label>Destination system</Field.Label>
           <Select options={DISTRICTS} />
         </Field.Root>,
       );
-      expect(screen.getByRole('combobox', { name: 'Filing district' })).toBeTruthy();
+      expect(screen.getByRole('combobox', { name: 'Destination system' })).toBeTruthy();
     });
 
     it('takes the field invalid state and description', () => {
       render(
         <Field.Root invalid>
-          <Field.Label>Filing district</Field.Label>
+          <Field.Label>Destination system</Field.Label>
           <Select options={DISTRICTS} />
-          <Field.Error>A filing district is required.</Field.Error>
+          <Field.Error>A destination system is required.</Field.Error>
         </Field.Root>,
       );
       const combobox = screen.getByRole('combobox');
       expect(combobox).toHaveAttribute('aria-invalid', 'true');
-      expect(combobox).toHaveAccessibleDescription('A filing district is required.');
+      expect(combobox).toHaveAccessibleDescription('A destination system is required.');
     });
   });
 
@@ -201,23 +201,23 @@ describe('Select (native leaf)', () => {
     // Asserting `getByLabelText` throws on a duplicate is what catches it —
     // `getByRole` alone passes either way, because the combobox was always
     // labelled correctly.
-    render(<Select aria-label="Filing district" options={DISTRICTS} />);
+    render(<Select aria-label="Destination system" options={DISTRICTS} />);
 
     // Exactly one node answers to the name. `getAllBy` rather than `getBy`
     // because `getBy` throwing on a duplicate would be a less legible failure
     // than a length assertion.
-    expect(screen.getAllByLabelText('Filing district')).toHaveLength(1);
-    expect(screen.getByRole('combobox', { name: 'Filing district' })).toBeTruthy();
+    expect(screen.getAllByLabelText('Destination system')).toHaveLength(1);
+    expect(screen.getByRole('combobox', { name: 'Destination system' })).toBeTruthy();
   });
 
   it('names the open listbox after the control', async () => {
     // A listbox with no accessible name is announced as an unlabelled group.
     // The web leaf names its <ul>; this makes the native leaf agree.
     const user = userEvent.setup();
-    render(<Select aria-label="Filing district" options={DISTRICTS} />);
+    render(<Select aria-label="Destination system" options={DISTRICTS} />);
 
     await user.click(screen.getByRole('combobox'));
 
-    expect(screen.getByRole('listbox', { name: 'Filing district' })).toBeTruthy();
+    expect(screen.getByRole('listbox', { name: 'Destination system' })).toBeTruthy();
   });
 });

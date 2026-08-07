@@ -23,7 +23,7 @@ function Notes() {
   return (
     <Collapsible.Root>
       <Collapsible.Trigger>Show case notes</Collapsible.Trigger>
-      <Collapsible.Panel>Filed jointly, no prior filings.</Collapsible.Panel>
+      <Collapsible.Panel>Flying solo, no prior runs.</Collapsible.Panel>
     </Collapsible.Root>
   );
 }
@@ -49,22 +49,22 @@ describe('Collapsible (native leaf)', () => {
     render(<Notes />);
 
     const trigger = screen.getByRole('button', { name: 'Show case notes' });
-    expect(screen.queryByText('Filed jointly, no prior filings.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Flying solo, no prior runs.')).not.toBeInTheDocument();
 
     await user.click(trigger);
 
-    expect(screen.getByText('Filed jointly, no prior filings.')).toBeVisible();
+    expect(screen.getByText('Flying solo, no prior runs.')).toBeVisible();
 
     await user.click(trigger);
 
-    expect(screen.queryByText('Filed jointly, no prior filings.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Flying solo, no prior runs.')).not.toBeInTheDocument();
   });
 
   it('reports disabled state and does not toggle when the root is disabled', () => {
     render(
       <Collapsible.Root disabled>
         <Collapsible.Trigger>Show case notes</Collapsible.Trigger>
-        <Collapsible.Panel>Filed jointly, no prior filings.</Collapsible.Panel>
+        <Collapsible.Panel>Flying solo, no prior runs.</Collapsible.Panel>
       </Collapsible.Root>,
     );
 
@@ -77,7 +77,7 @@ describe('Collapsible (native leaf)', () => {
     // prove the panel never mounts, without userEvent's pointer-events check.
     fireEvent.click(trigger);
 
-    expect(screen.queryByText('Filed jointly, no prior filings.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Flying solo, no prior runs.')).not.toBeInTheDocument();
   });
 
   // The 0.2.1 regression: every native leaf baked in `colors.light` at module

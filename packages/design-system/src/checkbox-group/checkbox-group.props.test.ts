@@ -17,49 +17,49 @@ describe('useCheckboxGroupState', () => {
 
   it('honours defaultValue on first render (uncontrolled)', () => {
     const { result } = renderHook(() =>
-      useCheckboxGroupState(undefined, ['debts'], undefined, false),
+      useCheckboxGroupState(undefined, ['cargo'], undefined, false),
     );
 
-    expect(result.current.value).toEqual(['debts']);
+    expect(result.current.value).toEqual(['cargo']);
   });
 
   it('toggle adds an absent value and removes a present one', () => {
     const { result } = renderHook(() => useCheckboxGroupState(undefined, [], undefined, false));
 
-    act(() => result.current.toggle('debts'));
-    expect(result.current.value).toEqual(['debts']);
+    act(() => result.current.toggle('cargo'));
+    expect(result.current.value).toEqual(['cargo']);
 
-    act(() => result.current.toggle('income'));
-    expect(result.current.value).toEqual(['debts', 'income']);
+    act(() => result.current.toggle('fuel'));
+    expect(result.current.value).toEqual(['cargo', 'fuel']);
 
-    act(() => result.current.toggle('debts'));
-    expect(result.current.value).toEqual(['income']);
+    act(() => result.current.toggle('cargo'));
+    expect(result.current.value).toEqual(['fuel']);
   });
 
   it('fires onValueChange with the next array in both controlled and uncontrolled modes', () => {
     const onValueChange = vi.fn();
     const { result } = renderHook(() => useCheckboxGroupState(undefined, [], onValueChange, false));
 
-    act(() => result.current.toggle('debts'));
+    act(() => result.current.toggle('cargo'));
 
-    expect(onValueChange).toHaveBeenCalledWith(['debts']);
+    expect(onValueChange).toHaveBeenCalledWith(['cargo']);
   });
 
   it('in controlled mode, toggle reports the requested array but does not apply it locally', () => {
     const onValueChange = vi.fn();
     const { result, rerender } = renderHook(
       ({ value }) => useCheckboxGroupState(value, [], onValueChange, false),
-      { initialProps: { value: ['debts'] } },
+      { initialProps: { value: ['cargo'] } },
     );
 
-    act(() => result.current.toggle('income'));
+    act(() => result.current.toggle('fuel'));
 
-    expect(onValueChange).toHaveBeenCalledWith(['debts', 'income']);
+    expect(onValueChange).toHaveBeenCalledWith(['cargo', 'fuel']);
     // Parent owns the value: nothing changes until it re-renders with a new one.
-    expect(result.current.value).toEqual(['debts']);
+    expect(result.current.value).toEqual(['cargo']);
 
-    rerender({ value: ['debts', 'income'] });
-    expect(result.current.value).toEqual(['debts', 'income']);
+    rerender({ value: ['cargo', 'fuel'] });
+    expect(result.current.value).toEqual(['cargo', 'fuel']);
   });
 
   it('carries the disabled flag through to context consumers', () => {

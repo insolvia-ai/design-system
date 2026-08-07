@@ -7,16 +7,16 @@ describe('Card', () => {
   it('renders its title as a heading alongside body and footer content', () => {
     render(
       <Card.Root>
-        <Card.Title>Chapter 7 in minutes</Card.Title>
-        <Card.Body>Schedules, means test, and the petition, all from one intake.</Card.Body>
+        <Card.Title>Hyperspace in minutes</Card.Title>
+        <Card.Body>Nav computer, star charts, and jump solutions, from one console.</Card.Body>
         <Card.Footer>
           <span>Included in every plan</span>
         </Card.Footer>
       </Card.Root>,
     );
 
-    expect(screen.getByRole('heading', { name: 'Chapter 7 in minutes' })).toBeInTheDocument();
-    expect(screen.getByText(/Schedules, means test/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Hyperspace in minutes' })).toBeInTheDocument();
+    expect(screen.getByText(/star charts/)).toBeInTheDocument();
     expect(screen.getByText('Included in every plan')).toBeInTheDocument();
   });
 

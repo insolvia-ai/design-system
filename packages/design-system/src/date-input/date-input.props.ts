@@ -3,18 +3,18 @@
 // the status a leaf renders from.
 //
 // WHY A MASKED TEXT INPUT AND NOT A CALENDAR. The dates this has to collect are
-// mostly historical and mostly far from today — "date debt incurred" on a 2016
-// credit card, a pay date three months back, a prior filing in 2011. A calendar
-// is the slowest possible way to enter those, and it is the single largest
+// mostly historical and mostly far from today — a departure logged in 2016, a
+// service date three months back, a registration from 2011. A calendar is the
+// slowest possible way to enter those, and it is the single largest
 // accessibility surface a form can grow. Typing eight digits is faster for a
 // sighted user and unambiguous for a screen-reader user, and it needs no popup,
-// no positioning and no roving focus. A picker is worth revisiting only if the
-// intake grows a field where browsing dates is the point (scheduling), which
-// none of the 8.1 field map is.
+// no positioning and no roving focus. A picker is worth revisiting only for a
+// field where BROWSING dates is the point — scheduling something ahead — which
+// is the opposite of the case this was built for.
 //
-// WHY THE VALUE IS A STRING. docs/reference/case-data-model.md: a form date is
-// `YYYY-MM-DD`, no time and no zone, because "date debt incurred" is a calendar
-// fact rather than an instant. A `Date` is an instant — constructing one puts
+// WHY THE VALUE IS A STRING. A form date is `YYYY-MM-DD`, no time and no zone,
+// because a date someone types into a form is a calendar FACT rather than an
+// instant. A `Date` is an instant — constructing one puts
 // the value in a timezone it does not have, and the classic result is a date
 // that shifts by a day depending on where the browser is. So no `Date` is
 // constructed anywhere in this component, including for the leap-year check.
