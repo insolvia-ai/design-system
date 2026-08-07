@@ -3,6 +3,9 @@ import type { Preview } from '@storybook/react-native-web-vite';
 import { MINIMAL_VIEWPORTS } from 'storybook/viewport';
 
 import '../workbench/tailwind.css';
+// After tailwind.css on purpose: this only overrides addon-docs' own canvas
+// chrome, and later is the side of a specificity tie to be on. See the file.
+import './docs-canvas.css';
 import { applyScheme, type Scheme } from '../workbench/scheme.ts';
 import { workbenchTheme } from './theme.ts';
 
