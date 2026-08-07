@@ -179,6 +179,21 @@ const config: StorybookConfig = {
         'dom-accessibility-api',
         'pretty-format',
         'axe-core',
+
+        // Pre-declared because the react-native shim below HIDES it from
+        // Vite's dependency scanner: with `react-native` excluded from
+        // optimization and aliased to workbench source, nothing bare-imports
+        // react-native-web until the shim module is actually SERVED — so on
+        // a COLD optimizer cache (every CI run) Vite discovers it mid-test,
+        // re-optimizes, and reloads the run. That surfaced as "Vite
+        // unexpectedly reloaded a test" plus ten stories failing in under
+        // 20ms on "Failed to fetch dynamically imported module" — the failed
+        // fetches naming unrelated chunks (addon-docs) whose hashes the
+        // re-optimization had just invalidated. A warm local cache never
+        // reproduces it, which is exactly why it shipped; `rm -rf
+        // node_modules/.cache/storybook && npm run test:a11y` is the honest
+        // local rehearsal of CI.
+        'react-native-web',
       ],
     };
 
