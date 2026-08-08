@@ -63,16 +63,21 @@ const INTERACTIVE = [
   'combobox',
   'date-input',
   'dialog',
+  'drawer',
+  'dropdown',
   'field',
   'input',
   'input-group',
+  'popover',
   'radio-group',
   'select',
   'switch',
   'tabs',
   'textarea',
+  'toast',
   'toggle',
   'toggle-group',
+  'tooltip',
 ] as const;
 
 for (const name of INTERACTIVE) {
