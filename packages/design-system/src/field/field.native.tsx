@@ -101,7 +101,7 @@ export interface FieldControlProps {
    * native. That is fixed here at the same time as the bigger change: neither
    * leaf renders a control of its own any more.
    *
-   * Reach for `<Input />` (or `Select`, `DateInput`, `Textarea`, `Combobox`)
+   * Reach for `<Input />` (or `Select`, `DatePicker`, `Textarea`, `Combobox`)
    * directly inside `<Field.Root>` — every one of them reads the field's
    * context. `render` is for a control this package does not own, which cannot
    * read `FieldContext` because the context is not exported. See the web

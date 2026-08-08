@@ -16,8 +16,6 @@ export type { BadgeIntent, BadgeSize } from './badge';
 export { Breadcrumbs } from './breadcrumbs';
 export { Button, buttonClass } from './button';
 export type { ButtonIntent, ButtonSize, ButtonClassOptions } from './button';
-export { Calendar } from './calendar';
-export type { CalendarValue } from './calendar';
 export { Card } from './card';
 export type { CardElevation } from './card';
 export { Checkbox } from './checkbox';
@@ -25,8 +23,13 @@ export { CheckboxGroup } from './checkbox-group';
 export { Collapsible } from './collapsible';
 export { Combobox } from './combobox';
 export type { ComboboxOption, ComboboxValue } from './combobox';
-export { DateInput } from './date-input';
-export type { DateStatus } from './date-input';
+// 0.12.0 replaced `Calendar` (a month grid) and `DateInput` (a masked
+// `YYYY-MM-DD` text field) with one wheel picker. `DatePicker` covers dates,
+// times and both; `Wheel` is the scrolling column it is built from, exported
+// because it is useful on its own. See date-picker.props.ts for what that
+// change costs as well as what it buys.
+export { DatePicker } from './date-picker';
+export type { DatePickerMode } from './date-picker';
 export { Dialog } from './dialog';
 export { Drawer } from './drawer';
 export type { DrawerSide } from './drawer';
@@ -63,6 +66,8 @@ export type { ToastApi, ToastIntent, ToastOptions } from './toast';
 export { Toggle } from './toggle';
 export { ToggleGroup } from './toggle-group';
 export { Tooltip } from './tooltip';
+export { Wheel } from './wheel';
+export type { WheelItem } from './wheel';
 
 // Theming. `ThemeProvider` is renderer-free and exported from the shared side
 // on purpose, so a cross-platform consumer writes one provider rather than

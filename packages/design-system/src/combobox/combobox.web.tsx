@@ -125,7 +125,7 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
           }}
           className={cn(
             // `h-11` (44px), the WCAG 2.5.5 target-size floor the Select
-            // trigger and DateInput already hold.
+            // trigger and every Wheel row already hold.
             'h-11 w-full rounded-md border border-line bg-card px-sm font-body text-sm text-ink',
             'placeholder:text-muted',
             focusRing,
@@ -138,7 +138,7 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
 
         {/* A real form control so an ordinary form post carries the COMMITTED
             value — never the half-typed query, which is what the visible input
-            holds. Same reasoning as DateInput's hidden input. */}
+            holds. Same reasoning as DatePicker's hidden input. */}
         {name === undefined ? null : <input type="hidden" name={name} value={state.value ?? ''} />}
 
         {listOpen && (

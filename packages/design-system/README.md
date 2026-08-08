@@ -31,10 +31,12 @@ pins it), so the catalogue and the place you look at it agree.
 `InputGroup` · `RadioGroup` · `Select` · `Switch` · `Textarea` · `Toggle` ·
 `ToggleGroup`
 
-**Dates** — the typed and the pointed way to say the same thing. They share
-`daysInMonth` and `isRealDate`, because they must agree about what a date is.
+**Dates** — one surface, and the column it is built from. `DatePicker` covers
+dates, times and both through a `mode`; `Wheel` is the scrolling column
+underneath, exported because it suits any short ordered list. The date
+arithmetic they share lives in `src/lib/date.ts`.
 
-`Calendar` · `DateInput`
+`DatePicker` · `Wheel`
 
 **Layout** — page furniture. This shelf is ours; the convention above has no
 home for it.
@@ -55,8 +57,9 @@ The original surfaces were `Accordion` · `Button` · `Card` · `Field` · `Foot
 `RadioGroup` · `Separator` · `Switch` · `Tabs` · `Toggle` · `ToggleGroup`. 0.4.0
 added `Select`, the first anchored-popup component — see the note below on why
 it stopped being deferred. 0.5.0 added `DateInput`, a masked `YYYY-MM-DD` text
-field with no calendar (the reasoning is at the top of `date-input.props.ts`);
-0.6.0 gave its `onValueChange` a second argument, because `''` alone cannot
+field with no calendar (removed in 0.12.0 — see below, which keeps the argument
+it was built on); 0.6.0 gave its `onValueChange` a second argument, because
+`''` alone cannot
 distinguish "cleared" from "still typing" and an autosaving caller wiped saved
 dates on that ambiguity.
 
@@ -65,6 +68,21 @@ dates on that ambiguity.
 `InputGroup` · `Combobox` · `Tooltip` · `Popover` · `Dropdown` · `Drawer` ·
 `Toast` · `Sidebar` · `Calendar`, plus `Avatar.Group` and `Card.Image` — closing
 the gap against a mainstream React component library's catalogue.
+
+**0.12.0 REMOVED `Calendar` and `DateInput`** and replaced both with
+`DatePicker`, a row of scrolling wheels, plus the `Wheel` primitive it is built
+from. This is a breaking change: there is no drop-in for either name.
+
+Two things it costs, stated here because they are easier to plan around than to
+discover. A wheel is slower than typing for a date far from today — which is
+what `date-input.props.ts` argued at length and why every column now takes
+**digit typeahead**, so `2011` at the year column jumps straight there. And a
+wheel has no empty state: it always shows a value, so a form meaning "no date
+chosen yet" has to say so by not showing the picker. `DateStatus` and
+`CalendarValue` are gone with the components that owned them.
+
+What it buys: a time picker and a datetime picker, which the package had never
+had at all, and one date surface instead of two that had to be kept agreeing.
 
 That wave answers most of the deferral list this section used to carry, so the
 list is reproduced here with what actually happened to each:
@@ -85,7 +103,7 @@ list is reproduced here with what actually happened to each:
 - **`Input` overlapping with `Field`** — the objection was right, and the first
   attempt at answering it was not. `Input` and `Textarea` read `Field`'s
   context for their id, name, description and invalid state, exactly as
-  `Select` and `DateInput` already do — but `Field.Control` went on rendering a
+  `Select` and `DatePicker` already do — but `Field.Control` went on rendering a
   bare `<input>` of its own, so the package shipped two components drawing the
   same box with nothing to say which to reach for. **`Field.Control` no longer
   renders a control.** Put one inside the field:

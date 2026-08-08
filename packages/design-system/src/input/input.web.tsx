@@ -1,6 +1,6 @@
 // WEB LEAF — plain React DOM + Tailwind.
 //
-// Reads Field's context when there is one, exactly as Select and DateInput do:
+// Reads Field's context when there is one, exactly as Select and DatePicker do:
 // the id, the `aria-describedby` string and the invalid flag all come from the
 // Field rather than being passed twice. It also reads InputGroup's context, and
 // goes `bare` inside one so the group draws a single box around the whole row.

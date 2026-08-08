@@ -1,9 +1,9 @@
 // NATIVE LEAF — React Native's TextInput over @insolvia-ai/tokens.
 //
-// Mirrors DateInput's native leaf, which is deliberate: a text field and a date
-// field sitting next to each other in one form should not look like different
-// species. Colors resolve at render time; StyleSheet.create keeps only the
-// scheme-independent box.
+// Mirrors Textarea's and Select's native leaves, which is deliberate: the
+// controls sitting next to each other in one form should not look like
+// different species. Colors resolve at render time; StyleSheet.create keeps
+// only the scheme-independent box.
 import * as React from 'react';
 import { StyleSheet, TextInput, type TextInputProps } from 'react-native';
 
@@ -55,7 +55,7 @@ export const Input = ({
   // `aria-describedby` and `aria-invalid` are web-only and outside RN's own
   // types; react-native-web forwards them to the DOM regardless. OMITTED
   // rather than set to undefined, so the control never points at an element
-  // that does not exist — the same shape Field's and DateInput's native leaves
+  // that does not exist — the same shape Field's and DatePicker's native leaves
   // use.
   const webAria = {
     ...(field?.describedBy === undefined ? {} : { 'aria-describedby': field.describedBy }),
