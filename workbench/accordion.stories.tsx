@@ -11,17 +11,20 @@ const STARSHIPS = [
   {
     value: 'xwing',
     trigger: 'X-wing — starfighter',
-    panel: 'A single-seat fighter with S-foils that lock into attack position before a run.',
+    panel:
+      'A single-seat fighter with S-foils that lock into attack position before a run.',
   },
   {
     value: 'freighter',
     trigger: 'YT-1300 — light freighter',
-    panel: 'A stock Corellian hauler, modified well past its original specification for speed.',
+    panel:
+      'A stock Corellian hauler, modified well past its original specification for speed.',
   },
   {
     value: 'destroyer',
     trigger: 'Star Destroyer — capital ship',
-    panel: 'A wedge-shaped capital ship, over a mile long, built to be seen before it is fought.',
+    panel:
+      'A wedge-shaped capital ship, over a mile long, built to be seen before it is fought.',
   },
 ] as const;
 
@@ -100,10 +103,9 @@ export const Basic: Story = {
       await expect(xwing).toHaveAttribute('aria-expanded', 'true');
       await expect(web.getByRole('region', { name: 'X-wing — starfighter' })).toBeVisible();
       // YT-1300, opened by `defaultValue`, is still open too.
-      await expect(web.getByRole('button', { name: 'YT-1300 — light freighter' })).toHaveAttribute(
-        'aria-expanded',
-        'true',
-      );
+      await expect(
+        web.getByRole('button', { name: 'YT-1300 — light freighter' }),
+      ).toHaveAttribute('aria-expanded', 'true');
     });
 
     await step('native leaf: same toggle, reported through accessibilityState', async () => {
@@ -149,10 +151,9 @@ export const SingleOpen: Story = {
 
     await step('web leaf: opening the YT-1300 closes the X-wing', async () => {
       await userEvent.click(web.getByRole('button', { name: 'YT-1300 — light freighter' }));
-      await expect(web.getByRole('button', { name: 'YT-1300 — light freighter' })).toHaveAttribute(
-        'aria-expanded',
-        'true',
-      );
+      await expect(
+        web.getByRole('button', { name: 'YT-1300 — light freighter' }),
+      ).toHaveAttribute('aria-expanded', 'true');
       await expect(web.getByRole('button', { name: 'X-wing — starfighter' })).toHaveAttribute(
         'aria-expanded',
         'false',

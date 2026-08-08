@@ -96,9 +96,7 @@ export const Basic: Story = {
       // about 1.6:1, and invisible to every other check here. axe does not read
       // the box as text for contrast purposes, and the jsdom suite computes no
       // colour at all. Comparing the two panes is what catches it.
-      const webColour = checkGlyphColour(
-        canvasElement.querySelector('[data-testid="leaf-pair-web"]')!,
-      );
+      const webColour = checkGlyphColour(canvasElement.querySelector('[data-testid="leaf-pair-web"]')!);
       const nativeColour = checkGlyphColour(
         canvasElement.querySelector('[data-testid="leaf-pair-native"]')!,
       );
@@ -110,14 +108,22 @@ export const Basic: Story = {
       await expect(web.getByRole('group', { name: 'Cargo manifest' })).toBeInTheDocument();
       await userEvent.click(web.getByRole('checkbox', { name: 'Proton torpedoes' }));
       await expect(args.onValueChange).toHaveBeenCalledTimes(1);
-      await expect(args.onValueChange).toHaveBeenLastCalledWith(['spice', 'bacta', 'torpedoes']);
+      await expect(args.onValueChange).toHaveBeenLastCalledWith([
+        'spice',
+        'bacta',
+        'torpedoes',
+      ]);
     });
 
     await step('native leaf: same group semantics, same handler', async () => {
       await expect(native.getByRole('group', { name: 'Cargo manifest' })).toBeInTheDocument();
       await userEvent.click(native.getByRole('checkbox', { name: 'Proton torpedoes' }));
       await expect(args.onValueChange).toHaveBeenCalledTimes(2);
-      await expect(args.onValueChange).toHaveBeenLastCalledWith(['spice', 'bacta', 'torpedoes']);
+      await expect(args.onValueChange).toHaveBeenLastCalledWith([
+        'spice',
+        'bacta',
+        'torpedoes',
+      ]);
     });
   },
 };
@@ -169,9 +175,7 @@ function CargoManifestWeb(props: Partial<React.ComponentProps<typeof CheckboxGro
   );
 }
 
-function CargoManifestNative(
-  props: Partial<React.ComponentProps<typeof CheckboxGroupNative.Root>>,
-) {
+function CargoManifestNative(props: Partial<React.ComponentProps<typeof CheckboxGroupNative.Root>>) {
   return (
     <View style={{ gap: 8 }}>
       <InkText style={{ fontWeight: '600' }}>Cargo manifest</InkText>

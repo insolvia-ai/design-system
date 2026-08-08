@@ -176,7 +176,11 @@ export const MultiSelect: Story = {
         </ToggleGroupWeb.Root>
       }
       native={
-        <ToggleGroupNative.Root multiple defaultValue={['bold', 'italic']} aria-label="Text style">
+        <ToggleGroupNative.Root
+          multiple
+          defaultValue={['bold', 'italic']}
+          aria-label="Text style"
+        >
           <ToggleNative value="bold">Bold</ToggleNative>
           <ToggleNative value="italic">Italic</ToggleNative>
           <ToggleNative value="underline">Underline</ToggleNative>

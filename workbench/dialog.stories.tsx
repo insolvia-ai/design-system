@@ -131,7 +131,9 @@ function SingleLeafFrame({ note, children }: { note: React.ReactNode; children: 
 export const OpenWebLeaf: Story = {
   name: 'Open (web leaf only)',
   render: (args) => (
-    <SingleLeafFrame note="Single-leaf on purpose — see the file header. This audits the web Popup actually open: role, aria-modal, and the Title/Description wiring, with axe running against it.">
+    <SingleLeafFrame
+      note="Single-leaf on purpose — see the file header. This audits the web Popup actually open: role, aria-modal, and the Title/Description wiring, with axe running against it."
+    >
       <MissionNoteDialogWeb defaultOpen {...storyContent(args)} />
     </SingleLeafFrame>
   ),
