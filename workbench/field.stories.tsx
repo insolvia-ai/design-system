@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { TextInput } from 'react-native';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, userEvent } from 'storybook/test';
 
@@ -181,12 +182,20 @@ function fieldWebNode(args: FieldArgs) {
   return (
     <FieldWeb.Root invalid={args.invalid}>
       <FieldWeb.Label>{args.label}</FieldWeb.Label>
+      {/* `render` is REQUIRED now — Field.Control wires a control, it does
+          not render one. A plain `<input>` is used here on purpose: this
+          story is about the WIRING, and the everyday composition is
+          `<Input />` inside `<Field.Root>` (see the Input story). */}
       <FieldWeb.Control
-        type={args.type}
-        placeholder={args.placeholder}
-        defaultValue={args.defaultValue}
-        disabled={args.readOnly}
-        onChange={(event) => args.onValueChange(event.target.value)}
+        render={
+          <input
+            type={args.type}
+            placeholder={args.placeholder}
+            defaultValue={args.defaultValue}
+            disabled={args.readOnly}
+            onChange={(event) => args.onValueChange(event.target.value)}
+          />
+        }
       />
       {args.description ? <FieldWeb.Description>{args.description}</FieldWeb.Description> : null}
       {args.errorText ? <FieldWeb.Error>{args.errorText}</FieldWeb.Error> : null}
@@ -200,11 +209,18 @@ function fieldNativeNode(args: FieldArgs) {
   return (
     <FieldNative.Root invalid={args.invalid}>
       <FieldNative.Label>{args.label}</FieldNative.Label>
+      {/* `render` is new on this leaf: the web one has had it since 0.3.0
+          and native never did, so a cross-platform call site using it broke
+          here. Both leaves are slots now. */}
       <FieldNative.Control
-        placeholder={args.placeholder}
-        defaultValue={args.defaultValue}
-        editable={!args.readOnly}
-        onChangeText={args.onValueChange}
+        render={
+          <TextInput
+            placeholder={args.placeholder}
+            defaultValue={args.defaultValue}
+            editable={!args.readOnly}
+            onChangeText={args.onValueChange}
+          />
+        }
       />
       {args.description ? (
         <FieldNative.Description>{args.description}</FieldNative.Description>

@@ -4,6 +4,7 @@
 // native mirror of field.test.tsx: an unlabelled input is the exact defect the
 // Field pattern exists to prevent, so the association must hold on BOTH leaves.
 import { render, screen } from '@testing-library/react';
+import { TextInput } from 'react-native';
 import { describe, expect, it } from 'vitest';
 
 import { colors } from '@insolvia-ai/tokens';
@@ -16,7 +17,7 @@ describe('Field (native leaf)', () => {
     render(
       <Field.Root>
         <Field.Label>Work email</Field.Label>
-        <Field.Control placeholder="you@firm.com" />
+        <Field.Control render={<TextInput placeholder="you@firm.com" />} />
       </Field.Root>,
     );
 
@@ -29,7 +30,7 @@ describe('Field (native leaf)', () => {
     render(
       <Field.Root>
         <Field.Label>Work email</Field.Label>
-        <Field.Control />
+        <Field.Control render={<TextInput />} />
         <Field.Description>We only use this to send your invite.</Field.Description>
       </Field.Root>,
     );
@@ -43,7 +44,7 @@ describe('Field (native leaf)', () => {
     render(
       <Field.Root invalid>
         <Field.Label>Work email</Field.Label>
-        <Field.Control />
+        <Field.Control render={<TextInput />} />
         <Field.Error>Enter your work email.</Field.Error>
       </Field.Root>,
     );
@@ -59,11 +60,30 @@ describe('Field (native leaf)', () => {
     render(
       <Field.Root>
         <Field.Label>Work email</Field.Label>
-        <Field.Control />
+        <Field.Control render={<TextInput />} />
       </Field.Root>,
     );
 
     const input = screen.getByLabelText('Work email');
     expect(rgb(input.style.backgroundColor)).toEqual(rgb(colors.dark.card));
+  });
+
+  it('greys a read-only control the way the web leaf greys a disabled one', () => {
+    // `editable={false}` is the native spelling of the web `disabled`, and the
+    // two have to LOOK the same. This leaf painted card/ink regardless, so a
+    // read-only native field was indistinguishable from an editable one while
+    // the web pane beside it was visibly greyed.
+    setPrefersColorScheme('light');
+    render(
+      <Field.Root>
+        <Field.Label>Logged by</Field.Label>
+        <Field.Control render={<TextInput editable={false} defaultValue="Wedge Antilles" />} />
+      </Field.Root>,
+    );
+
+    const control = screen.getByLabelText('Logged by');
+    const style = getComputedStyle(control);
+    expect(rgb(style.backgroundColor)).toEqual(rgb(colors.light.surfaceAlt));
+    expect(rgb(style.color)).toEqual(rgb(colors.light.muted));
   });
 });

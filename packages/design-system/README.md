@@ -82,10 +82,32 @@ list is reproduced here with what actually happened to each:
 - **Toast** — now has the app-level provider it needed: `Toast.Provider` owns
   the store, `useToast()` is the imperative handle, `Toast.Viewport` renders
   the stack.
-- **`Input` overlapping with `Field`** — resolved by composition rather than by
-  duplication. `Input` and `Textarea` read `Field`'s context for their id,
-  name, description and invalid state, exactly as `Select` and `DateInput`
-  already do, so a field's wiring still lives in one place.
+- **`Input` overlapping with `Field`** — the objection was right, and the first
+  attempt at answering it was not. `Input` and `Textarea` read `Field`'s
+  context for their id, name, description and invalid state, exactly as
+  `Select` and `DateInput` already do — but `Field.Control` went on rendering a
+  bare `<input>` of its own, so the package shipped two components drawing the
+  same box with nothing to say which to reach for. **`Field.Control` no longer
+  renders a control.** Put one inside the field:
+
+  ```tsx
+  <Field.Root name="callsign" invalid={hasError}>
+    <Field.Label>Callsign</Field.Label>
+    <Input />
+    <Field.Error>Required</Field.Error>
+  </Field.Root>
+  ```
+
+  `Field.Control` remains as the escape hatch for a control this package does
+  NOT own — a third-party widget cannot read `FieldContext`, which is not
+  exported — and takes it through a now-required `render` prop:
+  `<Field.Control render={<TheirInput />} />`. That prop is also new on the
+  native leaf, which never had it: the web leaf has offered it since 0.3.0, so
+  a cross-platform call site using it compiled on web and broke on native.
+
+  **This is the one breaking change in 0.11.0.** A bare `<Field.Control />` is
+  now a type error naming its replacement, rather than a silent change in what
+  renders.
 
 Still not ported, and still for the original reasons: desktop-menu surfaces
 (Menubar, Navigation Menu), Preview Card, Number Field, Scroll Area and Context

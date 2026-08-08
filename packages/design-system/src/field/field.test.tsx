@@ -9,7 +9,7 @@ describe('Field', () => {
     render(
       <Field.Root>
         <Field.Label>Work email</Field.Label>
-        <Field.Control type="email" placeholder="you@firm.com" />
+        <Field.Control render={<input type="email" placeholder="you@firm.com" />} />
       </Field.Root>,
     );
 
@@ -24,7 +24,7 @@ describe('Field', () => {
     render(
       <Field.Root>
         <Field.Label>Work email</Field.Label>
-        <Field.Control type="email" />
+        <Field.Control render={<input type="email" />} />
       </Field.Root>,
     );
 
@@ -38,7 +38,7 @@ describe('Field', () => {
     render(
       <Field.Root>
         <Field.Label>Work email</Field.Label>
-        <Field.Control />
+        <Field.Control render={<input />} />
         <Field.Description>We only use this to send your invite.</Field.Description>
       </Field.Root>,
     );

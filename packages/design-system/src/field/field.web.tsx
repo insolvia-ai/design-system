@@ -5,6 +5,7 @@
 // render-as-select/textarea escape hatch are web-only.
 import * as React from 'react';
 
+import { controlBox } from '../input/input.props';
 import { cn } from '../lib/cn';
 import { focusRing } from '../lib/styles';
 import {
@@ -78,44 +79,72 @@ const FieldLabel = React.forwardRef<HTMLLabelElement, React.ComponentPropsWithou
 );
 FieldLabel.displayName = 'Field.Label';
 
+// The control's chrome, built on the one box every plain text control in the
+// package draws (`controlBox`, from input.props). Sharing that constant is
+// what stops Field and Input from disagreeing about how tall a text field is —
+// they did, at 40 against 44, until the size scale came out.
 const controlClass = cn(
-  'h-10 w-full rounded-md border border-line bg-card px-sm font-body text-sm text-ink',
+  controlBox,
+  'rounded-md border border-line bg-card font-body text-ink',
   'placeholder:text-muted',
   focusRing,
   'disabled:cursor-not-allowed disabled:bg-surface-alt disabled:text-muted',
   'aria-[invalid=true]:border-danger',
 );
 
-export interface FieldControlProps extends React.ComponentPropsWithoutRef<'input'> {
+export interface FieldControlProps extends Omit<
+  React.ComponentPropsWithoutRef<'input'>,
+  'children'
+> {
   /**
-   * Render as a different element (a `<select>` or `<textarea>`) while still
-   * receiving the field's id, name, and aria wiring. The element's own
-   * `className` is merged after the control base.
+   * The control to wire — REQUIRED.
+   *
+   * `Field.Control` renders no control of its own. It used to default to a
+   * bare `<input>`, which made it a second implementation of `Input` living in
+   * the Field folder: same box, same height, and nothing to tell a reader
+   * which to reach for. Every control this package ships — `Input`,
+   * `Textarea`, `Select`, `DateInput`, `Combobox` — already reads the field's
+   * context directly, so the composition to reach for is:
+   *
+   *     <Field.Root name="callsign">
+   *       <Field.Label>Callsign</Field.Label>
+   *       <Input />
+   *       <Field.Error>Required</Field.Error>
+   *     </Field.Root>
+   *
+   * What is left for this part is the case that composition cannot cover: a
+   * control this package does NOT own — a third-party combobox, a hand-rolled
+   * `<input>` — which cannot read `FieldContext` because the context is not
+   * exported. Hand it here and it gets the id, the name, the
+   * `aria-describedby` and the invalid flag, plus the control box.
    */
-  render?: React.ReactElement<Record<string, unknown>>;
+  render: React.ReactElement<Record<string, unknown>>;
 }
 
-const FieldControl = React.forwardRef<HTMLInputElement, FieldControlProps>(
+const FieldControl = React.forwardRef<HTMLElement, FieldControlProps>(
   ({ className, render, name: nameProp, ...props }, ref) => {
     const { controlId, describedBy, invalid, name } = useFieldContext('Control');
-    const shared = {
+
+    // A required prop is a compile error for a TS caller; this is for the
+    // JavaScript one, and it names the fix rather than rendering nothing.
+    if (!render) {
+      throw new Error(
+        'Field.Control needs a `render` element. It no longer renders an <input> of its own — ' +
+          'put a control inside <Field.Root> instead (<Input />, <Select />, …), or pass ' +
+          'render={<your-control />} to wire one this package does not own.',
+      );
+    }
+
+    const childClassName = (render.props.className as string | undefined) ?? undefined;
+    return React.cloneElement(render, {
       id: controlId,
       name: nameProp ?? name,
       'aria-describedby': describedBy,
       'aria-invalid': invalid ? true : undefined,
-    } as const;
-
-    if (render) {
-      const childClassName = (render.props.className as string | undefined) ?? undefined;
-      return React.cloneElement(render, {
-        ...shared,
-        ...props,
-        ref,
-        className: cn(controlClass, childClassName, className),
-      });
-    }
-
-    return <input ref={ref} {...shared} className={cn(controlClass, className)} {...props} />;
+      ...props,
+      ref,
+      className: cn(controlClass, childClassName, className),
+    });
   },
 );
 FieldControl.displayName = 'Field.Control';
