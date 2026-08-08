@@ -33,7 +33,7 @@ type RadioGroupArgs = {
 };
 
 const meta = {
-  title: 'Components/RadioGroup',
+  title: 'Forms/RadioGroup',
   parameters: { layout: 'fullscreen' },
   args: {
     defaultValue: 'freighter',

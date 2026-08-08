@@ -32,7 +32,7 @@ type TextareaArgs = {
  * divergence a caller can drag into existence.
  */
 const meta = {
-  title: 'Components/Textarea',
+  title: 'Forms/Textarea',
   component: TextareaWeb,
   parameters: { layout: 'fullscreen' },
   args: {

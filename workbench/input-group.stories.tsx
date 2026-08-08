@@ -43,7 +43,7 @@ type InputGroupArgs = {
  * be right on web. Click into each pane and the difference is the point.
  */
 const meta = {
-  title: 'Components/InputGroup',
+  title: 'Forms/InputGroup',
   parameters: { layout: 'fullscreen' },
   args: {
     label: 'Domain',

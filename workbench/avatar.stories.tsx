@@ -33,7 +33,7 @@ type AvatarArgs = {
  * read it, which is why `Fallback` alone is enough to show the default state.
  */
 const meta = {
-  title: 'Components/Avatar',
+  title: 'Data display/Avatar',
   parameters: { layout: 'fullscreen' },
   args: {
     size: 'md',

@@ -29,7 +29,7 @@ type SpinnerArgs = {
  * space at every size even where the glyph differs.
  */
 const meta = {
-  title: 'Components/Spinner',
+  title: 'Data display/Spinner',
   component: SpinnerWeb,
   parameters: { layout: 'fullscreen' },
   args: {

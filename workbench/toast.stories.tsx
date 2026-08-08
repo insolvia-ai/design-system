@@ -88,7 +88,7 @@ function PublisherNative({ args }: { args: ToastArgs }) {
  * window's corner, the native ones to their pane's.
  */
 const meta = {
-  title: 'Components/Toast',
+  title: 'Overlays/Toast',
   parameters: { layout: 'fullscreen' },
   args: {
     title: 'Jump logged',

@@ -25,7 +25,7 @@ type SwitchArgs = {
 };
 
 const meta = {
-  title: 'Components/Switch',
+  title: 'Forms/Switch',
   parameters: { layout: 'fullscreen' },
   args: {
     label: 'Email me mission updates',

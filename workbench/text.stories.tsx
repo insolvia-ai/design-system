@@ -38,7 +38,7 @@ type TextArgs = {
  * different levels — which is the same trade `Card.Title` documents.
  */
 const meta = {
-  title: 'Components/Text',
+  title: 'Data display/Text',
   component: TextWeb,
   parameters: { layout: 'fullscreen' },
   args: {

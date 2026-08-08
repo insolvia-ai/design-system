@@ -31,7 +31,7 @@ type DropdownArgs = {
  * existence is still discoverable.
  */
 const meta = {
-  title: 'Components/Dropdown',
+  title: 'Overlays/Dropdown',
   parameters: { layout: 'fullscreen' },
   args: {
     trigger: 'Actions',

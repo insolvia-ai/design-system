@@ -29,7 +29,7 @@ type TooltipArgs = {
  * the bubble with `aria-describedby`, and only while the bubble exists.
  */
 const meta = {
-  title: 'Components/Tooltip',
+  title: 'Overlays/Tooltip',
   parameters: { layout: 'fullscreen' },
   args: {
     trigger: 'Jump drive',

@@ -32,7 +32,7 @@ type MeterArgs = {
  * either implicit.
  */
 const meta = {
-  title: 'Components/Meter',
+  title: 'Data display/Meter',
   parameters: { layout: 'fullscreen' },
   args: {
     value: 62,

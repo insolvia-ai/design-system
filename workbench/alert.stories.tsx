@@ -39,7 +39,7 @@ type AlertArgs = {
  * `badge.props.ts` measures out at length.
  */
 const meta = {
-  title: 'Components/Alert',
+  title: 'Data display/Alert',
   parameters: { layout: 'fullscreen' },
   args: {
     intent: 'warning',

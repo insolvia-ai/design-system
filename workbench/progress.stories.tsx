@@ -38,7 +38,7 @@ type ProgressArgs = {
  * shape — a multi-file grid and a label-less bar, respectively.
  */
 const meta = {
-  title: 'Components/Progress',
+  title: 'Data display/Progress',
   parameters: { layout: 'fullscreen' },
   args: {
     value: 30,

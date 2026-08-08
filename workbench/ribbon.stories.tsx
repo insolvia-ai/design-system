@@ -40,7 +40,7 @@ type RibbonArgs = {
  * would look fine in light and score 3.5:1 in dark.
  */
 const meta = {
-  title: 'Components/Ribbon',
+  title: 'Data display/Ribbon',
   component: RibbonWeb,
   parameters: { layout: 'fullscreen' },
   args: {

@@ -37,7 +37,7 @@ type CalendarArgs = {
  * reaching the 15th does not mean tabbing through fourteen buttons.
  */
 const meta = {
-  title: 'Components/Calendar',
+  title: 'Dates/Calendar',
   parameters: { layout: 'fullscreen' },
   args: {
     today: '2026-03-11',

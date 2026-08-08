@@ -47,7 +47,7 @@ const TRAIL = ['Fleet', 'Ships', 'Wayfarer'] as const;
  * trails — which is exactly why `label` is a prop.
  */
 const meta = {
-  title: 'Components/Breadcrumbs',
+  title: 'Data display/Breadcrumbs',
   parameters: { layout: 'fullscreen' },
   args: {
     separator: '/',

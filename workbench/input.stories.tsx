@@ -46,7 +46,7 @@ type InputArgs = {
  * Field automatically — see the Field story.
  */
 const meta = {
-  title: 'Components/Input',
+  title: 'Forms/Input',
   component: InputWeb,
   parameters: { layout: 'fullscreen' },
   args: {

@@ -32,7 +32,7 @@ type PopoverArgs = {
  * Close. Click outside each pane in turn and the difference is the point.
  */
 const meta = {
-  title: 'Components/Popover',
+  title: 'Overlays/Popover',
   parameters: { layout: 'fullscreen' },
   args: {
     trigger: 'Filters',

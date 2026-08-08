@@ -37,7 +37,7 @@ type FieldArgs = {
 };
 
 const meta = {
-  title: 'Components/Field',
+  title: 'Forms/Field',
   parameters: { layout: 'fullscreen' },
   args: {
     label: 'Transponder code',

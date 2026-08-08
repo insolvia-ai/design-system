@@ -31,7 +31,7 @@ type CollapsibleArgs = {
 };
 
 const meta = {
-  title: 'Components/Collapsible',
+  title: 'Data display/Collapsible',
   parameters: { layout: 'fullscreen' },
   args: {
     trigger: 'Show revision history',

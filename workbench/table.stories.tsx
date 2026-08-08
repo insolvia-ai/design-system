@@ -40,7 +40,7 @@ type TableArgs = {
  * the reason the index exists at all is so the two never shade opposite rows.
  */
 const meta = {
-  title: 'Components/Table',
+  title: 'Data display/Table',
   parameters: { layout: 'fullscreen' },
   args: {
     striped: true,

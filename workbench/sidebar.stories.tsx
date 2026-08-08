@@ -41,7 +41,7 @@ const ITEMS = [
  * in a top bar. Inside it, `Sidebar.Toggle` already does the work.
  */
 const meta = {
-  title: 'Components/Sidebar',
+  title: 'Overlays/Sidebar',
   parameters: { layout: 'fullscreen' },
   args: {
     title: 'Wayfarer',

@@ -9,30 +9,62 @@ It succeeded a web-only predecessor (0.1.x, Base UI), retired at 0.2.x.
 
 ## Components
 
-The original surfaces: `Accordion` · `Button` · `Card` · `Field` · `Footer` ·
-`NavBar`. The 0.3.0 wave added owned equivalents of the portable Base UI
-primitives (equivalent behavior, zero Base UI dependency): `AlertDialog` ·
-`Avatar` · `Checkbox` · `CheckboxGroup` · `Collapsible` · `Dialog` · `Meter` ·
-`Progress` · `RadioGroup` · `Separator` · `Switch` · `Tabs` · `Toggle` ·
-`ToggleGroup`. 0.4.0 adds `Select`, the first anchored-popup component — see
-the note below on why it stopped being deferred. 0.5.0 adds `DateInput`, a
-masked `YYYY-MM-DD` text field with no calendar (the reasoning is at the top of
-`date-input.props.ts`); 0.6.0 gives its `onValueChange` a second argument, because
-`''` alone cannot distinguish "cleared" from "still typing" and an autosaving
-caller wiped saved dates on that ambiguity. Compound components export their parts under one name
-(`Dialog.Root`, `Dialog.Trigger`, …); input-taking components support both
-uncontrolled (`default*`) and controlled (`*` + change callback) modes via
-`src/lib/controllable.ts`.
+Forty-one components, shelved the way a component library's documentation site
+conventionally shelves them — by what you reach for them FOR. The workbench's
+sidebar uses these same five groups in this same order (`.storybook/preview.tsx`
+pins it), so the catalogue and the place you look at it agree.
 
-**0.11.0 adds nineteen components and two parts**, closing the gap against a
-mainstream React component library's catalogue:
+**Data display** — what shows something.
 
-- Display — `Text` · `Badge` · `Spinner` · `Alert` · `Ribbon` · `Breadcrumbs` ·
-  `Table`
-- Forms — `Input` · `Textarea` · `InputGroup` · `Combobox`
-- Overlays — `Tooltip` · `Popover` · `Dropdown` · `Drawer` · `Toast`
-- Structure — `Sidebar` · `Calendar`
-- New parts on existing components — `Avatar.Group` · `Card.Image`
+`Accordion` · `Alert` · `Avatar` · `Badge` · `Breadcrumbs` · `Card` ·
+`Collapsible` · `Meter` · `Progress` · `Ribbon` · `Spinner` · `Table` · `Tabs` ·
+`Text`
+
+**Overlays** — what floats above the page.
+
+`AlertDialog` · `Dialog` · `Drawer` · `Dropdown` · `Popover` · `Sidebar` ·
+`Toast` · `Tooltip`
+
+**Forms** — what takes input.
+
+`Button` · `Checkbox` · `CheckboxGroup` · `Combobox` · `Field` · `Input` ·
+`InputGroup` · `RadioGroup` · `Select` · `Switch` · `Textarea` · `Toggle` ·
+`ToggleGroup`
+
+**Dates** — the typed and the pointed way to say the same thing. They share
+`daysInMonth` and `isRealDate`, because they must agree about what a date is.
+
+`Calendar` · `DateInput`
+
+**Layout** — page furniture. This shelf is ours; the convention above has no
+home for it.
+
+`Footer` · `NavBar` · `Separator`
+
+Two conventions run through all of them: compound components export their parts
+under one name (`Dialog.Root`, `Dialog.Trigger`, …), and input-taking components
+support both uncontrolled (`default*`) and controlled (`*` + change callback)
+modes via `src/lib/controllable.ts`.
+
+### How it got here
+
+The original surfaces were `Accordion` · `Button` · `Card` · `Field` · `Footer` ·
+`NavBar`. 0.3.0 added owned equivalents of the portable Base UI primitives
+(equivalent behavior, zero Base UI dependency): `AlertDialog` · `Avatar` ·
+`Checkbox` · `CheckboxGroup` · `Collapsible` · `Dialog` · `Meter` · `Progress` ·
+`RadioGroup` · `Separator` · `Switch` · `Tabs` · `Toggle` · `ToggleGroup`. 0.4.0
+added `Select`, the first anchored-popup component — see the note below on why
+it stopped being deferred. 0.5.0 added `DateInput`, a masked `YYYY-MM-DD` text
+field with no calendar (the reasoning is at the top of `date-input.props.ts`);
+0.6.0 gave its `onValueChange` a second argument, because `''` alone cannot
+distinguish "cleared" from "still typing" and an autosaving caller wiped saved
+dates on that ambiguity.
+
+**0.11.0 added nineteen components and two parts** — `Text` · `Badge` ·
+`Spinner` · `Alert` · `Ribbon` · `Breadcrumbs` · `Table` · `Input` · `Textarea` ·
+`InputGroup` · `Combobox` · `Tooltip` · `Popover` · `Dropdown` · `Drawer` ·
+`Toast` · `Sidebar` · `Calendar`, plus `Avatar.Group` and `Card.Image` — closing
+the gap against a mainstream React component library's catalogue.
 
 That wave answers most of the deferral list this section used to carry, so the
 list is reproduced here with what actually happened to each:

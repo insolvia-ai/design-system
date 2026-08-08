@@ -27,7 +27,7 @@ type NavBarArgs = {
  * below for a real semantic divergence between the two leaves.
  */
 const meta = {
-  title: 'Components/NavBar',
+  title: 'Layout/NavBar',
   parameters: { layout: 'fullscreen' },
   args: {
     brand: 'Outer Rim',

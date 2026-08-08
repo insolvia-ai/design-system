@@ -47,7 +47,7 @@ type ComboboxArgs = {
  * pointerdown and pointerup, so nothing is ever selectable.
  */
 const meta = {
-  title: 'Components/Combobox',
+  title: 'Forms/Combobox',
   // No meta `component`. It only feeds the docs props table, and it has to be
   // assignable to `ComponentType<ComboboxArgs>` — which this is not, because
   // `options` is a required prop that the args deliberately do not carry (the

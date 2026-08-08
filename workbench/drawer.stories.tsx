@@ -45,7 +45,7 @@ type DrawerArgs = {
  * both platforms.
  */
 const meta = {
-  title: 'Components/Drawer',
+  title: 'Overlays/Drawer',
   parameters: { layout: 'fullscreen' },
   args: {
     side: 'right',

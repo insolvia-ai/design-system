@@ -26,7 +26,7 @@ type DateInputArgs = {
 };
 
 const meta = {
-  title: 'Components/DateInput',
+  title: 'Dates/DateInput',
   // The web leaf, for the docs-page props table only (best-effort react-docgen
   // — see the addon-docs note in .storybook/main.ts). Controls never rely on
   // it: they are declared by hand in `argTypes` below.

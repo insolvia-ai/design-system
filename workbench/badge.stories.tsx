@@ -37,7 +37,7 @@ type BadgeArgs = {
  * the same legibility, and only the dots should change hue.
  */
 const meta = {
-  title: 'Components/Badge',
+  title: 'Data display/Badge',
   component: BadgeWeb,
   parameters: { layout: 'fullscreen' },
   args: {

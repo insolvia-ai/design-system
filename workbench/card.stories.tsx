@@ -47,7 +47,7 @@ type CardArgs = {
  * style port off `card.props.ts`'s `elevationStyles`.
  */
 const meta = {
-  title: 'Components/Card',
+  title: 'Data display/Card',
   parameters: { layout: 'fullscreen' },
   args: {
     elevation: 'raised',
