@@ -118,7 +118,12 @@ const meta = {
       }
       native={
         <ToastNative.Provider>
-          <View style={{ minHeight: 160 }}>
+          {/* `alignItems: 'flex-start'` so the Pressable hugs its label the
+              way the web pane's inline-flex button does. A React Native View
+              stretches its children by default, and without this the two
+              panes' buttons are different widths for no reason the components
+              are responsible for. */}
+          <View style={{ minHeight: 160, alignItems: 'flex-start' }}>
             <PublisherNative args={args} />
             <ToastNative.Viewport label="Notifications (native leaf)" />
           </View>
