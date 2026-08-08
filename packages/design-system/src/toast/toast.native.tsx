@@ -105,18 +105,22 @@ export const Toast = {
 };
 
 const styles = StyleSheet.create({
+  // Mirrors the web leaf's `fixed bottom-0 right-0 w-full max-w-[24rem] p-md`:
+  // the cap is on the STRIP, not on the toast, and the strip's own padding
+  // eats into it. Capping the toast instead made it 384 against the web
+  // leaf's 352 — measured in the workbench, both pinned to the same corner.
   viewport: {
     position: 'absolute',
     right: 0,
     bottom: 0,
-    left: 0,
+    width: '100%',
+    maxWidth: 384,
     padding: spacing.md,
     gap: spacing.sm,
     alignItems: 'flex-end',
   },
   toast: {
     width: '100%',
-    maxWidth: 384, // matches the web leaf's max-w-[24rem]
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.sm,

@@ -79,13 +79,21 @@ function PublisherNative({ args }: { args: ToastArgs }) {
  * is decided once. The role sits on each TOAST rather than on the region — a
  * region that announced its own arrival would repeat every message twice.
  *
- * WHERE THE STACK LIVES IS THE DIVERGENCE. The web Viewport portals to
- * `document.body`, so no `overflow: hidden` ancestor can clip it. React Native
- * has nowhere to portal to, so its Viewport is an in-tree overlay that the
- * consumer must render LAST inside their root view — every RN View starts its
- * own stacking context, so there is no z-index that rescues one rendered too
- * early. In this story that difference is visible: the web toasts pin to the
- * window's corner, the native ones to their pane's.
+ * HOW THE STACK IS HOSTED DIFFERS; WHERE IT LANDS DOES NOT. The web Viewport
+ * portals to `document.body`, so no `overflow: hidden` ancestor can clip it.
+ * React Native has nowhere to portal to, so its Viewport is an in-tree overlay
+ * pinned with `position: absolute` — and that is the constraint a consumer has
+ * to honour: **render `Toast.Viewport` as a direct child of your root view.**
+ * Every RN View is `position: relative`, so a Viewport nested inside one pins
+ * to THAT view instead of the screen, and no z-index rescues it.
+ *
+ * This story got that wrong at first — it wrapped the native Viewport in a
+ * decorative `View`, and the toast dutifully pinned itself inside the pane
+ * while the web one went to the window corner. That read as a broken
+ * component and was a broken story: on a device, a Viewport at the app root
+ * pins to the screen, exactly as the web one pins to the window. Both panes
+ * now do, and the native strip carries a story-level `bottom` offset purely so
+ * the two do not land on top of each other.
  */
 const meta = {
   title: 'Overlays/Toast',
@@ -104,7 +112,7 @@ const meta = {
   },
   render: (args) => (
     <LeafPair
-      note="Web toasts pin to the WINDOW corner (portaled); native toasts pin to their pane. Same store, different hosting — see the doc comment."
+      note="Both leaves pin to the WINDOW corner — the web one portaled, the native one absolutely positioned from the app root. The native strip sits a little higher only so the two do not overlap."
       web={
         <ToastWeb.Provider>
           <PublisherWeb args={args} />
@@ -117,16 +125,20 @@ const meta = {
         </ToastWeb.Provider>
       }
       native={
+        // The Viewport is a DIRECT child of the Provider, with no View
+        // between them, and that is the whole arrangement — see the doc
+        // comment. Wrapping it in one pins the toast to that wrapper.
         <ToastNative.Provider>
-          {/* `alignItems: 'flex-start'` so the Pressable hugs its label the
-              way the web pane's inline-flex button does. A React Native View
-              stretches its children by default, and without this the two
-              panes' buttons are different widths for no reason the components
-              are responsible for. */}
-          <View style={{ minHeight: 160, alignItems: 'flex-start' }}>
+          <View style={{ alignItems: 'flex-start' }}>
             <PublisherNative args={args} />
-            <ToastNative.Viewport label="Notifications (native leaf)" />
           </View>
+          <ToastNative.Viewport
+            label="Notifications (native leaf)"
+            // The lift is the STORY's, not the component's. Both leaves pin to
+            // the same window corner, so without it the two panes' toasts land
+            // on top of each other and the comparison shows one toast.
+            style={{ bottom: 96 }}
+          />
         </ToastNative.Provider>
       }
     />
