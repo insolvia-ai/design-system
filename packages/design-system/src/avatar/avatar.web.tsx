@@ -118,10 +118,20 @@ const AvatarGroup = React.forwardRef<HTMLSpanElement, AvatarGroupProps>(
           {visible.map((child, index) => (
             <span
               key={child.key ?? index}
-              // The overlap, plus a ring in the page background so each avatar
+              // The overlap, plus a 2px band of page background so each avatar
               // reads as separate from the one beneath it rather than as one
               // smeared shape.
-              className="inline-flex rounded-pill ring-2 ring-bg"
+              //
+              // `border-2`, NOT `ring-2`. A ring paints OUTSIDE the box and
+              // costs no layout, which is usually the point of reaching for
+              // one — but React Native has no ring, so the native leaf draws a
+              // border, and a border grows the box by 4px. The two rows then
+              // space differently for the same list: measured in the
+              // workbench, at ~4px per avatar. A real border on both leaves
+              // costs the web pane 4px it did not spend before and buys the
+              // two panes agreeing, which is the trade this package exists to
+              // make.
+              className="inline-flex rounded-pill border-2 border-bg"
               style={index === 0 ? undefined : { marginLeft: -AVATAR_GROUP_OVERLAP_PX }}
             >
               {child}
@@ -131,7 +141,7 @@ const AvatarGroup = React.forwardRef<HTMLSpanElement, AvatarGroupProps>(
             <span
               // The counter is a normal, announced part of the group — it is
               // information ("and 3 more"), not decoration.
-              className="inline-flex items-center justify-center rounded-pill bg-surface-alt font-body text-xs font-medium text-muted ring-2 ring-bg"
+              className="inline-flex items-center justify-center rounded-pill border-2 border-bg bg-surface-alt font-body text-xs font-medium text-muted"
               style={{ width: px, height: px, marginLeft: -AVATAR_GROUP_OVERLAP_PX }}
             >
               +{overflow}
