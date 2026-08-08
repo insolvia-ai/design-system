@@ -21,11 +21,12 @@ import { spacing } from '@insolvia-ai/tokens';
 import { useNativeColors } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import {
+  isLastRow,
   isStripedRow,
   rowHeight,
   TableContext,
-  TableRowIndexContext,
-  useRowIndex,
+  TableRowPositionContext,
+  useRowPosition,
   useTableContext,
   type TableRootOwnProps,
 } from './table.props';
@@ -33,6 +34,23 @@ import {
 /** Applies a role react-native-web forwards but RN's own types do not admit. */
 function webRole(role: string): Partial<ViewProps> {
   return { role } as unknown as Partial<ViewProps>;
+}
+
+/**
+ * Wraps a section's rows in their position — the same wrapping the web leaf
+ * does, so both agree on which row is "even" and which is "last". This leaf
+ * has no selectors to fall back on; see table.props.ts.
+ */
+function positioned(children: React.ReactNode, striping: boolean): React.ReactNode {
+  const rows = React.Children.toArray(children);
+  return rows.map((row, index) => (
+    <TableRowPositionContext.Provider
+      key={index}
+      value={{ index, isLast: index === rows.length - 1, striping }}
+    >
+      {row}
+    </TableRowPositionContext.Provider>
+  ));
 }
 
 export interface TableRootProps extends ViewProps, TableRootOwnProps {
@@ -58,8 +76,21 @@ const TableRoot = ({
         )}
         {/* Horizontal scroll, matching the web leaf's `overflow-x-auto`: a
             table wider than its column must scroll itself rather than take
-            the screen's layout with it. */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            the screen's layout with it.
+
+            `contentContainerStyle={{ flexGrow: 1 }}` is load-bearing. A
+            horizontal ScrollView sizes its content to CONTENT, so `flex: 1`
+            cells have no definite width to divide and collapse to their
+            `minWidth` — measured at 360px against the web leaf's 522px in the
+            same pane, which read as a table that had given up on the right
+            third of its column. `flexGrow` makes the content container at
+            least as wide as the viewport, so the cells divide the real width
+            and only scroll once their minimums genuinely exceed it. */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
           <View {...webRole('table')} style={[styles.table, style]} {...props}>
             {children}
           </View>
@@ -77,25 +108,16 @@ const TableHead = ({ style, children, ...props }: ViewProps & { children?: React
       style={[styles.head, { borderBottomColor: c.line }, style]}
       {...props}
     >
-      {children}
+      {positioned(children, false)}
     </View>
   );
 };
 
-const TableBody = ({ style, children, ...props }: ViewProps & { children?: React.ReactNode }) => {
-  // The same index wrapping the web leaf does, so "even rows are shaded" picks
-  // the same rows on both platforms.
-  const rows = React.Children.toArray(children);
-  return (
-    <View {...webRole('rowgroup')} style={style} {...props}>
-      {rows.map((row, index) => (
-        <TableRowIndexContext.Provider key={index} value={index}>
-          {row}
-        </TableRowIndexContext.Provider>
-      ))}
-    </View>
-  );
-};
+const TableBody = ({ style, children, ...props }: ViewProps & { children?: React.ReactNode }) => (
+  <View {...webRole('rowgroup')} style={style} {...props}>
+    {positioned(children, true)}
+  </View>
+);
 
 const TableFoot = ({ style, children, ...props }: ViewProps & { children?: React.ReactNode }) => {
   const c = useNativeColors();
@@ -105,14 +127,14 @@ const TableFoot = ({ style, children, ...props }: ViewProps & { children?: React
       style={[styles.foot, { borderTopColor: c.line }, style]}
       {...props}
     >
-      {children}
+      {positioned(children, false)}
     </View>
   );
 };
 
 const TableRow = ({ style, children, ...props }: ViewProps & { children?: React.ReactNode }) => {
   const { striped, dense } = useTableContext('Row');
-  const index = useRowIndex();
+  const position = useRowPosition();
   const c = useNativeColors();
   return (
     <View
@@ -120,7 +142,10 @@ const TableRow = ({ style, children, ...props }: ViewProps & { children?: React.
       style={[
         styles.row,
         { minHeight: dense ? rowHeight.dense : rowHeight.normal, borderBottomColor: c.line },
-        striped && isStripedRow(index) ? { backgroundColor: c.surfaceAlt } : null,
+        // The section owns its bottom edge, so the last row drops its own rule
+        // — the native counterpart of the web leaf's `last:border-b-0`.
+        isLastRow(position) ? styles.lastRow : null,
+        striped && isStripedRow(position) ? { backgroundColor: c.surfaceAlt } : null,
         style,
       ]}
       {...props}
@@ -181,11 +206,13 @@ export const Table = {
 
 const styles = StyleSheet.create({
   wrapper: { width: '100%' },
+  scrollContent: { flexGrow: 1 },
   caption: { ...textScale.sm, paddingBottom: spacing.sm },
   table: { minWidth: '100%' },
   head: { borderBottomWidth: 1 },
   foot: { borderTopWidth: 1 },
   row: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1 },
+  lastRow: { borderBottomWidth: 0 },
   cell: { justifyContent: 'center', paddingHorizontal: spacing.sm },
   flexCell: { flex: 1, minWidth: 120 },
   headerText: { ...textScale.sm, fontWeight: '600' },

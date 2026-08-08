@@ -30,27 +30,45 @@ export function useTableContext(part: string): TableContextValue {
   return ctx;
 }
 
-/**
- * A body row's position, provided by `Table.Body`.
- *
- * WHY AN INDEX AT ALL. On web, striping is `nth-child(even)` and no component
- * needs to count. React Native has no selectors, so its rows have to be told
- * where they sit — and rather than let each leaf invent its own counting, the
- * Body on BOTH leaves wraps its children in this, so "even rows are shaded"
- * means the same row on each platform. Getting that wrong is invisible to
- * every test and obvious in the workbench: two tables striped in antiphase.
- *
- * `null` outside a body — a header or footer row is never striped.
- */
-export const TableRowIndexContext = React.createContext<number | null>(null);
+export interface TableRowPosition {
+  /** Zero-based, within the row's own section. */
+  index: number;
+  /** Last row of its section — head, body or foot. */
+  isLast: boolean;
+  /** Only body rows stripe; a header or footer row never does. */
+  striping: boolean;
+}
 
-export function useRowIndex(): number | null {
-  return React.useContext(TableRowIndexContext);
+/**
+ * A row's position, provided by whichever section contains it.
+ *
+ * WHY POSITION AT ALL. On web this is free: striping is `nth-child(even)` and
+ * dropping the last rule is `last:border-b-0`. React Native has no selectors,
+ * so its rows have to be TOLD where they sit — and rather than let each leaf
+ * invent its own counting, every section on BOTH leaves wraps its children in
+ * this. "Even rows are shaded" then means the same row on each platform, and
+ * so does "the last row has no rule under it".
+ *
+ * Getting either wrong is invisible to every test and obvious in the
+ * workbench: two tables striped in antiphase, or a stray line under one
+ * table's footer and not the other's. The second one shipped — this context
+ * carried only an index at first, and the native footer kept a border the web
+ * leaf dropped.
+ */
+export const TableRowPositionContext = React.createContext<TableRowPosition | null>(null);
+
+export function useRowPosition(): TableRowPosition | null {
+  return React.useContext(TableRowPositionContext);
 }
 
 /** Zero-based, so the SECOND row (index 1) is the first shaded one. */
-export function isStripedRow(index: number | null): boolean {
-  return index !== null && index % 2 === 1;
+export function isStripedRow(position: TableRowPosition | null): boolean {
+  return position !== null && position.striping && position.index % 2 === 1;
+}
+
+/** The last row of a section drops its bottom rule — the section owns that edge. */
+export function isLastRow(position: TableRowPosition | null): boolean {
+  return position !== null && position.isLast;
 }
 
 export const rowHeight = { normal: 48, dense: 36 } as const;

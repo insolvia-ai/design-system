@@ -10,10 +10,30 @@ import * as React from 'react';
 import { cn } from '../lib/cn';
 import {
   TableContext,
-  TableRowIndexContext,
+  TableRowPositionContext,
   useTableContext,
   type TableRootOwnProps,
 } from './table.props';
+
+/**
+ * Wraps a section's rows in their position.
+ *
+ * The web leaf could express both rules in CSS (`nth-child(even)`,
+ * `last:border-b-0`) and does — this exists so the SECTIONS agree with the
+ * native leaf about what "last" and "even" mean, rather than each platform
+ * counting for itself. See table.props.ts.
+ */
+function positioned(children: React.ReactNode, striping: boolean): React.ReactNode {
+  const rows = React.Children.toArray(children);
+  return rows.map((row, index) => (
+    <TableRowPositionContext.Provider
+      key={index}
+      value={{ index, isLast: index === rows.length - 1, striping }}
+    >
+      {row}
+    </TableRowPositionContext.Provider>
+  ));
+}
 
 export interface TableRootProps extends React.ComponentPropsWithoutRef<'table'>, TableRootOwnProps {
   /** Names the table for assistive tech. Rendered as a visible `<caption>`. */
@@ -46,8 +66,10 @@ TableRoot.displayName = 'Table.Root';
 const TableHead = React.forwardRef<
   HTMLTableSectionElement,
   React.ComponentPropsWithoutRef<'thead'>
->(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn('border-b border-line', className)} {...props} />
+>(({ className, children, ...props }, ref) => (
+  <thead ref={ref} className={cn('border-b border-line', className)} {...props}>
+    {positioned(children, false)}
+  </thead>
 ));
 TableHead.displayName = 'Table.Head';
 
@@ -55,17 +77,9 @@ const TableBody = React.forwardRef<
   HTMLTableSectionElement,
   React.ComponentPropsWithoutRef<'tbody'>
 >(({ className, children, ...props }, ref) => {
-  // Rows are wrapped in their index even though CSS could stripe them here:
-  // the native leaf has no selectors and must be told, and doing it the same
-  // way on both leaves is what stops the two from striping in antiphase.
-  const rows = React.Children.toArray(children);
   return (
     <tbody ref={ref} className={className} {...props}>
-      {rows.map((row, index) => (
-        <TableRowIndexContext.Provider key={index} value={index}>
-          {row}
-        </TableRowIndexContext.Provider>
-      ))}
+      {positioned(children, true)}
     </tbody>
   );
 });
@@ -74,8 +88,10 @@ TableBody.displayName = 'Table.Body';
 const TableFoot = React.forwardRef<
   HTMLTableSectionElement,
   React.ComponentPropsWithoutRef<'tfoot'>
->(({ className, ...props }, ref) => (
-  <tfoot ref={ref} className={cn('border-t border-line font-medium', className)} {...props} />
+>(({ className, children, ...props }, ref) => (
+  <tfoot ref={ref} className={cn('border-t border-line font-medium', className)} {...props}>
+    {positioned(children, false)}
+  </tfoot>
 ));
 TableFoot.displayName = 'Table.Foot';
 

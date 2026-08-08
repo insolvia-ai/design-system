@@ -68,4 +68,18 @@ describe('Table (native leaf)', () => {
 
     expect(rgb(getComputedStyle(screen.getByText('Wayfarer')).color)).toEqual(rgb(colors.dark.ink));
   });
+
+  it('drops the bottom rule on the LAST row of each section', () => {
+    // The web leaf gets this from `last:border-b-0`; this leaf has no
+    // selectors and must be told where a row sits. It shipped without the
+    // rule, and the workbench showed a stray line under the native footer
+    // that the web pane did not have.
+    render(<Fleet />);
+
+    const rows = screen.getAllByRole('row');
+    const last = rows.at(-1)!;
+    const firstBodyRow = rows[1]!;
+    expect(getComputedStyle(last).borderBottomWidth).toBe('0px');
+    expect(getComputedStyle(firstBodyRow).borderBottomWidth).toBe('1px');
+  });
 });
