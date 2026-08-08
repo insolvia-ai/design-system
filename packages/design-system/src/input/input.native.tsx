@@ -14,9 +14,9 @@ import { useInputGroup } from '../input-group/input-group.props';
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
 import {
+  CONTROL_HEIGHT_PX,
   isSecureType,
   keyboardTypeFor,
-  sizeHeight,
   useInputState,
   type InputOwnProps,
 } from './input.props';
@@ -37,7 +37,6 @@ export const Input = ({
   defaultValue,
   onValueChange,
   type = 'text',
-  size,
   disabled = false,
   invalid = false,
   name: _name,
@@ -52,7 +51,6 @@ export const Input = ({
   const [text, setText] = useInputState({ value, defaultValue, onValueChange });
 
   const isInvalid = invalid || (field?.invalid ?? false);
-  const resolvedSize = size ?? group?.size ?? 'md';
 
   // `aria-describedby` and `aria-invalid` are web-only and outside RN's own
   // types; react-native-web forwards them to the DOM regardless. OMITTED
@@ -92,7 +90,7 @@ export const Input = ({
       }}
       style={[
         styles.base,
-        { height: sizeHeight[resolvedSize], color: disabled ? c.muted : c.ink },
+        { height: CONTROL_HEIGHT_PX, color: disabled ? c.muted : c.ink },
         group
           ? // Inside a group the Root draws the box; the control keeps only
             // its text and its share of the row. `flex: 1` is what lets the

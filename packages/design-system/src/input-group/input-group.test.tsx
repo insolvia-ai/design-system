@@ -29,20 +29,17 @@ describe('InputGroup', () => {
     expect(input).not.toHaveClass('border-0');
   });
 
-  it('gives the control the row’s size unless the caller asked for another', () => {
+  it('is the same 40px box a standalone control draws', () => {
+    // There is no size scale to reconcile any more: one height, shared with
+    // Field.Control, so a group and a bare Input cannot come out different
+    // heights. See input.props.ts.
     render(
-      <InputGroup.Root size="lg">
-        <Input aria-label="Sized by the group" data-testid="grouped" />
-      </InputGroup.Root>,
-    );
-    render(
-      <InputGroup.Root size="lg">
-        <Input aria-label="Sized by hand" size="sm" data-testid="explicit" />
+      <InputGroup.Root data-testid="row">
+        <Input aria-label="Domain" />
       </InputGroup.Root>,
     );
 
-    expect(screen.getByTestId('grouped')).toHaveClass('px-md');
-    expect(screen.getByTestId('explicit')).toHaveClass('text-sm');
+    expect(screen.getByTestId('row')).toHaveClass('h-10');
   });
 
   it('renders the addon text without making it the control’s name', () => {

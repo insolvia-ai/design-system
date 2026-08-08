@@ -5,11 +5,10 @@ import { View } from 'react-native';
 
 import { Input as InputWeb } from '@design-system/input/input.web.tsx';
 import { Input as InputNative } from '@design-system/input/input.native.tsx';
-import type { InputSize, InputType } from '@design-system/input/input.props.ts';
+import type { InputType } from '@design-system/input/input.props.ts';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
 
-const SIZES = ['sm', 'md', 'lg'] as const satisfies readonly InputSize[];
 const TYPES = [
   'text',
   'email',
@@ -23,7 +22,6 @@ type InputArgs = {
   label: string;
   placeholder: string;
   type: InputType;
-  size: InputSize;
   disabled: boolean;
   invalid: boolean;
   onValueChange: (next: string) => void;
@@ -53,7 +51,6 @@ const meta = {
     label: 'Callsign',
     placeholder: 'Wayfarer',
     type: 'text',
-    size: 'md',
     disabled: false,
     invalid: false,
     onValueChange: fn(),
@@ -62,7 +59,6 @@ const meta = {
     label: { control: 'text' },
     placeholder: { control: 'text' },
     type: { control: 'select', options: [...TYPES] },
-    size: { control: 'inline-radio', options: [...SIZES] },
     disabled: { control: 'boolean' },
     invalid: { control: 'boolean' },
     onValueChange: { control: false },
@@ -74,7 +70,6 @@ const meta = {
           aria-label={args.label}
           placeholder={args.placeholder}
           type={args.type}
-          size={args.size}
           disabled={args.disabled}
           invalid={args.invalid}
           onValueChange={args.onValueChange}
@@ -85,7 +80,6 @@ const meta = {
           aria-label={args.label}
           placeholder={args.placeholder}
           type={args.type}
-          size={args.size}
           disabled={args.disabled}
           invalid={args.invalid}
           onValueChange={args.onValueChange}
@@ -118,43 +112,6 @@ export const Basic: Story = {
       await expect(args.onValueChange).toHaveBeenLastCalledWith('Way');
     });
   },
-};
-
-/**
- * The three heights side by side. `md` is 44px — the WCAG 2.5.5 target-size
- * floor that the Select trigger and DateInput already hold — and `sm` is a
- * deliberate opt-in to a smaller target for dense forms, exactly as Button's
- * `sm` is.
- */
-export const Sizes: Story = {
-  render: (args) => (
-    <LeafPair
-      web={
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {SIZES.map((size) => (
-            <InputWeb
-              key={size}
-              aria-label={`${args.label} ${size}`}
-              size={size}
-              placeholder={size}
-            />
-          ))}
-        </div>
-      }
-      native={
-        <View style={{ gap: 12 }}>
-          {SIZES.map((size) => (
-            <InputNative
-              key={size}
-              aria-label={`${args.label} ${size}`}
-              size={size}
-              placeholder={size}
-            />
-          ))}
-        </View>
-      }
-    />
-  ),
 };
 
 /**

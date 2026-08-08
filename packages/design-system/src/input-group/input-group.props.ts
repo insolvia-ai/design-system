@@ -6,8 +6,6 @@
 // stop drawing its own box — which is what this context tells it.
 import * as React from 'react';
 
-import type { InputSize } from '../input/input.props';
-
 export interface InputGroupContextValue {
   /**
    * True for every descendant control. `Input` and `Textarea` read it and drop
@@ -21,8 +19,6 @@ export interface InputGroupContextValue {
    * invariant the group's own responsibility.
    */
   bare: true;
-  /** The row's height, so addons and the control agree without being told twice. */
-  size: InputSize;
 }
 
 export const InputGroupContext = React.createContext<InputGroupContextValue | null>(null);
@@ -38,7 +34,6 @@ export function useInputGroup(): InputGroupContextValue | null {
 }
 
 export interface InputGroupRootOwnProps {
-  size?: InputSize | undefined;
   /** Draws the row in its invalid state — the same danger border a control shows. */
   invalid?: boolean | undefined;
   disabled?: boolean | undefined;

@@ -10,14 +10,11 @@ import { FieldContext } from '../field/field.props';
 import { useInputGroup } from '../input-group/input-group.props';
 import { cn } from '../lib/cn';
 import { focusRing } from '../lib/styles';
-import { autoCompleteFor, sizeStyles, useInputState, type InputOwnProps } from './input.props';
+import { autoCompleteFor, controlBox, useInputState, type InputOwnProps } from './input.props';
 
 export interface InputProps
   extends
-    Omit<
-      React.ComponentPropsWithoutRef<'input'>,
-      'value' | 'defaultValue' | 'onChange' | 'type' | 'size'
-    >,
+    Omit<React.ComponentPropsWithoutRef<'input'>, 'value' | 'defaultValue' | 'onChange' | 'type'>,
     InputOwnProps {}
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -28,7 +25,6 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       defaultValue,
       onValueChange,
       type = 'text',
-      size,
       disabled = false,
       invalid = false,
       name: nameProp,
@@ -42,10 +38,6 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const [text, setText] = useInputState({ value, defaultValue, onValueChange });
 
     const isInvalid = invalid || (field?.invalid ?? false);
-    // The group's size wins over an unset prop but never over an explicit one:
-    // a caller who asked for `lg` inside a `sm` group gets what they asked for,
-    // and sees it immediately.
-    const resolvedSize = size ?? group?.size ?? 'md';
 
     return (
       <input
@@ -73,8 +65,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             : props.onWheel
         }
         className={cn(
-          'w-full font-body text-ink placeholder:text-muted',
-          sizeStyles[resolvedSize],
+          'font-body text-ink placeholder:text-muted',
+          controlBox,
           group
             ? // Inside a group the Root owns the border, the radius and the
               // focus ring — see input-group.props.ts. `h-auto` releases the

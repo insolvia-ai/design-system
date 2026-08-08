@@ -34,7 +34,7 @@ export { Dropdown } from './dropdown';
 export { Field } from './field';
 export { Footer } from './footer';
 export { Input } from './input';
-export type { InputSize, InputType } from './input';
+export type { InputType } from './input';
 export { InputGroup } from './input-group';
 export { Meter } from './meter';
 export { NavBar } from './nav-bar';

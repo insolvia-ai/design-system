@@ -59,9 +59,11 @@ describe('Input', () => {
     expect(screen.getByRole('textbox', { name: 'Email' })).toHaveAttribute('autocomplete', 'email');
   });
 
-  it('applies the size scale, defaulting to the 44px target-size floor', () => {
+  it('draws the one control height, the same as Field.Control', () => {
+    // No size scale: 40px, matching Field.Control, so the two cannot come out
+    // different heights for the same job. input.props.ts has the reasoning.
     render(<Input aria-label="Callsign" data-testid="input" />);
 
-    expect(screen.getByTestId('input')).toHaveClass('h-11');
+    expect(screen.getByTestId('input')).toHaveClass('h-10');
   });
 });

@@ -34,20 +34,29 @@ import { useControllableState } from '../lib/controllable';
  */
 export type InputType = 'text' | 'number' | 'email' | 'password' | 'search' | 'tel' | 'url';
 
-export type InputSize = 'sm' | 'md' | 'lg';
-
 /**
- * `md` is 44px — the WCAG 2.5.5 target-size floor, the same height
- * `DateInput` and the Select trigger already hold. `sm` is a deliberate opt-in
- * to a smaller target for dense forms, exactly as `Button`'s `sm` is.
+ * ONE HEIGHT, and it is 40 — the same as `Field.Control`.
+ *
+ * This shipped with an `sm`/`md`/`lg` scale whose `md` was 44px, justified by
+ * the WCAG 2.5.5 target-size floor. That justification was wrong here, and the
+ * package was already saying so: `date-input.web.tsx` and `select.web.tsx`
+ * both take 44 BECAUSE they are press targets, and both record that
+ * "Field.Control stays 40" precisely because a text field is not one. A plain
+ * text input is the Field.Control case, so 44 put the package in the position
+ * of answering the same question two ways.
+ *
+ * The scale is gone rather than re-tuned. Three heights for a text box is
+ * three ways for two call sites to disagree, and the one that mattered — a
+ * denser row — is better served by the caller's own layout than by a prop
+ * every leaf has to carry.
+ *
+ * 44 still belongs where it was earned: Select's trigger, DateInput and
+ * Combobox are TAPPED, not typed into first.
  */
-export const sizeStyles: Record<InputSize, string> = {
-  sm: 'h-9 px-sm text-sm',
-  md: 'h-11 px-sm text-sm',
-  lg: 'h-12 px-md text-base',
-};
+export const CONTROL_HEIGHT_PX = 40;
 
-export const sizeHeight: Record<InputSize, number> = { sm: 36, md: 44, lg: 48 };
+/** The box every plain text control draws. Web class names. */
+export const controlBox = 'h-10 w-full px-sm text-sm';
 
 /**
  * The native keyboard for a web `type`.
@@ -103,7 +112,6 @@ export interface InputOwnProps {
   defaultValue?: string | undefined;
   onValueChange?: ((next: string) => void) | undefined;
   type?: InputType | undefined;
-  size?: InputSize | undefined;
   placeholder?: string | undefined;
   disabled?: boolean | undefined;
   /**

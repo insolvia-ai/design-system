@@ -15,7 +15,7 @@ import { StyleSheet, Text, View, type ViewProps } from 'react-native';
 
 import { radii, spacing } from '@insolvia-ai/tokens';
 
-import { sizeHeight } from '../input/input.props';
+import { CONTROL_HEIGHT_PX } from '../input/input.props';
 import { useNativeColors } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import { InputGroupContext, type InputGroupRootOwnProps } from './input-group.props';
@@ -25,7 +25,6 @@ export interface InputGroupRootProps extends ViewProps, InputGroupRootOwnProps {
 }
 
 const InputGroupRoot = ({
-  size = 'md',
   invalid = false,
   disabled = false,
   style,
@@ -33,7 +32,7 @@ const InputGroupRoot = ({
   ...props
 }: InputGroupRootProps) => {
   const c = useNativeColors();
-  const ctx = React.useMemo(() => ({ bare: true as const, size }), [size]);
+  const ctx = React.useMemo(() => ({ bare: true as const }), []);
 
   return (
     <InputGroupContext.Provider value={ctx}>
@@ -41,7 +40,7 @@ const InputGroupRoot = ({
         style={[
           styles.root,
           {
-            height: sizeHeight[size],
+            height: CONTROL_HEIGHT_PX,
             borderColor: invalid ? c.danger : c.line,
             backgroundColor: disabled ? c.surfaceAlt : c.card,
             opacity: disabled ? 0.5 : 1,

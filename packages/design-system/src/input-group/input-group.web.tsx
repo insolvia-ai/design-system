@@ -14,18 +14,11 @@ import { InputGroupContext, type InputGroupRootOwnProps } from './input-group.pr
 export interface InputGroupRootProps
   extends React.ComponentPropsWithoutRef<'div'>, InputGroupRootOwnProps {}
 
-// Height comes from the same size scale Input uses, minus the padding — the
-// controls inside supply that. Sharing `sizeStyles` would drag `px-*` in with
-// it, so only the height class is taken.
-const rowHeight: Record<NonNullable<InputGroupRootOwnProps['size']>, string> = {
-  sm: 'h-9',
-  md: 'h-11',
-  lg: 'h-12',
-};
-
 const InputGroupRoot = React.forwardRef<HTMLDivElement, InputGroupRootProps>(
-  ({ className, size = 'md', invalid = false, disabled = false, children, ...props }, ref) => {
-    const ctx = React.useMemo(() => ({ bare: true as const, size }), [size]);
+  ({ className, invalid = false, disabled = false, children, ...props }, ref) => {
+    // One value, so the memo has nothing to depend on — the row is `bare` and
+    // that is the whole contract.
+    const ctx = React.useMemo(() => ({ bare: true as const }), []);
     return (
       <InputGroupContext.Provider value={ctx}>
         <div
@@ -33,7 +26,8 @@ const InputGroupRoot = React.forwardRef<HTMLDivElement, InputGroupRootProps>(
           className={cn(
             'flex w-full items-stretch overflow-hidden rounded-md border border-line bg-card',
             'focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 focus-within:ring-offset-bg',
-            rowHeight[size],
+            // The same 40px every plain text control draws; see input.props.ts.
+            'h-10',
             invalid && 'border-danger',
             disabled && 'bg-surface-alt opacity-50',
             className,

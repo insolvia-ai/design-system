@@ -6,11 +6,8 @@ import { InputGroup as InputGroupWeb } from '@design-system/input-group/input-gr
 import { InputGroup as InputGroupNative } from '@design-system/input-group/input-group.native.tsx';
 import { Input as InputWeb } from '@design-system/input/input.web.tsx';
 import { Input as InputNative } from '@design-system/input/input.native.tsx';
-import type { InputSize } from '@design-system/input/input.props.ts';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
-
-const SIZES = ['sm', 'md', 'lg'] as const satisfies readonly InputSize[];
 
 /**
  * `InputGroup` is a parts object (`Root`/`Text`), so there is no meta
@@ -21,7 +18,6 @@ type InputGroupArgs = {
   label: string;
   prefix: string;
   suffix: string;
-  size: InputSize;
   invalid: boolean;
   disabled: boolean;
   onValueChange: (next: string) => void;
@@ -49,7 +45,6 @@ const meta = {
     label: 'Domain',
     prefix: 'https://',
     suffix: '.example',
-    size: 'md',
     invalid: false,
     disabled: false,
     onValueChange: fn(),
@@ -58,7 +53,6 @@ const meta = {
     label: { control: 'text' },
     prefix: { control: 'text' },
     suffix: { control: 'text' },
-    size: { control: 'inline-radio', options: [...SIZES] },
     invalid: { control: 'boolean' },
     disabled: { control: 'boolean' },
     onValueChange: { control: false },
@@ -67,7 +61,7 @@ const meta = {
     <LeafPair
       minPaneWidth={360}
       web={
-        <InputGroupWeb.Root size={args.size} invalid={args.invalid} disabled={args.disabled}>
+        <InputGroupWeb.Root invalid={args.invalid} disabled={args.disabled}>
           <InputGroupWeb.Text>{args.prefix}</InputGroupWeb.Text>
           <InputWeb
             aria-label={args.label}
@@ -79,7 +73,7 @@ const meta = {
         </InputGroupWeb.Root>
       }
       native={
-        <InputGroupNative.Root size={args.size} invalid={args.invalid} disabled={args.disabled}>
+        <InputGroupNative.Root invalid={args.invalid} disabled={args.disabled}>
           <InputGroupNative.Text>{args.prefix}</InputGroupNative.Text>
           <InputNative
             aria-label={args.label}
@@ -126,13 +120,13 @@ export const PrefixOnly: Story = {
     <LeafPair
       minPaneWidth={360}
       web={
-        <InputGroupWeb.Root size={args.size}>
+        <InputGroupWeb.Root>
           <InputGroupWeb.Text>@</InputGroupWeb.Text>
           <InputWeb aria-label="Handle" placeholder="wayfarer" />
         </InputGroupWeb.Root>
       }
       native={
-        <InputGroupNative.Root size={args.size}>
+        <InputGroupNative.Root>
           <InputGroupNative.Text>@</InputGroupNative.Text>
           <InputNative aria-label="Handle" placeholder="wayfarer" />
         </InputGroupNative.Root>
