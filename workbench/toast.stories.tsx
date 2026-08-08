@@ -10,6 +10,7 @@ import { View } from 'react-native';
 import { Toast as ToastWeb } from '@design-system/toast/toast.web.tsx';
 import { Toast as ToastNative } from '@design-system/toast/toast.native.tsx';
 import { useToast, type ToastIntent } from '@design-system/toast/toast.props.ts';
+import { useNativeColors } from '@design-system/lib/native-theme';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
 import { Button as ButtonWeb } from '@design-system/button/button.web.tsx';
@@ -43,6 +44,46 @@ function PublisherWeb({ args }: { args: ToastArgs }) {
     >
       Raise a toast
     </ButtonWeb>
+  );
+}
+
+/**
+ * A stand-in for a React Native consumer's ROOT VIEW — the dashed box.
+ *
+ * This is not decoration and it is not a workaround. `Toast.Viewport` pins
+ * itself with `position: absolute`, and every RN View is `position: relative`,
+ * so the Viewport pins to whichever View encloses it. On a device that View is
+ * the app root, the app root fills the screen, and the toast lands in the
+ * screen's corner. The dashed box is that root, drawn so you can see the edge
+ * the toast is measuring itself against.
+ *
+ * Two arrangements were tried before this one and both were worse. Nesting the
+ * Viewport in an undeclared decorative `View` made the toast look trapped
+ * inside the pane for no stated reason. Taking the wrapper away entirely let
+ * it hunt for the nearest positioned ancestor — which is the story block on a
+ * docs page, so the toasts escaped over the prose above them. Naming the root
+ * is what makes the behaviour legible instead of accidental.
+ *
+ * `overflow: 'hidden'` because a phone screen clips too.
+ */
+function AppRoot({ children }: { children?: React.ReactNode }) {
+  const c = useNativeColors();
+  return (
+    <View
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        width: '100%',
+        height: 220,
+        borderWidth: 1,
+        borderStyle: 'dashed',
+        borderColor: c.line,
+        borderRadius: 12,
+        padding: 12,
+      }}
+    >
+      {children}
+    </View>
   );
 }
 
@@ -87,13 +128,13 @@ function PublisherNative({ args }: { args: ToastArgs }) {
  * Every RN View is `position: relative`, so a Viewport nested inside one pins
  * to THAT view instead of the screen, and no z-index rescues it.
  *
- * This story got that wrong at first — it wrapped the native Viewport in a
- * decorative `View`, and the toast dutifully pinned itself inside the pane
- * while the web one went to the window corner. That read as a broken
- * component and was a broken story: on a device, a Viewport at the app root
- * pins to the screen, exactly as the web one pins to the window. Both panes
- * now do, and the native strip carries a story-level `bottom` offset purely so
- * the two do not land on top of each other.
+ * The two therefore CANNOT land in the same place in this workbench, and
+ * pretending otherwise is what made two earlier versions of this story wrong.
+ * The native pane draws its app root as a dashed box (see `AppRoot`) so the
+ * corner the toast measures itself against is visible; the web toast leaves
+ * the panes entirely and pins to the window, which is exactly what a web
+ * consumer gets. Compare the toasts themselves — stripe, title, dismiss, and
+ * a 352px width on both — not where the page puts them.
  */
 const meta = {
   title: 'Overlays/Toast',
@@ -112,7 +153,7 @@ const meta = {
   },
   render: (args) => (
     <LeafPair
-      note="Both leaves pin to the WINDOW corner — the web one portaled, the native one absolutely positioned from the app root. The native strip sits a little higher only so the two do not overlap."
+      note="The dashed box is a stand-in for a React Native app's ROOT VIEW — on a device it fills the screen, so the toast pinned to its corner is pinned to the screen. The web toast goes to the WINDOW corner instead, because a portal to document.body is what it has."
       web={
         <ToastWeb.Provider>
           <PublisherWeb args={args} />
@@ -125,20 +166,13 @@ const meta = {
         </ToastWeb.Provider>
       }
       native={
-        // The Viewport is a DIRECT child of the Provider, with no View
-        // between them, and that is the whole arrangement — see the doc
-        // comment. Wrapping it in one pins the toast to that wrapper.
         <ToastNative.Provider>
-          <View style={{ alignItems: 'flex-start' }}>
-            <PublisherNative args={args} />
-          </View>
-          <ToastNative.Viewport
-            label="Notifications (native leaf)"
-            // The lift is the STORY's, not the component's. Both leaves pin to
-            // the same window corner, so without it the two panes' toasts land
-            // on top of each other and the comparison shows one toast.
-            style={{ bottom: 96 }}
-          />
+          <AppRoot>
+            <View style={{ alignItems: 'flex-start' }}>
+              <PublisherNative args={args} />
+            </View>
+            <ToastNative.Viewport label="Notifications (native leaf)" />
+          </AppRoot>
         </ToastNative.Provider>
       }
     />

@@ -25,6 +25,7 @@ import {
 import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
+import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import { getListboxId, getOptionId } from '../select/select.props';
@@ -56,6 +57,7 @@ export const Combobox = ({
 }: ComboboxProps) => {
   const field = React.useContext(FieldContext);
   const c = useNativeColors();
+  const focus = useNativeFocusRing();
   const state = useComboboxState({ options, value, defaultValue, onValueChange });
   const { query, setQuery, visible, open, setOpen, active, setActive, commit, revert, rootId } =
     state;
@@ -129,9 +131,13 @@ export const Combobox = ({
         placeholderTextColor={c.muted}
         autoCapitalize="none"
         autoCorrect={false}
+        onFocus={() => focus.focus()}
         // Focus leaving discards uncommitted text, the same rule Escape and
         // Tab follow on both leaves.
-        onBlur={() => revert()}
+        onBlur={() => {
+          focus.blur();
+          revert();
+        }}
         style={[
           styles.control,
           {
@@ -139,6 +145,7 @@ export const Combobox = ({
             backgroundColor: disabled ? c.surfaceAlt : c.card,
             color: disabled ? c.muted : c.ink,
           },
+          focus.ringStyle,
         ]}
       />
 

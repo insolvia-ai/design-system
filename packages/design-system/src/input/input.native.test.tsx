@@ -5,7 +5,7 @@
 // there is no `<label for>` here, so the control points BACK at the label with
 // `aria-labelledby`, and that direction is exactly what shipped broken in
 // 0.2.1 for Field.
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -59,5 +59,35 @@ describe('Input (native leaf)', () => {
     expect(rgb(getComputedStyle(screen.getByRole('textbox', { name: 'Callsign' })).color)).toEqual(
       rgb(colors.dark.ink),
     );
+  });
+
+  it('draws the design system’s OWN focus ring, not the browser default', () => {
+    // The whole point of lib/native-focus.native.ts. Without it a native
+    // control falls through to Chrome's blue outline under react-native-web —
+    // which is what shipped in DateInput, Select, Input, Textarea and Combobox
+    // while Field alone had the fix. Brass, offset by 2px, resolved from the
+    // ACTIVE scheme.
+    setPrefersColorScheme('light');
+    render(<Input aria-label="Callsign" />);
+
+    const input = screen.getByRole('textbox', { name: 'Callsign' });
+    expect(getComputedStyle(input).outlineWidth).not.toBe('2px');
+
+    act(() => input.focus());
+
+    const style = getComputedStyle(input);
+    expect(style.outlineWidth).toBe('2px');
+    expect(style.outlineOffset).toBe('2px');
+    expect(rgb(style.outlineColor)).toEqual(rgb(colors.light.accent));
+  });
+
+  it('resolves the ring colour from the dark scheme too', () => {
+    setPrefersColorScheme('dark');
+    render(<Input aria-label="Callsign" />);
+
+    const input = screen.getByRole('textbox', { name: 'Callsign' });
+    act(() => input.focus());
+
+    expect(rgb(getComputedStyle(input).outlineColor)).toEqual(rgb(colors.dark.accent));
   });
 });

@@ -11,6 +11,7 @@ import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
 import { useInputGroup } from '../input-group/input-group.props';
+import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
 import {
   isSecureType,
@@ -47,6 +48,7 @@ export const Input = ({
   const field = React.useContext(FieldContext);
   const group = useInputGroup();
   const c = useNativeColors();
+  const focus = useNativeFocusRing();
   const [text, setText] = useInputState({ value, defaultValue, onValueChange });
 
   const isInvalid = invalid || (field?.invalid ?? false);
@@ -80,6 +82,14 @@ export const Input = ({
       // which turns a typed address into a rejected one on the first character.
       autoCapitalize={type === 'text' || type === 'search' ? 'sentences' : 'none'}
       autoCorrect={type === 'text'}
+      onFocus={(event) => {
+        focus.focus();
+        props.onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        focus.blur();
+        props.onBlur?.(event);
+      }}
       style={[
         styles.base,
         { height: sizeHeight[resolvedSize], color: disabled ? c.muted : c.ink },
@@ -95,6 +105,7 @@ export const Input = ({
                 backgroundColor: disabled ? c.surfaceAlt : c.card,
               },
             ],
+        focus.ringStyle,
         style,
       ]}
       {...props}

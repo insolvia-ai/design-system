@@ -12,6 +12,7 @@ import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
 import { useInputGroup } from '../input-group/input-group.props';
+import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
 import { minHeightForRows, useTextareaState, type TextareaOwnProps } from './textarea.props';
 
@@ -41,6 +42,7 @@ export const Textarea = ({
   const field = React.useContext(FieldContext);
   const group = useInputGroup();
   const c = useNativeColors();
+  const focus = useNativeFocusRing();
   const [text, setText] = useTextareaState({ value, defaultValue, onValueChange });
 
   const isInvalid = invalid || (field?.invalid ?? false);
@@ -64,6 +66,14 @@ export const Textarea = ({
       onChangeText={setText}
       placeholder={placeholder}
       placeholderTextColor={c.muted}
+      onFocus={(event) => {
+        focus.focus();
+        props.onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        focus.blur();
+        props.onBlur?.(event);
+      }}
       style={[
         styles.base,
         { minHeight: minHeightForRows(rows), color: disabled ? c.muted : c.ink },
@@ -76,6 +86,7 @@ export const Textarea = ({
                 backgroundColor: disabled ? c.surfaceAlt : c.card,
               },
             ],
+        focus.ringStyle,
         style,
       ]}
       {...props}

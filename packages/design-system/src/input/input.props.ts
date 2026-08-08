@@ -10,14 +10,29 @@ import { useControllableState } from '../lib/controllable';
 /**
  * The input kinds this package supports on BOTH platforms.
  *
- * Deliberately short of HTML's list. `date` is absent because `DateInput`
- * exists and says why at length; `number` is absent because a spinner control
- * has no React Native counterpart and its browser behaviour (scroll-to-change,
- * silent value loss on a bad character) is the one input type most design
- * systems end up banning anyway — `text` with `inputMode` covers the cases
- * that matter without the traps.
+ * `number` IS here. It was left out at first on the grounds that a spinner has
+ * no React Native counterpart and that `<input type="number">` carries real
+ * traps — scroll-to-change, and `.value` going empty on a bad character. Those
+ * traps are real but they are not a reason to make callers hand-roll it: a
+ * numeric field is one of the four or five inputs every form needs, and the
+ * scroll trap is two lines to disarm (the web leaf blurs on wheel). On native
+ * it is simply the numeric keypad, which is the whole point on a phone.
+ *
+ * WHAT IS STILL ABSENT, and why — each of these is a component or a native
+ * module, not a `type`:
+ *
+ * - `date`, `time`, `datetime-local` — `DateInput` owns typed dates and
+ *   `Calendar` owns picked ones. The reasoning is at the top of
+ *   `date-input.props.ts`; a second, differently-behaved date control reached
+ *   through a string prop would undo it.
+ * - `file` — React Native has no file input at all. It needs a document-picker
+ *   native module, which this package cannot declare (see the dependency rule
+ *   in CLAUDE.md).
+ * - `range` — a slider. RN has no built-in one, and a slider is its own
+ *   component with its own keyboard grammar, not a text field wearing a hat.
+ * - `color` — needs a colour picker; same story as `file`.
  */
-export type InputType = 'text' | 'email' | 'password' | 'search' | 'tel' | 'url';
+export type InputType = 'text' | 'number' | 'email' | 'password' | 'search' | 'tel' | 'url';
 
 export type InputSize = 'sm' | 'md' | 'lg';
 
@@ -42,15 +57,21 @@ export const sizeHeight: Record<InputSize, number> = { sm: 36, md: 44, lg: 48 };
  * that only happens if the two leaves agree on what `type="email"` MEANS. The
  * web leaf spells the same intent with `type` plus `inputMode`.
  */
-export const keyboardTypeFor: Record<InputType, 'default' | 'email-address' | 'phone-pad' | 'url'> =
-  {
-    text: 'default',
-    email: 'email-address',
-    password: 'default',
-    search: 'default',
-    tel: 'phone-pad',
-    url: 'url',
-  };
+export const keyboardTypeFor: Record<
+  InputType,
+  'default' | 'email-address' | 'phone-pad' | 'url' | 'numeric'
+> = {
+  text: 'default',
+  // `numeric`, not `number-pad`: it keeps the minus sign and the decimal
+  // separator, which `number-pad` drops — and a field that cannot accept
+  // "-12.5" is not a number field.
+  number: 'numeric',
+  email: 'email-address',
+  password: 'default',
+  search: 'default',
+  tel: 'phone-pad',
+  url: 'url',
+};
 
 /** Password is the one type that hides what it holds. */
 export function isSecureType(type: InputType): boolean {
@@ -64,6 +85,7 @@ export function isSecureType(type: InputType): boolean {
  */
 export const autoCompleteFor: Record<InputType, string | undefined> = {
   text: undefined,
+  number: undefined,
   email: 'email',
   password: 'current-password',
   search: undefined,

@@ -60,6 +60,18 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         aria-describedby={field?.describedBy}
         aria-invalid={isInvalid ? true : undefined}
         onChange={(event) => setText(event.target.value)}
+        // Scrolling the page with the pointer over a focused `type="number"`
+        // silently changes its value — the trap that nearly kept `number` out
+        // of `InputType` altogether. Blurring on wheel disarms it, and costs
+        // nothing on every other type because they never react to wheel.
+        onWheel={
+          type === 'number'
+            ? (event) => {
+                (event.target as HTMLInputElement).blur();
+                props.onWheel?.(event);
+              }
+            : props.onWheel
+        }
         className={cn(
           'w-full font-body text-ink placeholder:text-muted',
           sizeStyles[resolvedSize],

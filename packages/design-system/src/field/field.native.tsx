@@ -21,6 +21,7 @@ import {
 
 import { radii, spacing } from '@insolvia-ai/tokens';
 
+import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import {
@@ -99,11 +100,12 @@ const FieldControl = ({ style, onFocus, onBlur, ...props }: TextInputProps) => {
   const { labelId, controlId, describedBy, invalid } = useFieldContext('Control');
   const c = useNativeColors();
 
-  // React Native has no `:focus` selector, so the focused state is held here
-  // and the ring applied as a style — the web leaf gets the same thing for free
-  // from `focus-visible:` in lib/styles.ts's `focusRing`. A consumer's own
-  // handlers still fire: they are pulled out of `props` and called through.
-  const [focused, setFocused] = React.useState(false);
+  // React Native has no `:focus` selector, so the focused state is held in a
+  // hook and the ring applied as a style — the web leaf gets the same thing
+  // for free from `focus-visible:` in lib/styles.ts's `focusRing`. A
+  // consumer's own handlers still fire: they are pulled out of `props` and
+  // called through.
+  const focus = useNativeFocusRing();
 
   // `aria-labelledby` is in react-native's types; `aria-describedby` and
   // `aria-invalid` are not — they are web-only, and react-native-web forwards
@@ -125,17 +127,17 @@ const FieldControl = ({ style, onFocus, onBlur, ...props }: TextInputProps) => {
       accessibilityState={{ disabled: props.editable === false }}
       placeholderTextColor={c.muted}
       onFocus={(event) => {
-        setFocused(true);
+        focus.focus();
         onFocus?.(event);
       }}
       onBlur={(event) => {
-        setFocused(false);
+        focus.blur();
         onBlur?.(event);
       }}
       style={[
         styles.control,
         { borderColor: invalid ? c.danger : c.line, backgroundColor: c.card, color: c.ink },
-        focused && [styles.focusRing, { outlineColor: c.accent }],
+        focus.ringStyle,
         style,
       ]}
       {...props}
@@ -185,20 +187,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     fontSize: 14,
   },
-  // The web leaf's `focusRing`, expressed the way React Native expresses it.
-  //
-  // Tailwind draws that ring as two stacked box-shadows: 2px of `--color-bg`
-  // hugging the control, then 4px of `--color-accent` — which reads as a 2px
-  // gap and then 2px of gold. RN has no box-shadow, but it has had `outline*`
-  // since the style props landed, and `outlineOffset` produces the same gap.
-  // The gap is transparent here rather than painted `--color-bg`; on the page
-  // background those are the same pixels.
-  //
-  // Without this the native control fell through to the BROWSER's default focus
-  // ring under react-native-web — blue, hard against the control, and nothing
-  // to do with this design system. The colour resolves at render time from
-  // `c.accent`, so it follows the scheme like every other native colour.
-  focusRing: { outlineStyle: 'solid', outlineWidth: 2, outlineOffset: 2 },
+  // The focus ring moved to lib/native-focus.native.ts, so every native
+  // control draws the same one — it lived here alone for too long.
   description: { ...textScale.sm },
   error: { ...textScale.sm },
 });
