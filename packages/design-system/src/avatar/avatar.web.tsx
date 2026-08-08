@@ -8,10 +8,15 @@ import * as React from 'react';
 
 import { cn } from '../lib/cn';
 import {
+  AVATAR_GROUP_OVERLAP_PX,
+  AvatarGroupContext,
   AvatarRootContext,
   avatarSizePx,
+  splitGroup,
+  useAvatarGroup,
   useAvatarImageStatus,
   useAvatarRootContext,
+  type AvatarGroupOwnProps,
   type AvatarRootOwnProps,
 } from './avatar.props';
 
@@ -19,9 +24,11 @@ export interface AvatarRootProps
   extends React.ComponentPropsWithoutRef<'span'>, AvatarRootOwnProps {}
 
 const AvatarRoot = React.forwardRef<HTMLSpanElement, AvatarRootProps>(
-  ({ size = 'md', className, style, children, ...props }, ref) => {
+  ({ size, className, style, children, ...props }, ref) => {
     const [imageStatus, setImageStatus] = useAvatarImageStatus();
-    const px = avatarSizePx[size];
+    const group = useAvatarGroup();
+    // An explicit `size` wins over the group's; the group's beats the default.
+    const px = avatarSizePx[size ?? group?.size ?? 'md'];
 
     return (
       <span
@@ -87,8 +94,59 @@ const AvatarFallback = React.forwardRef<HTMLSpanElement, AvatarFallbackProps>(
 );
 AvatarFallback.displayName = 'Avatar.Fallback';
 
+export interface AvatarGroupProps
+  extends React.ComponentPropsWithoutRef<'span'>, AvatarGroupOwnProps {}
+
+const AvatarGroup = React.forwardRef<HTMLSpanElement, AvatarGroupProps>(
+  ({ className, size = 'md', max, label, children, ...props }, ref) => {
+    const items = React.Children.toArray(children).filter(React.isValidElement);
+    const { visible, overflow } = splitGroup(items, max);
+    const px = avatarSizePx[size];
+    const ctx = React.useMemo(() => ({ size }), [size]);
+
+    return (
+      <span
+        ref={ref}
+        // A labelled group, not a bare row: a screen reader reading five names
+        // with no word for what they are is announcing a list of strangers.
+        role="group"
+        aria-label={label}
+        className={cn('inline-flex items-center', className)}
+        {...props}
+      >
+        <AvatarGroupContext.Provider value={ctx}>
+          {visible.map((child, index) => (
+            <span
+              key={child.key ?? index}
+              // The overlap, plus a ring in the page background so each avatar
+              // reads as separate from the one beneath it rather than as one
+              // smeared shape.
+              className="inline-flex rounded-pill ring-2 ring-bg"
+              style={index === 0 ? undefined : { marginLeft: -AVATAR_GROUP_OVERLAP_PX }}
+            >
+              {child}
+            </span>
+          ))}
+          {overflow > 0 ? (
+            <span
+              // The counter is a normal, announced part of the group — it is
+              // information ("and 3 more"), not decoration.
+              className="inline-flex items-center justify-center rounded-pill bg-surface-alt font-body text-xs font-medium text-muted ring-2 ring-bg"
+              style={{ width: px, height: px, marginLeft: -AVATAR_GROUP_OVERLAP_PX }}
+            >
+              +{overflow}
+            </span>
+          ) : null}
+        </AvatarGroupContext.Provider>
+      </span>
+    );
+  },
+);
+AvatarGroup.displayName = 'Avatar.Group';
+
 export const Avatar = {
   Root: AvatarRoot,
   Image: AvatarImage,
   Fallback: AvatarFallback,
+  Group: AvatarGroup,
 };

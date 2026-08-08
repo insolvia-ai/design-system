@@ -54,4 +54,28 @@ describe('Card (native leaf)', () => {
     const title = screen.getByRole('heading', { name: 'Dark title' });
     expect(rgb(getComputedStyle(title).color)).toEqual(rgb(colors.dark.ink));
   });
+
+  it('names its image for BOTH renderers', () => {
+    // `alt` alone names it on a device and leaves it decorative in a browser,
+    // because react-native-web builds its <img> as `alt={ariaLabel || \'\'}`.
+    // That divergence shipped once already, in Avatar, and is why this leaf
+    // sets accessibilityLabel too.
+    render(
+      <Card.Root>
+        <Card.Image src="/ship.jpg" alt="The Wayfarer at dock" />
+      </Card.Root>,
+    );
+
+    expect(screen.getByRole('img', { name: 'The Wayfarer at dock' })).toBeInTheDocument();
+  });
+
+  it('renders a caption under the image', () => {
+    render(
+      <Card.Root>
+        <Card.Image src="/ship.jpg" alt="Ship" caption="Docked at Ganymede" />
+      </Card.Root>,
+    );
+
+    expect(screen.getByText('Docked at Ganymede')).toBeInTheDocument();
+  });
 });

@@ -174,3 +174,63 @@ export const FallbackOnError: Story = {
     />
   ),
 };
+
+/**
+ * `Avatar.Group` — a crew, the people on a thread.
+ *
+ * Three things are decided in `avatar.props.ts` rather than in either leaf.
+ * The group carries the SIZE, so a row cannot come out ragged (a child that
+ * names its own size still wins — an explicit prop should never be silently
+ * overruled). The overlap is one shared number, so the two panes stack by the
+ * same amount. And `splitGroup` does the `+N` arithmetic, because "+2" on one
+ * platform and "+3" on the other for the same list is precisely the divergence
+ * this workbench exists to catch.
+ *
+ * The group is a labelled `group`, not a bare row: a screen reader reading
+ * five names with no word for what they are is announcing a list of strangers.
+ * The `+1` chip is announced too — it is information about who is missing, not
+ * decoration.
+ */
+export const Group: Story = {
+  render: (args) => (
+    <LeafPair
+      note="Count the avatars and the +N chip in each pane, and check the overlap and the ring are the same."
+      web={
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <AvatarWeb.Group label="Crew" size={args.size}>
+            {['AB', 'CD', 'EF'].map((initials) => (
+              <AvatarWeb.Root key={initials}>
+                <AvatarWeb.Fallback>{initials}</AvatarWeb.Fallback>
+              </AvatarWeb.Root>
+            ))}
+          </AvatarWeb.Group>
+          <AvatarWeb.Group label="Crew, capped at two" size={args.size} max={2}>
+            {['AB', 'CD', 'EF', 'GH'].map((initials) => (
+              <AvatarWeb.Root key={initials}>
+                <AvatarWeb.Fallback>{initials}</AvatarWeb.Fallback>
+              </AvatarWeb.Root>
+            ))}
+          </AvatarWeb.Group>
+        </div>
+      }
+      native={
+        <View style={{ gap: 16 }}>
+          <AvatarNative.Group label="Crew" size={args.size}>
+            {['AB', 'CD', 'EF'].map((initials) => (
+              <AvatarNative.Root key={initials}>
+                <AvatarNative.Fallback>{initials}</AvatarNative.Fallback>
+              </AvatarNative.Root>
+            ))}
+          </AvatarNative.Group>
+          <AvatarNative.Group label="Crew, capped at two" size={args.size} max={2}>
+            {['AB', 'CD', 'EF', 'GH'].map((initials) => (
+              <AvatarNative.Root key={initials}>
+                <AvatarNative.Fallback>{initials}</AvatarNative.Fallback>
+              </AvatarNative.Root>
+            ))}
+          </AvatarNative.Group>
+        </View>
+      }
+    />
+  ),
+};

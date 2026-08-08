@@ -11,10 +11,15 @@ import { radii } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
 import {
+  AVATAR_GROUP_OVERLAP_PX,
+  AvatarGroupContext,
   AvatarRootContext,
   avatarSizePx,
+  splitGroup,
+  useAvatarGroup,
   useAvatarImageStatus,
   useAvatarRootContext,
+  type AvatarGroupOwnProps,
   type AvatarRootOwnProps,
 } from './avatar.props';
 
@@ -22,9 +27,11 @@ export interface AvatarRootProps extends Omit<ViewProps, 'children'>, AvatarRoot
   children?: React.ReactNode;
 }
 
-const AvatarRoot = ({ size = 'md', children, style, ...props }: AvatarRootProps) => {
+const AvatarRoot = ({ size, children, style, ...props }: AvatarRootProps) => {
   const [imageStatus, setImageStatus] = useAvatarImageStatus();
-  const px = avatarSizePx[size];
+  const group = useAvatarGroup();
+  // An explicit `size` wins over the group's; the group's beats the default.
+  const px = avatarSizePx[size ?? group?.size ?? 'md'];
 
   return (
     <View
@@ -97,10 +104,71 @@ const AvatarFallback = ({ children, style }: AvatarFallbackProps) => {
   );
 };
 
+export interface AvatarGroupProps extends Omit<ViewProps, 'children'>, AvatarGroupOwnProps {
+  children?: React.ReactNode;
+}
+
+const AvatarGroup = ({ size = 'md', max, label, style, children, ...props }: AvatarGroupProps) => {
+  const c = useNativeColors();
+  const items = React.Children.toArray(children).filter(React.isValidElement);
+  const { visible, overflow } = splitGroup(items, max);
+  const px = avatarSizePx[size];
+  const ctx = React.useMemo(() => ({ size }), [size]);
+
+  return (
+    <View
+      // A labelled group, matching the web leaf: a row of avatars is a set,
+      // and RN's Role union has no `group`, so the string is forwarded by
+      // react-native-web the same way `listbox` is in select.native.tsx.
+      {...({ role: 'group' } as unknown as Partial<ViewProps>)}
+      accessibilityLabel={label}
+      style={[styles.group, style]}
+      {...props}
+    >
+      <AvatarGroupContext.Provider value={ctx}>
+        {visible.map((child, index) => (
+          <View
+            key={child.key ?? index}
+            // The overlap, plus a ring in the page background so each avatar
+            // reads as separate rather than as one smeared shape. RN has no
+            // `ring`, so it is a border of the same width the web leaf uses.
+            style={[
+              styles.groupItem,
+              { borderColor: c.bg, borderRadius: radii.pill },
+              index === 0 ? null : { marginLeft: -AVATAR_GROUP_OVERLAP_PX },
+            ]}
+          >
+            {child}
+          </View>
+        ))}
+        {overflow > 0 ? (
+          <View
+            style={[
+              styles.groupItem,
+              styles.overflow,
+              {
+                width: px,
+                height: px,
+                borderColor: c.bg,
+                backgroundColor: c.surfaceAlt,
+                borderRadius: radii.pill,
+                marginLeft: -AVATAR_GROUP_OVERLAP_PX,
+              },
+            ]}
+          >
+            <Text style={[styles.overflowText, { color: c.muted }]}>{`+${overflow}`}</Text>
+          </View>
+        ) : null}
+      </AvatarGroupContext.Provider>
+    </View>
+  );
+};
+
 export const Avatar = {
   Root: AvatarRoot,
   Image: AvatarImage,
   Fallback: AvatarFallback,
+  Group: AvatarGroup,
 };
 
 const styles = StyleSheet.create({
@@ -124,4 +192,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   fallbackText: { fontSize: 12, fontWeight: '500' },
+  group: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start' },
+  // 2px, matching the web leaf's `ring-2`.
+  groupItem: { borderWidth: 2 },
+  overflow: { alignItems: 'center', justifyContent: 'center' },
+  overflowText: { fontSize: 12, fontWeight: '500' },
 });

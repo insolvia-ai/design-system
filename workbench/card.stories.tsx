@@ -15,6 +15,19 @@ import { InkText } from './ink-text.tsx';
 // `INTENTS`).
 const ELEVATIONS = ['flat', 'raised'] as const satisfies readonly CardElevation[];
 
+// An inline data URI, not a hosted placeholder: the workbench and its a11y
+// gate must render with no network, and a story that silently shows a broken
+// image is worse than one that shows none. Built with a template literal and
+// `encodeURIComponent` so the SVG's own quotes need no escaping — a hand-
+// escaped data URI is unreadable and, as this file briefly proved, easy to
+// break.
+const SHIP_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="320">` +
+    `<rect width="640" height="320" fill="#0B2A4A"/>` +
+    `<text x="320" y="176" font-family="Georgia" font-size="40" fill="#FFFFFF" text-anchor="middle">Wayfarer</text>` +
+    `</svg>`,
+)}`;
+
 /**
  * `Card` is a parts object (`Root`/`Title`/`Body`/`Footer`), the same shape
  * as `Dialog` — there is no single component for a meta `component` to point
@@ -119,6 +132,50 @@ export const Elevations: Story = {
             <CardNative.Body>A shadow lifts it above the page.</CardNative.Body>
           </CardNative.Root>
         </View>
+      }
+    />
+  ),
+};
+
+/**
+ * `Card.Image` — a full-bleed image at the top of the card.
+ *
+ * The negative margins are the point: `Card.Root` owns 24px of padding, and an
+ * image inset by it reads as a picture dropped into a card rather than part of
+ * one. Both leaves cancel that padding the same way, which is why this belongs
+ * FIRST inside the Root on both platforms.
+ *
+ * The height is REQUIRED (defaulted, not optional-with-intrinsic-sizing)
+ * because the platforms disagree about an unsized image: a web `<img>` reflows
+ * the card when it finally loads, and RN's `Image` with no dimensions renders
+ * at zero and shows nothing at all.
+ *
+ * `alt` is threaded to both `alt` and `accessibilityLabel` on the native leaf.
+ * Passing only `alt` names the image on a device and leaves it decorative in a
+ * browser — react-native-web builds its `<img>` as `alt={ariaLabel || ''}` —
+ * and that exact divergence shipped once in Avatar, in 0.8.3.
+ */
+export const WithImage: Story = {
+  render: (args) => (
+    <LeafPair
+      note="The image should meet the card's edges and round its top corners, in both panes."
+      web={
+        <CardWeb.Root elevation={args.elevation} style={{ maxWidth: 320 }}>
+          <CardWeb.Image src={SHIP_IMAGE} alt="The Wayfarer at dock" caption="Docked at Ganymede" />
+          <CardWeb.Title>{args.title}</CardWeb.Title>
+          <CardWeb.Body>{args.body}</CardWeb.Body>
+        </CardWeb.Root>
+      }
+      native={
+        <CardNative.Root elevation={args.elevation} style={{ maxWidth: 320 }}>
+          <CardNative.Image
+            src={SHIP_IMAGE}
+            alt="The Wayfarer at dock"
+            caption="Docked at Ganymede"
+          />
+          <CardNative.Title>{args.title}</CardNative.Title>
+          <CardNative.Body>{args.body}</CardNative.Body>
+        </CardNative.Root>
       }
     />
   ),

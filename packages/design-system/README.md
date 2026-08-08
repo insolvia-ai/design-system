@@ -24,13 +24,41 @@ caller wiped saved dates on that ambiguity. Compound components export their par
 uncontrolled (`default*`) and controlled (`*` + change callback) modes via
 `src/lib/controllable.ts`.
 
-Deliberately not ported, and why: hover-only surfaces (Tooltip, Preview Card —
-inaccessible on touch, per Base UI's own docs) and desktop-menu surfaces
-(Menubar, Navigation Menu); anchored-popup components (Popover, Menu, Combobox,
-Autocomplete, Number Field, Scroll Area, Context Menu) need a positioning
-primitive and mobile idioms (sheets, native pickers) that deserve their own
-design pass; Toast needs an app-level provider architecture; Form / Fieldset /
-Input overlap with `Field`, which already owns form-control wiring.
+**0.11.0 adds nineteen components and two parts**, closing the gap against a
+mainstream React component library's catalogue:
+
+- Display — `Text` · `Badge` · `Spinner` · `Alert` · `Ribbon` · `Breadcrumbs` ·
+  `Table`
+- Forms — `Input` · `Textarea` · `InputGroup` · `Combobox`
+- Overlays — `Tooltip` · `Popover` · `Dropdown` · `Drawer` · `Toast`
+- Structure — `Sidebar` · `Calendar`
+- New parts on existing components — `Avatar.Group` · `Card.Image`
+
+That wave answers most of the deferral list this section used to carry, so the
+list is reproduced here with what actually happened to each:
+
+- **Hover-only surfaces (Tooltip)** — "inaccessible on touch" was the right
+  objection and is answered rather than waived: the native leaf summons the
+  bubble with a long press and the web leaf with hover *and focus*, while the
+  `aria-describedby` association is shared. `tooltip.props.ts` argues it.
+- **Anchored popups (Popover, Menu, Combobox)** — these anchor to their own
+  trigger, which is the case `Select` already showed needs no positioning
+  primitive: the popup is placed against the control it belongs to. The mobile
+  idiom gap is real and documented at the seam — a native Popover and Dropdown
+  have no press-outside dismissal, because RN has no document to listen to and
+  both workarounds defeat the non-modal point.
+- **Toast** — now has the app-level provider it needed: `Toast.Provider` owns
+  the store, `useToast()` is the imperative handle, `Toast.Viewport` renders
+  the stack.
+- **`Input` overlapping with `Field`** — resolved by composition rather than by
+  duplication. `Input` and `Textarea` read `Field`'s context for their id,
+  name, description and invalid state, exactly as `Select` and `DateInput`
+  already do, so a field's wiring still lives in one place.
+
+Still not ported, and still for the original reasons: desktop-menu surfaces
+(Menubar, Navigation Menu), Preview Card, Number Field, Scroll Area and Context
+Menu — each needs a desktop-first interaction model with no touch counterpart
+worth the surface area.
 
 **`Select` came off that list in 0.4.0**, because the intake questionnaire
 needs it and a form cannot route around a missing select. The two reasons it

@@ -42,3 +42,62 @@ export interface AvatarRootOwnProps {
 export function useAvatarImageStatus(): [AvatarImageStatus, (status: AvatarImageStatus) => void] {
   return React.useState<AvatarImageStatus>('idle');
 }
+
+/**
+ * A stack of avatars — a crew, the people on a thread.
+ *
+ * The group carries the SIZE so the row cannot end up ragged: setting it once
+ * on the group beats setting it identically on every child and hoping. A child
+ * that names its own `size` still wins, because an explicit prop should never
+ * be silently overruled.
+ */
+export interface AvatarGroupContextValue {
+  size: AvatarSize;
+}
+
+export const AvatarGroupContext = React.createContext<AvatarGroupContextValue | null>(null);
+
+/** Returns `null` outside a group — a lone Avatar is the normal case. */
+export function useAvatarGroup(): AvatarGroupContextValue | null {
+  return React.useContext(AvatarGroupContext);
+}
+
+export interface AvatarGroupOwnProps {
+  size?: AvatarSize | undefined;
+  /**
+   * Show at most this many, with a `+N` counter for the rest. Omit to show
+   * every one.
+   */
+  max?: number | undefined;
+  /**
+   * Names the group for assistive tech — "Crew", "Thread participants". A row
+   * of avatars is a set, and a screen reader that reads five names with no
+   * word for what they are is announcing a list of strangers.
+   */
+  label?: string | undefined;
+}
+
+/** How far each avatar after the first slides under the one before it. */
+export const AVATAR_GROUP_OVERLAP_PX = 8;
+
+/**
+ * Splits a group's children into what is shown and what is counted.
+ *
+ * Shared, because "+2" appearing on one platform and "+3" on the other for the
+ * same list is exactly the class of divergence this package exists to prevent
+ * — and the arithmetic has an edge case worth pinning: with `max` equal to the
+ * child count there is no overflow at all, and with `max` one less than it the
+ * counter says "+1" rather than replacing the last avatar with a chip reading
+ * "+1" that hides two.
+ */
+export function splitGroup<T>(
+  items: readonly T[],
+  max: number | undefined,
+): {
+  visible: readonly T[];
+  overflow: number;
+} {
+  if (max === undefined || max >= items.length) return { visible: items, overflow: 0 };
+  const safeMax = Math.max(0, max);
+  return { visible: items.slice(0, safeMax), overflow: items.length - safeMax };
+}

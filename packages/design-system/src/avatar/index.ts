@@ -1,2 +1,7 @@
 export { Avatar } from './avatar';
-export type { AvatarRootOwnProps, AvatarSize, AvatarImageStatus } from './avatar.props';
+export type {
+  AvatarGroupOwnProps,
+  AvatarImageStatus,
+  AvatarRootOwnProps,
+  AvatarSize,
+} from './avatar.props';
