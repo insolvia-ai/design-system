@@ -25,7 +25,7 @@ type FooterArgs = {
  * closing note. Pure presentation — no state, no behavior.
  */
 const meta = {
-  title: 'Components/Footer',
+  title: 'Layout/Footer',
   parameters: { layout: 'fullscreen' },
   args: {
     productTitle: 'Product',

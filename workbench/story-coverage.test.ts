@@ -53,20 +53,33 @@ const components = readdirSync(componentsDir).filter(isComponentDir).sort();
 // removal cannot leave a ghost entry silently satisfied.
 const INTERACTIVE = [
   'accordion',
+  'alert',
   'alert-dialog',
+  'breadcrumbs',
   'button',
+  'calendar',
   'checkbox',
   'checkbox-group',
   'collapsible',
+  'combobox',
   'date-input',
   'dialog',
+  'drawer',
+  'dropdown',
   'field',
+  'input',
+  'input-group',
+  'popover',
   'radio-group',
   'select',
+  'sidebar',
   'switch',
   'tabs',
+  'textarea',
+  'toast',
   'toggle',
   'toggle-group',
+  'tooltip',
 ] as const;
 
 for (const name of INTERACTIVE) {

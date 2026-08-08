@@ -27,7 +27,7 @@ type AlertDialogArgs = {
 };
 
 const meta = {
-  title: 'Components/AlertDialog',
+  title: 'Overlays/AlertDialog',
   parameters: { layout: 'fullscreen' },
   args: {
     triggerLabel: 'Abort mission',
@@ -124,7 +124,11 @@ export const Basic: Story = {
 export const OpenWebLeaf: Story = {
   name: 'Open (web leaf only)',
   render: (args) => (
-    <SingleLeafFrame note={'Single-leaf on purpose — see the file header. This audits the web Popup actually open: `role="alertdialog"`, `aria-modal`, and that Escape/backdrop-click do NOT dismiss it.'}>
+    <SingleLeafFrame
+      note={
+        'Single-leaf on purpose — see the file header. This audits the web Popup actually open: `role="alertdialog"`, `aria-modal`, and that Escape/backdrop-click do NOT dismiss it.'
+      }
+    >
       <AbortMissionDialogWeb defaultOpen {...storyContent(args)} />
     </SingleLeafFrame>
   ),
@@ -162,7 +166,11 @@ export const OpenWebLeaf: Story = {
 export const OpenNativeLeaf: Story = {
   name: 'Open (native leaf only)',
   render: (args) => (
-    <SingleLeafFrame note={'Single-leaf on purpose — see the file header. Guards the 0.8.3 fix: react-native-web’s Modal wraps this card in its own `role="dialog"`, and that outer element must carry the title’s id too, or axe fails it as `aria-dialog-name`.'}>
+    <SingleLeafFrame
+      note={
+        'Single-leaf on purpose — see the file header. Guards the 0.8.3 fix: react-native-web’s Modal wraps this card in its own `role="dialog"`, and that outer element must carry the title’s id too, or axe fails it as `aria-dialog-name`.'
+      }
+    >
       <AbortMissionDialogNative defaultOpen {...storyContent(args)} />
     </SingleLeafFrame>
   ),

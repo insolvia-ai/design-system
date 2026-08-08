@@ -25,7 +25,7 @@ type ToggleArgs = {
 };
 
 const meta = {
-  title: 'Components/Toggle',
+  title: 'Forms/Toggle',
   component: ToggleWeb,
   parameters: { layout: 'fullscreen' },
   args: {

@@ -37,7 +37,7 @@ type SelectArgs = {
 };
 
 const meta = {
-  title: 'Components/Select',
+  title: 'Forms/Select',
   component: SelectWeb,
   parameters: { layout: 'fullscreen' },
   args: {

@@ -68,6 +68,7 @@ export function LeafPair({
           label="native leaf"
           sub="RN primitives via react-native-web — what a React Native consumer renders"
           testId="leaf-pair-native"
+          isNative
         >
           {native}
         </Pane>
@@ -80,11 +81,14 @@ function Pane({
   label,
   sub,
   testId,
+  isNative = false,
   children,
 }: {
   label: string;
   sub: string;
   testId: string;
+  /** The native stage is a flex column; see `nativeStage` for why. */
+  isNative?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -95,7 +99,10 @@ function Pane({
       </header>
       {/* The frame is deliberately plain: no background, no card, nothing that
           could be mistaken for part of the component being shown. */}
-      <div style={styles.stage} data-testid={testId}>
+      <div
+        style={isNative ? { ...styles.stage, ...styles.nativeStage } : styles.stage}
+        data-testid={testId}
+      >
         {children}
       </div>
     </section>
@@ -209,4 +216,33 @@ const styles: Record<string, React.CSSProperties> = {
   sub: { fontSize: 11 },
 
   stage: { padding: 20 },
+
+  /**
+   * The native stage is a FLEX COLUMN whose children start at the top-left.
+   * The web stage stays a plain block, which is what a web consumer's page is.
+   *
+   * WHY, and it is not cosmetic. React Native has no block layout at all —
+   * every RN parent is a flex container, so a leaf that says
+   * `alignSelf: 'flex-start'` shrink-wraps on a device exactly as its author
+   * intended. react-native-web renders each View as a block-level flex
+   * container, and `align-self` on a child of a plain `<div>` is simply
+   * ignored: the View takes `width: auto` and fills the pane instead.
+   *
+   * So this frame was misreporting the native leaf. A Badge stretched edge to
+   * edge where a phone shows a pill; the Calendar card ran 488px wide around a
+   * 280px grid, leaving the dead space on its right that prompted this. Both
+   * were the workbench's block `<div>`, not the components — and the
+   * side-by-side comparison is worthless if the native pane shows something no
+   * consumer would ever see.
+   *
+   * `alignItems: 'stretch'`, NOT `flex-start`, and the difference is the whole
+   * fix. `stretch` is React Native's own default, so this frame now matches
+   * what a consumer's root View gives its children — and a child that says
+   * `alignSelf: 'flex-start'` overrides it, which is exactly how Badge and
+   * Calendar shrink-wrap. `flex-start` here looked right for those two and
+   * broke every leaf that fills its parent: the Input sizes story went from
+   * three full-width fields to three stubs, because a `width: '100%'` child of
+   * a shrink-wrapped View has nothing definite to be 100% OF.
+   */
+  nativeStage: { display: 'flex', flexDirection: 'column', alignItems: 'stretch' },
 };

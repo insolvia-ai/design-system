@@ -27,6 +27,7 @@ import {
 import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
+import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import {
@@ -68,6 +69,7 @@ export const Select = ({
 }: SelectProps) => {
   const field = React.useContext(FieldContext);
   const c = useNativeColors();
+  const focus = useNativeFocusRing();
   const state = useSelectState({ options, value, defaultValue, onValueChange });
   const { open, setOpen, active, setActive, commit, selected, rootId } = state;
 
@@ -173,15 +175,20 @@ export const Select = ({
             setActive(state.value ?? null);
           }
         }}
+        onFocus={() => focus.focus()}
         // Focus leaving the trigger closes the list. An option press does NOT
         // reach here — the list cancels the focus change; see its onMouseDown.
-        onBlur={() => setOpen(false)}
+        onBlur={() => {
+          focus.blur();
+          setOpen(false);
+        }}
         style={[
           styles.trigger,
           {
             backgroundColor: disabled ? c.surfaceAlt : c.card,
             borderColor: invalid ? c.danger : c.line,
           },
+          focus.ringStyle,
         ]}
         {...webOnly}
       >

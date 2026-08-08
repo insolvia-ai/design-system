@@ -16,6 +16,7 @@ import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
+import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
 import {
   DATE_FORMAT,
@@ -46,6 +47,7 @@ export const DateInput = ({
 }: DateInputProps) => {
   const field = React.useContext(FieldContext);
   const c = useNativeColors();
+  const focus = useNativeFocusRing();
   const { text, setText, status } = useDateInputState({
     value,
     defaultValue,
@@ -80,6 +82,14 @@ export const DateInput = ({
         placeholderTextColor={c.muted}
         // A digit keypad on a phone; harmless on web, where it is advisory.
         keyboardType="number-pad"
+        onFocus={(event) => {
+          focus.focus();
+          props.onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          focus.blur();
+          props.onBlur?.(event);
+        }}
         style={[
           styles.control,
           {
@@ -87,6 +97,7 @@ export const DateInput = ({
             backgroundColor: disabled ? c.surfaceAlt : c.card,
             color: disabled ? c.muted : c.ink,
           },
+          focus.ringStyle,
           style,
         ]}
         {...props}

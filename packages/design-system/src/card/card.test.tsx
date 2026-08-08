@@ -29,4 +29,50 @@ describe('Card', () => {
 
     expect(screen.getByTestId('card')).toHaveClass('shadow-md');
   });
+
+  it('renders a named image without a figure when there is no caption', () => {
+    const { container } = render(
+      <Card.Root>
+        <Card.Image src="/ship.jpg" alt="The Wayfarer at dock" />
+        <Card.Title>Wayfarer</Card.Title>
+      </Card.Root>,
+    );
+
+    expect(screen.getByRole('img', { name: 'The Wayfarer at dock' })).toBeInTheDocument();
+    // An empty <figure> adds a grouping role and says nothing.
+    expect(container.querySelector('figure')).toBeNull();
+  });
+
+  it('wraps the image in a figure when a caption is given', () => {
+    const { container } = render(
+      <Card.Root>
+        <Card.Image src="/ship.jpg" alt="The Wayfarer at dock" caption="Docked at Ganymede" />
+      </Card.Root>,
+    );
+
+    expect(container.querySelector('figure')).not.toBeNull();
+    expect(screen.getByText('Docked at Ganymede')).toBeInTheDocument();
+  });
+
+  it('accepts an empty alt for a decorative image', () => {
+    // The explicit way to say "nothing to announce" — a missing alt is a
+    // defect, an empty one is a decision.
+    render(
+      <Card.Root>
+        <Card.Image src="/texture.jpg" alt="" />
+      </Card.Root>,
+    );
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  it('bleeds to the card edge by cancelling the Root padding', () => {
+    const { container } = render(
+      <Card.Root>
+        <Card.Image src="/ship.jpg" alt="Ship" />
+      </Card.Root>,
+    );
+
+    expect(container.querySelector('.-mx-lg')).not.toBeNull();
+  });
 });

@@ -32,7 +32,7 @@ type TabsArgs = {
 };
 
 const meta = {
-  title: 'Components/Tabs',
+  title: 'Data display/Tabs',
   parameters: { layout: 'fullscreen' },
   args: {
     defaultValue: 'content',

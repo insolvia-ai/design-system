@@ -30,7 +30,7 @@ type CheckboxArgs = {
 };
 
 const meta = {
-  title: 'Components/Checkbox',
+  title: 'Forms/Checkbox',
   parameters: { layout: 'fullscreen' },
   args: {
     label: 'Flown in combat before',

@@ -1,2 +1,2 @@
 export { Card } from './card';
-export type { CardElevation } from './card.props';
+export type { CardElevation, CardImageOwnProps } from './card.props';

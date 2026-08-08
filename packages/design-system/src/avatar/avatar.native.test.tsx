@@ -78,4 +78,25 @@ describe('Avatar (native leaf)', () => {
       rgb(colors.dark.surfaceAlt),
     );
   });
+
+  it('stacks a group, names it, and counts the overflow', () => {
+    render(
+      <Avatar.Group max={2} label="Crew">
+        <Avatar.Root>
+          <Avatar.Fallback>AB</Avatar.Fallback>
+        </Avatar.Root>
+        <Avatar.Root>
+          <Avatar.Fallback>CD</Avatar.Fallback>
+        </Avatar.Root>
+        <Avatar.Root>
+          <Avatar.Fallback>EF</Avatar.Fallback>
+        </Avatar.Root>
+      </Avatar.Group>,
+    );
+
+    expect(screen.getByRole('group', { name: 'Crew' })).toBeInTheDocument();
+    expect(screen.getByText('AB')).toBeInTheDocument();
+    expect(screen.queryByText('EF')).not.toBeInTheDocument();
+    expect(screen.getByText('+1')).toBeInTheDocument();
+  });
 });

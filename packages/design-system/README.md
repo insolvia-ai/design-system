@@ -9,28 +9,110 @@ It succeeded a web-only predecessor (0.1.x, Base UI), retired at 0.2.x.
 
 ## Components
 
-The original surfaces: `Accordion` · `Button` · `Card` · `Field` · `Footer` ·
-`NavBar`. The 0.3.0 wave added owned equivalents of the portable Base UI
-primitives (equivalent behavior, zero Base UI dependency): `AlertDialog` ·
-`Avatar` · `Checkbox` · `CheckboxGroup` · `Collapsible` · `Dialog` · `Meter` ·
-`Progress` · `RadioGroup` · `Separator` · `Switch` · `Tabs` · `Toggle` ·
-`ToggleGroup`. 0.4.0 adds `Select`, the first anchored-popup component — see
-the note below on why it stopped being deferred. 0.5.0 adds `DateInput`, a
-masked `YYYY-MM-DD` text field with no calendar (the reasoning is at the top of
-`date-input.props.ts`); 0.6.0 gives its `onValueChange` a second argument, because
-`''` alone cannot distinguish "cleared" from "still typing" and an autosaving
-caller wiped saved dates on that ambiguity. Compound components export their parts under one name
-(`Dialog.Root`, `Dialog.Trigger`, …); input-taking components support both
-uncontrolled (`default*`) and controlled (`*` + change callback) modes via
-`src/lib/controllable.ts`.
+Forty-one components, shelved the way a component library's documentation site
+conventionally shelves them — by what you reach for them FOR. The workbench's
+sidebar uses these same five groups in this same order (`.storybook/preview.tsx`
+pins it), so the catalogue and the place you look at it agree.
 
-Deliberately not ported, and why: hover-only surfaces (Tooltip, Preview Card —
-inaccessible on touch, per Base UI's own docs) and desktop-menu surfaces
-(Menubar, Navigation Menu); anchored-popup components (Popover, Menu, Combobox,
-Autocomplete, Number Field, Scroll Area, Context Menu) need a positioning
-primitive and mobile idioms (sheets, native pickers) that deserve their own
-design pass; Toast needs an app-level provider architecture; Form / Fieldset /
-Input overlap with `Field`, which already owns form-control wiring.
+**Data display** — what shows something.
+
+`Accordion` · `Alert` · `Avatar` · `Badge` · `Breadcrumbs` · `Card` ·
+`Collapsible` · `Meter` · `Progress` · `Ribbon` · `Spinner` · `Table` · `Tabs` ·
+`Text`
+
+**Overlays** — what floats above the page.
+
+`AlertDialog` · `Dialog` · `Drawer` · `Dropdown` · `Popover` · `Sidebar` ·
+`Toast` · `Tooltip`
+
+**Forms** — what takes input.
+
+`Button` · `Checkbox` · `CheckboxGroup` · `Combobox` · `Field` · `Input` ·
+`InputGroup` · `RadioGroup` · `Select` · `Switch` · `Textarea` · `Toggle` ·
+`ToggleGroup`
+
+**Dates** — the typed and the pointed way to say the same thing. They share
+`daysInMonth` and `isRealDate`, because they must agree about what a date is.
+
+`Calendar` · `DateInput`
+
+**Layout** — page furniture. This shelf is ours; the convention above has no
+home for it.
+
+`Footer` · `NavBar` · `Separator`
+
+Two conventions run through all of them: compound components export their parts
+under one name (`Dialog.Root`, `Dialog.Trigger`, …), and input-taking components
+support both uncontrolled (`default*`) and controlled (`*` + change callback)
+modes via `src/lib/controllable.ts`.
+
+### How it got here
+
+The original surfaces were `Accordion` · `Button` · `Card` · `Field` · `Footer` ·
+`NavBar`. 0.3.0 added owned equivalents of the portable Base UI primitives
+(equivalent behavior, zero Base UI dependency): `AlertDialog` · `Avatar` ·
+`Checkbox` · `CheckboxGroup` · `Collapsible` · `Dialog` · `Meter` · `Progress` ·
+`RadioGroup` · `Separator` · `Switch` · `Tabs` · `Toggle` · `ToggleGroup`. 0.4.0
+added `Select`, the first anchored-popup component — see the note below on why
+it stopped being deferred. 0.5.0 added `DateInput`, a masked `YYYY-MM-DD` text
+field with no calendar (the reasoning is at the top of `date-input.props.ts`);
+0.6.0 gave its `onValueChange` a second argument, because `''` alone cannot
+distinguish "cleared" from "still typing" and an autosaving caller wiped saved
+dates on that ambiguity.
+
+**0.11.0 added nineteen components and two parts** — `Text` · `Badge` ·
+`Spinner` · `Alert` · `Ribbon` · `Breadcrumbs` · `Table` · `Input` · `Textarea` ·
+`InputGroup` · `Combobox` · `Tooltip` · `Popover` · `Dropdown` · `Drawer` ·
+`Toast` · `Sidebar` · `Calendar`, plus `Avatar.Group` and `Card.Image` — closing
+the gap against a mainstream React component library's catalogue.
+
+That wave answers most of the deferral list this section used to carry, so the
+list is reproduced here with what actually happened to each:
+
+- **Hover-only surfaces (Tooltip)** — "inaccessible on touch" was the right
+  objection and is answered rather than waived: the native leaf summons the
+  bubble with a long press and the web leaf with hover *and focus*, while the
+  `aria-describedby` association is shared. `tooltip.props.ts` argues it.
+- **Anchored popups (Popover, Menu, Combobox)** — these anchor to their own
+  trigger, which is the case `Select` already showed needs no positioning
+  primitive: the popup is placed against the control it belongs to. The mobile
+  idiom gap is real and documented at the seam — a native Popover and Dropdown
+  have no press-outside dismissal, because RN has no document to listen to and
+  both workarounds defeat the non-modal point.
+- **Toast** — now has the app-level provider it needed: `Toast.Provider` owns
+  the store, `useToast()` is the imperative handle, `Toast.Viewport` renders
+  the stack.
+- **`Input` overlapping with `Field`** — the objection was right, and the first
+  attempt at answering it was not. `Input` and `Textarea` read `Field`'s
+  context for their id, name, description and invalid state, exactly as
+  `Select` and `DateInput` already do — but `Field.Control` went on rendering a
+  bare `<input>` of its own, so the package shipped two components drawing the
+  same box with nothing to say which to reach for. **`Field.Control` no longer
+  renders a control.** Put one inside the field:
+
+  ```tsx
+  <Field.Root name="callsign" invalid={hasError}>
+    <Field.Label>Callsign</Field.Label>
+    <Input />
+    <Field.Error>Required</Field.Error>
+  </Field.Root>
+  ```
+
+  `Field.Control` remains as the escape hatch for a control this package does
+  NOT own — a third-party widget cannot read `FieldContext`, which is not
+  exported — and takes it through a now-required `render` prop:
+  `<Field.Control render={<TheirInput />} />`. That prop is also new on the
+  native leaf, which never had it: the web leaf has offered it since 0.3.0, so
+  a cross-platform call site using it compiled on web and broke on native.
+
+  **This is the one breaking change in 0.11.0.** A bare `<Field.Control />` is
+  now a type error naming its replacement, rather than a silent change in what
+  renders.
+
+Still not ported, and still for the original reasons: desktop-menu surfaces
+(Menubar, Navigation Menu), Preview Card, Number Field, Scroll Area and Context
+Menu — each needs a desktop-first interaction model with no touch counterpart
+worth the surface area.
 
 **`Select` came off that list in 0.4.0**, because the intake questionnaire
 needs it and a form cannot route around a missing select. The two reasons it

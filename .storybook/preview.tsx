@@ -44,6 +44,31 @@ const preview: Preview = {
       },
     },
 
+    // The sidebar's groups, in a DELIBERATE order rather than the alphabetical
+    // one Storybook falls back to.
+    //
+    // The grouping follows how a component library's documentation site
+    // conventionally shelves these — what you display, what floats above the
+    // page, what takes input, and dates — because that is the order someone
+    // browsing for "the thing that shows a message" actually looks in.
+    // Alphabetically it would read Data display, Dates, Forms, Layout,
+    // Overlays, which puts Calendar second and separates Dialog from Drawer
+    // for no reason a reader benefits from.
+    //
+    // `Layout` is this package's own fifth shelf: Footer, NavBar and Separator
+    // are page furniture with nowhere sensible to sit among the other four.
+    // `Workbench` is pinned first because it is the page explaining how to read
+    // all the rest.
+    //
+    // A story whose title names a group not listed here still appears — it
+    // sorts after the listed ones — so adding a component to a new group is a
+    // visible surprise rather than a silent disappearance.
+    options: {
+      storySort: {
+        order: ['Workbench', 'Data display', 'Overlays', 'Forms', 'Dates', 'Layout'],
+      },
+    },
+
     // The leaf-pair frames draw their own spacing; Storybook's default padding
     // fights it.
     layout: 'fullscreen',
