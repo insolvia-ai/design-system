@@ -1,0 +1,84 @@
+// WEB LEAF — plain React DOM + Tailwind.
+//
+// Reads Field's context when there is one, exactly as Select and DateInput do:
+// the id, the `aria-describedby` string and the invalid flag all come from the
+// Field rather than being passed twice. It also reads InputGroup's context, and
+// goes `bare` inside one so the group draws a single box around the whole row.
+import * as React from 'react';
+
+import { FieldContext } from '../field/field.props';
+import { useInputGroup } from '../input-group/input-group.props';
+import { cn } from '../lib/cn';
+import { focusRing } from '../lib/styles';
+import { autoCompleteFor, sizeStyles, useInputState, type InputOwnProps } from './input.props';
+
+export interface InputProps
+  extends
+    Omit<
+      React.ComponentPropsWithoutRef<'input'>,
+      'value' | 'defaultValue' | 'onChange' | 'type' | 'size'
+    >,
+    InputOwnProps {}
+
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  (
+    {
+      className,
+      value,
+      defaultValue,
+      onValueChange,
+      type = 'text',
+      size,
+      disabled = false,
+      invalid = false,
+      name: nameProp,
+      placeholder,
+      ...props
+    },
+    ref,
+  ) => {
+    const field = React.useContext(FieldContext);
+    const group = useInputGroup();
+    const [text, setText] = useInputState({ value, defaultValue, onValueChange });
+
+    const isInvalid = invalid || (field?.invalid ?? false);
+    // The group's size wins over an unset prop but never over an explicit one:
+    // a caller who asked for `lg` inside a `sm` group gets what they asked for,
+    // and sees it immediately.
+    const resolvedSize = size ?? group?.size ?? 'md';
+
+    return (
+      <input
+        ref={ref}
+        type={type}
+        id={field?.controlId}
+        name={nameProp ?? field?.name}
+        autoComplete={autoCompleteFor[type]}
+        value={text}
+        placeholder={placeholder}
+        disabled={disabled}
+        aria-describedby={field?.describedBy}
+        aria-invalid={isInvalid ? true : undefined}
+        onChange={(event) => setText(event.target.value)}
+        className={cn(
+          'w-full font-body text-ink placeholder:text-muted',
+          sizeStyles[resolvedSize],
+          group
+            ? // Inside a group the Root owns the border, the radius and the
+              // focus ring — see input-group.props.ts. `h-auto` releases the
+              // height too, so the row's own height governs.
+              'h-auto min-w-0 flex-1 border-0 bg-transparent outline-none'
+            : cn(
+                'rounded-md border border-line bg-card',
+                focusRing,
+                'disabled:cursor-not-allowed disabled:bg-surface-alt disabled:text-muted',
+                isInvalid && 'border-danger',
+              ),
+          className,
+        )}
+        {...props}
+      />
+    );
+  },
+);
+Input.displayName = 'Input';
