@@ -105,6 +105,45 @@ describe('Select (native leaf)', () => {
     });
   });
 
+  // Reported from a real browser: hovering a row gave no feedback about which
+  // option a click was about to commit. The highlight existed, but only the
+  // ARROW KEYS moved it — so a pointer user saw nothing, and the web leaf,
+  // which has always highlighted on `onMouseEnter`, disagreed with this one
+  // under the one interaction anyone uses in a browser.
+  describe('hover', () => {
+    it('moves the highlight to the hovered option', async () => {
+      const user = userEvent.setup();
+      render(<Select options={DISTRICTS} aria-label="District" />);
+      await user.click(screen.getByRole('combobox'));
+
+      const option = screen.getByRole('option', { name: 'New Jersey' });
+      await user.hover(option);
+
+      // The paint AND the a11y consequence: the same `active` state drives
+      // both, which is what makes hover and the arrow keys one mechanism
+      // rather than two.
+      expect(rgb(option.style.backgroundColor)).toEqual(rgb(colors.light.surfaceAlt));
+      const id = screen.getByRole('combobox').getAttribute('aria-activedescendant');
+      expect(document.getElementById(id!)).toBe(option);
+    });
+
+    it('will not highlight a disabled option', async () => {
+      const user = userEvent.setup();
+      render(<Select options={DISTRICTS} aria-label="District" />);
+      await user.click(screen.getByRole('combobox'));
+
+      // Asserted, not hovered — the same shape as the disabled-trigger test
+      // above. react-native-web gives a disabled Pressable
+      // `pointer-events: none`, so the hover never reaches it and user-event
+      // refuses to fake one; that IS the guarantee. The `option.disabled`
+      // guard in `onHoverIn` is the belt to this file's braces, for a platform
+      // that delivers the event anyway.
+      const disabled = screen.getByRole('option', { name: 'California' });
+      expect(disabled).toHaveStyle({ pointerEvents: 'none' });
+      expect(screen.getByRole('combobox')).not.toHaveAttribute('aria-activedescendant');
+    });
+  });
+
   describe('inside a Field', () => {
     it('is named by the field label through aria-labelledby', () => {
       // The native direction: the control points BACK at the label, which is

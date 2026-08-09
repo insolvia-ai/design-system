@@ -241,6 +241,24 @@ export const Select = ({
                   onPress={() => {
                     if (!option.disabled) commit(option.value);
                   }}
+                  // Hover moves the highlight, exactly as the web leaf's
+                  // `onMouseEnter` does — same `active` state, so the trigger's
+                  // `aria-activedescendant` follows the pointer on both leaves.
+                  // Without it this list highlighted only under the ARROW KEYS,
+                  // so a pointer user got no feedback about which row they were
+                  // about to commit, and the two panes disagreed under the one
+                  // interaction anyone uses in a browser.
+                  //
+                  // `onHoverIn` is a real React Native Pressable prop, not a
+                  // react-native-web extension: RN carries it for the platforms
+                  // that have a pointer, and a touch device simply never fires
+                  // it. There is deliberately no `onHoverOut` — the web leaf
+                  // leaves the highlight where the pointer last was rather than
+                  // clearing it, and an empty highlight between rows would read
+                  // as a flicker.
+                  onHoverIn={() => {
+                    if (!option.disabled) setActive(option.value);
+                  }}
                   style={[
                     styles.option,
                     option.value === active && { backgroundColor: c.surfaceAlt },

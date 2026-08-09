@@ -72,6 +72,21 @@ describe('Select', () => {
     );
   });
 
+  // jsdom has no :focus-visible and no paint, so this can only pin the CLASS —
+  // which is the whole mechanism here. The native leaf rings from its own
+  // onFocus, so a mouse-opened Select ringed brass on native and bare on web
+  // until the trigger started ringing on `open` too.
+  it('rings the trigger while the list is open, not only on keyboard focus', async () => {
+    const user = userEvent.setup();
+    render(<Select options={DISTRICTS} aria-label="District" />);
+    const combobox = screen.getByRole('combobox');
+    expect(combobox).not.toHaveClass('ring-accent');
+    await open(user);
+    expect(combobox).toHaveClass('ring-2', 'ring-accent', 'ring-offset-2', 'ring-offset-bg');
+    await user.keyboard('{Escape}');
+    expect(combobox).not.toHaveClass('ring-accent');
+  });
+
   it('will not commit a disabled option', async () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();
