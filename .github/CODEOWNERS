@@ -1,0 +1,23 @@
+# One owner, every path.
+#
+# WHAT THIS FILE DOES ON ITS OWN: assigns a reviewer. GitHub requests review
+# from the owner of every changed path when a pull request opens. That is all.
+#
+# WHAT IT DOES NOT DO: gate anything. A CODEOWNERS entry becomes a merge
+# requirement only when the `protect-main` ruleset turns on "require review
+# from Code Owners", which today it does not — it requires a pull request, the
+# `Checks` context, and that the branch be up to date, with zero approvals.
+# So this is a review REQUEST, not a gate, until that setting changes.
+#
+# BEFORE TURNING THAT SETTING ON, know what it costs here. GitHub does not let
+# anyone approve their own pull request, and every PR in this repo is opened by
+# the account this file names. Enforced code-owner review would leave each one
+# unmergeable except through the admin bypass the ruleset already grants — a
+# gate whose only outcome is that it gets bypassed, which is worse than no gate
+# because it reads like one. It becomes real the day a second person can
+# approve.
+#
+# That is also why the repo's own docs say CI is the merge gate: there is no
+# human reviewer, so the PR body is written as the durable record rather than a
+# request for attention. See ../CLAUDE.md and the design-system-pr skill.
+* @insolvia-dev
