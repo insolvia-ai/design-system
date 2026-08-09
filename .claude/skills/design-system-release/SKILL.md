@@ -7,9 +7,11 @@ description: >-
   because CI fails any PR that changes a package without bumping its version.
   Also read it when asked "why hasn't my change shown up downstream", when a
   publish is skipped or the registry looks stale, and before choosing a version
-  number for a component change. Covers which of the two packages you are
-  releasing, why both publish source with no build step, and the one-time
-  GitHub Packages access this repo needs.
+  number for a component change. Read it BEFORE removing or renaming anything
+  the package exports — a prop, a type, a component — because that is a
+  two-release deprecation here, not a single edit. Covers which of the two
+  packages you are releasing, why both publish source with no build step, and
+  the one-time GitHub Packages access this repo needs.
 ---
 
 # Releasing from this repo
@@ -51,6 +53,41 @@ not reach a consumer until someone widens the range there.
 A consumer once sat on `^0.2.1` while this package reached 0.6.0 — five minors
 it could never install, and nothing surfaced the gap. If you ship a minor, say
 so in the PR body.
+
+## Removing or renaming public API
+
+`src/index.ts` is the export surface. Deleting a line from it — or dropping a
+prop, or renaming one — breaks a consumer at the moment it widens its range,
+and this repo has no way to warn anyone: it is not allowed to name a consumer,
+there is no changelog, and nobody here can see who installed what.
+
+There is exactly one channel, and it is a good one. **Both packages publish
+source** — `files: ["src"]`, `exports` pointing at `.ts`, no build step — so
+the consumer's TypeScript reads the real `.props.ts`. A JSDoc tag written here
+shows up struck through in that consumer's editor on their next install,
+without anyone being told anything.
+
+So removal is two releases, never one:
+
+1. **Deprecate in one minor.** Keep the old name working. Mark it
+   `@deprecated`, naming both the replacement and the version that removes it
+   — a tag saying only "deprecated" tells a consumer nothing it can act on:
+   ```ts
+   /** @deprecated Use `intent`. Removed in 0.14.0. */
+   emphasis?: ButtonIntent | undefined;   // illustrative — no such prop exists
+   ```
+   A renamed prop keeps both, with the old one optional and forwarding to the
+   new one, so the deprecation release breaks nobody.
+2. **Remove in a later minor** — never in a patch. A patch reaches consumers on
+   their next install without anyone choosing it; that is precisely the release
+   that must not take an API away.
+
+State both steps in the PR body under the version-bump statement, since that
+body is the only durable record of the change (`design-system-pr`). A minor
+that removes something is a handoff twice over: the consumer must widen its
+range *and* edit its call sites, and the range edit is where the breakage
+lands — under `0.x` caret rules a consumer sits on `^0.12.0` until it decides
+to move, then takes every removal since in one step.
 
 ## The whole path to a consumer
 
