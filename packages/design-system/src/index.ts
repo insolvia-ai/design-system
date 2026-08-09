@@ -23,11 +23,15 @@ export { CheckboxGroup } from './checkbox-group';
 export { Collapsible } from './collapsible';
 export { Combobox } from './combobox';
 export type { ComboboxOption, ComboboxValue } from './combobox';
-// 0.12.0 replaced `Calendar` (a month grid) and `DateInput` (a masked
-// `YYYY-MM-DD` text field) with one wheel picker. `DatePicker` covers dates,
-// times and both; `Wheel` is the scrolling column it is built from, exported
-// because it is useful on its own. See date-picker.props.ts for what that
-// change costs as well as what it buys.
+// Dates, as three layers of one thing. `DateInput` is the FIELD — a masked text
+// input with a button that opens the wheels — and is what most callers want.
+// `DatePicker` is those wheels on their own, for a surface that is already a
+// picker. `Wheel` is the scrolling column both are built from, exported because
+// it suits any short ordered list. 0.12.0 removed `Calendar` (a month grid) and
+// rebuilt `DateInput` around this; see date-input.props.ts for why the typed
+// field and the picker are both needed and neither replaces the other.
+export { DateInput } from './date-input';
+export type { DateInputMode, DateStatus } from './date-input';
 export { DatePicker } from './date-picker';
 export type { DatePickerMode } from './date-picker';
 export { Dialog } from './dialog';

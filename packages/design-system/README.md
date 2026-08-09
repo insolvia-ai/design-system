@@ -31,12 +31,14 @@ pins it), so the catalogue and the place you look at it agree.
 `InputGroup` · `RadioGroup` · `Select` · `Switch` · `Textarea` · `Toggle` ·
 `ToggleGroup`
 
-**Dates** — one surface, and the column it is built from. `DatePicker` covers
-dates, times and both through a `mode`; `Wheel` is the scrolling column
-underneath, exported because it suits any short ordered list. The date
+**Dates** — three layers of one thing. `DateInput` is the FIELD most callers
+want: a masked text input with a button that opens the wheels. `DatePicker` is
+those wheels alone, for a surface that is already a picker. `Wheel` is the
+scrolling column both are built from, exported because it suits any short
+ordered list. All three take `mode="date" | "time" | "datetime"`, and the date
 arithmetic they share lives in `src/lib/date.ts`.
 
-`DatePicker` · `Wheel`
+`DateInput` · `DatePicker` · `Wheel`
 
 **Layout** — page furniture. This shelf is ours; the convention above has no
 home for it.

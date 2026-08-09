@@ -61,6 +61,7 @@ const INTERACTIVE = [
   'checkbox-group',
   'collapsible',
   'combobox',
+  'date-input',
   'date-picker',
   'dialog',
   'drawer',
