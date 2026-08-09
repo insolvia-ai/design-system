@@ -26,6 +26,58 @@ describe('DateInput', () => {
     expect(screen.getByRole('textbox')).toHaveAttribute('placeholder', 'YYYY-MM-DD HH:mm');
   });
 
+  describe('which picker the button opens', () => {
+    it('opens the wheels by default', async () => {
+      const user = userEvent.setup();
+      render(<DateInput today="2026-03-11" />);
+      const picker = await openPicker(user);
+      expect(picker.getByRole('listbox', { name: 'Day' })).toBeInTheDocument();
+      expect(picker.queryByRole('grid')).toBeNull();
+    });
+
+    it('opens the month grid when asked', async () => {
+      const user = userEvent.setup();
+      render(<DateInput today="2026-03-11" picker="calendar" />);
+      const picker = await openPicker(user);
+      expect(picker.getByRole('grid')).toBeInTheDocument();
+      expect(picker.queryByRole('listbox', { name: 'Day' })).toBeNull();
+    });
+
+    it('never shows BOTH — they are alternatives, not toggles', async () => {
+      const user = userEvent.setup();
+      for (const choice of ['wheels', 'calendar'] as const) {
+        const view = render(<DateInput today="2026-03-11" picker={choice} />);
+        const picker = await openPicker(user);
+        const wheels = picker.queryAllByRole('listbox').length > 0;
+        const grid = picker.queryByRole('grid') !== null;
+        expect(wheels).toBe(!grid);
+        view.unmount();
+      }
+    });
+
+    it('writes a grid pick back into the field', async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(<DateInput today="2026-03-11" picker="calendar" onValueChange={onValueChange} />);
+
+      const picker = await openPicker(user);
+      await user.click(picker.getByRole('button', { name: '19 March 2026' }));
+      expect(onValueChange).toHaveBeenLastCalledWith('2026-03-19', 'valid');
+      expect(screen.getByRole('textbox')).toHaveValue('2026-03-19');
+    });
+
+    it('falls back to the wheels for a mode the grid cannot express', async () => {
+      // A month grid has no hours in it. Returned rather than thrown: `mode`
+      // and `picker` are independent props and flipping the mode of a
+      // calendar-configured field is an ordinary thing to do.
+      const user = userEvent.setup();
+      render(<DateInput mode="time" picker="calendar" defaultValue="09:30" />);
+      const picker = await openPicker(user, 'Choose a time');
+      expect(picker.getByRole('listbox', { name: 'Hour' })).toBeInTheDocument();
+      expect(picker.queryByRole('grid')).toBeNull();
+    });
+  });
+
   describe('a caller-chosen format', () => {
     it('shows the format as the placeholder and types in its order', async () => {
       const user = userEvent.setup();

@@ -14,7 +14,15 @@
 // picker on its own button, on Escape where there is a keyboard, and when the
 // value is picked.
 import * as React from 'react';
-import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import {
+  Dimensions,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+  type LayoutChangeEvent,
+  type TextInputProps,
+} from 'react-native';
 
 import { radii, spacing } from '@insolvia-ai/tokens';
 
@@ -22,14 +30,18 @@ import { FieldContext } from '../field/field.props';
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
 // Explicit `.native`, mirroring the `.web` imports in the sibling leaf.
+import { Calendar } from '../calendar/calendar.native';
 import { DatePicker } from '../date-picker/date-picker.native';
 import { PickerIcon } from './date-input-icon.native';
 import {
   isErrorStatus,
   OPEN_LABEL,
+  pickerFor,
+  placeSurface,
   resolveFormat,
   useDateInputState,
   type DateInputOwnProps,
+  type PickerPlacement,
 } from './date-input.props';
 
 export interface DateInputProps
@@ -44,6 +56,7 @@ export interface DateInputProps
 
 export const DateInput = ({
   mode = 'date',
+  picker,
   format,
   value,
   defaultValue,
@@ -78,6 +91,23 @@ export const DateInput = ({
   const invalid = isErrorStatus(status) || (field?.invalid ?? false);
   const surfaceId = `${rootId}-picker`;
 
+  // Flip the surface above the field when it does not fit below — the web
+  // leaf's copy of this carries the reasoning. Measured from the surface's own
+  // layout rather than in an effect, because React Native has no synchronous
+  // box to read: `onLayout` is when its height first exists.
+  const rootRef = React.useRef<View | null>(null);
+  const [placement, setPlacement] = React.useState<PickerPlacement>('below');
+  const measure = (event: LayoutChangeEvent) => {
+    const surfaceHeight = event.nativeEvent.layout.height;
+    rootRef.current?.measureInWindow((_x, y, _width, height) => {
+      const windowHeight = Dimensions.get('window').height;
+      setPlacement(placeSurface(windowHeight - (y + height), y, surfaceHeight));
+    });
+  };
+  React.useEffect(() => {
+    if (!open) setPlacement('below');
+  }, [open]);
+
   // Tell the enclosing Field the picker is up, so it can elevate itself. This
   // component's own `rootOpen` zIndex only orders it against ITS siblings; it
   // cannot reach past the Field wrapping it, because React Native gives every
@@ -101,7 +131,7 @@ export const DateInput = ({
   } as TextInputProps;
 
   return (
-    <View style={[styles.root, open ? styles.rootOpen : null]}>
+    <View ref={rootRef} style={[styles.root, open ? styles.rootOpen : null]}>
       <TextInput
         nativeID={field?.controlId}
         aria-labelledby={field?.labelId}
@@ -168,18 +198,29 @@ export const DateInput = ({
           // the page is inert while it demonstrably is not. RN's own Role union
           // carries neither, and react-native-web forwards the strings.
           {...({ role: 'dialog', 'aria-label': OPEN_LABEL[mode] } as object)}
-          style={styles.surface}
+          onLayout={measure}
+          style={[styles.surface, placement === 'below' ? styles.below : styles.above]}
         >
-          <DatePicker
-            mode={mode}
-            value={pickerValue}
-            onValueChange={pick}
-            {...(min === undefined ? {} : { min })}
-            {...(max === undefined ? {} : { max })}
-            minuteInterval={minuteInterval}
-            hourCycle={hourCycle}
-            {...(today === undefined ? {} : { today })}
-          />
+          {pickerFor(mode, picker) === 'calendar' ? (
+            <Calendar
+              value={pickerValue}
+              onValueChange={pick}
+              {...(min === undefined ? {} : { min })}
+              {...(max === undefined ? {} : { max })}
+              {...(today === undefined ? {} : { today })}
+            />
+          ) : (
+            <DatePicker
+              mode={mode}
+              value={pickerValue}
+              onValueChange={pick}
+              {...(min === undefined ? {} : { min })}
+              {...(max === undefined ? {} : { max })}
+              minuteInterval={minuteInterval}
+              hourCycle={hourCycle}
+              {...(today === undefined ? {} : { today })}
+            />
+          )}
         </View>
       ) : null}
     </View>
@@ -217,8 +258,11 @@ const styles = StyleSheet.create({
   },
   surface: {
     position: 'absolute',
-    top: CONTROL_HEIGHT + spacing.xs,
     left: 0,
     zIndex: 10,
   },
+  below: { top: CONTROL_HEIGHT + spacing.xs },
+  // The root is only as tall as the control, so anchoring the surface's BOTTOM
+  // that far from the root's bottom puts it just above the field.
+  above: { bottom: CONTROL_HEIGHT + spacing.xs },
 });

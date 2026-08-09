@@ -9,6 +9,7 @@ import {
   isErrorStatus,
   maskFor,
   parseFormat,
+  placeSurface,
   resolveFormat,
   toText,
   toValue,
@@ -94,6 +95,23 @@ describe('a caller-chosen format', () => {
 
   it('accepts any punctuation between the fields', () => {
     expect(maskFor('datetime', 'DD/MM/YYYY, HH:mm', '140220190930')).toBe('14/02/2019, 09:30');
+  });
+});
+
+describe('placeSurface', () => {
+  it('opens below whenever it fits', () => {
+    expect(placeSurface(400, 400, 354)).toBe('below');
+    expect(placeSurface(354, 900, 354)).toBe('below');
+  });
+
+  it('flips above when the surface does not fit below', () => {
+    // The calendar is 354px tall; a field near the bottom of a page put its
+    // last rows off the end of the viewport, where they could not be reached.
+    expect(placeSurface(120, 500, 354)).toBe('above');
+  });
+
+  it('stays below when above is no roomier — a pointless flip is worse', () => {
+    expect(placeSurface(200, 150, 354)).toBe('below');
   });
 });
 

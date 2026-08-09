@@ -4,11 +4,12 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { DateInput as DateInputWeb } from '@design-system/date-input/date-input.web.tsx';
 import { DateInput as DateInputNative } from '@design-system/date-input/date-input.native.tsx';
-import type { DateInputMode } from '@design-system/date-input/date-input.props.ts';
+import type { DateInputMode, DateInputPicker } from '@design-system/date-input/date-input.props.ts';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
 
 const MODES = ['date', 'time', 'datetime'] as const satisfies readonly DateInputMode[];
+const PICKERS = ['wheels', 'calendar'] as const satisfies readonly DateInputPicker[];
 
 /**
  * A few conventions worth switching between in the Controls panel. The list is
@@ -31,6 +32,7 @@ const CYCLES = [24, 12] as const;
 
 type DateInputArgs = {
   mode: DateInputMode;
+  picker: DateInputPicker;
   /** `''` uses the mode's default. See FORMATS. */
   format: string;
   /** Pinned, so the story renders the same value every time it is opened. */
@@ -68,6 +70,14 @@ type DateInputArgs = {
  * that control's shape — field, icon, popup — built from parts both platforms
  * have.
  *
+ * `picker` chooses WHICH instrument the button opens, and the two are
+ * alternatives — never both at once, which is why it is one enum rather than a
+ * pair of booleans. `wheels` is fast to spin and the only thing that can
+ * express a time; `calendar` is the month grid, slower for a date you already
+ * know and much better for one you are working OUT ("the second Tuesday"),
+ * because a grid shows weekdays and a wheel cannot. A grid has no hours in it,
+ * so `time` and `datetime` take the wheels whatever this says.
+ *
  * `format` is what the field READS as — switch it in the Controls panel and the
  * same value reprints as `MM/DD/YYYY`, `DD.MM.YYYY` or whatever the form's
  * convention is. It is presentation only: the STORED value is the same ISO
@@ -86,6 +96,7 @@ const meta = {
   parameters: { layout: 'fullscreen' },
   args: {
     mode: 'date',
+    picker: 'wheels',
     format: '',
     today: '2026-03-11',
     defaultValue: '',
@@ -98,6 +109,10 @@ const meta = {
   },
   argTypes: {
     mode: { control: 'inline-radio', options: [...MODES] },
+    // A radio, not two checkboxes: the wheels and the grid are ALTERNATIVES,
+    // and a control that could select both would offer a state the component
+    // deliberately cannot represent.
+    picker: { control: 'inline-radio', options: [...PICKERS] },
     // A select rather than free text: a format that does not fit the mode
     // THROWS by design, and a half-typed one in a text control would throw on
     // every keystroke.
@@ -120,6 +135,7 @@ const meta = {
       web={
         <DateInputWeb
           mode={args.mode}
+          picker={args.picker}
           {...(args.format ? { format: args.format } : {})}
           today={args.today}
           defaultValue={args.defaultValue}
@@ -135,6 +151,7 @@ const meta = {
       native={
         <DateInputNative
           mode={args.mode}
+          picker={args.picker}
           {...(args.format ? { format: args.format } : {})}
           today={args.today}
           defaultValue={args.defaultValue}
@@ -199,6 +216,45 @@ export const Basic: Story = {
       );
       await expect(web.getByRole('textbox')).toHaveValue('2019-02-19');
       await expect(args.onValueChange).toHaveBeenLastCalledWith('2019-02-19', 'valid');
+    });
+  },
+};
+
+/**
+ * The month grid instead of the drum — the same field, the other instrument.
+ *
+ * Never both: `picker` is one enum, so a surface holding a grid AND a set of
+ * wheels is a state this component cannot represent. Switch it in the Controls
+ * panel to compare them on the same value.
+ *
+ * The grid is the better instrument whenever the weekday matters, which a
+ * wheel simply cannot show. It is the worse one for a date far from today —
+ * paging to 2011 a month at a time — which is what the typed field is for.
+ */
+export const CalendarPicker: Story = {
+  args: { picker: 'calendar' },
+  play: async ({ canvasElement, args, step }) => {
+    const { web, native } = pair(canvasElement);
+
+    await step('the button opens a grid, and no wheels', async () => {
+      await userEvent.click(web.getByRole('button', { name: 'Choose a date' }));
+      const picker = within(web.getByRole('dialog'));
+      await expect(picker.getByRole('grid')).toBeInTheDocument();
+      await expect(picker.queryByRole('listbox')).toBeNull();
+    });
+
+    await step('a day announces as a whole date, not a bare number', async () => {
+      // Six weeks are on screen, so "5" appears twice in most months.
+      const picker = within(web.getByRole('dialog'));
+      await userEvent.click(picker.getByRole('button', { name: '19 March 2026' }));
+      await expect(web.getByRole('textbox')).toHaveValue('2026-03-19');
+      await expect(args.onValueChange).toHaveBeenLastCalledWith('2026-03-19', 'valid');
+    });
+
+    await step('the native leaf opens the same grid', async () => {
+      await userEvent.click(native.getByRole('button', { name: 'Choose a date' }));
+      const picker = within(native.getByRole('dialog'));
+      await expect(picker.getByRole('grid')).toBeInTheDocument();
     });
   },
 };

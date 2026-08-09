@@ -57,6 +57,7 @@ const INTERACTIVE = [
   'alert-dialog',
   'breadcrumbs',
   'button',
+  'calendar',
   'checkbox',
   'checkbox-group',
   'collapsible',

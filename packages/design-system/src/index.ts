@@ -16,6 +16,8 @@ export type { BadgeIntent, BadgeSize } from './badge';
 export { Breadcrumbs } from './breadcrumbs';
 export { Button, buttonClass } from './button';
 export type { ButtonIntent, ButtonSize, ButtonClassOptions } from './button';
+export { Calendar } from './calendar';
+export type { CalendarValue } from './calendar';
 export { Card } from './card';
 export type { CardElevation } from './card';
 export { Checkbox } from './checkbox';
@@ -23,15 +25,15 @@ export { CheckboxGroup } from './checkbox-group';
 export { Collapsible } from './collapsible';
 export { Combobox } from './combobox';
 export type { ComboboxOption, ComboboxValue } from './combobox';
-// Dates, as three layers of one thing. `DateInput` is the FIELD — a masked text
-// input with a button that opens the wheels — and is what most callers want.
-// `DatePicker` is those wheels on their own, for a surface that is already a
-// picker. `Wheel` is the scrolling column both are built from, exported because
-// it suits any short ordered list. 0.12.0 removed `Calendar` (a month grid) and
-// rebuilt `DateInput` around this; see date-input.props.ts for why the typed
-// field and the picker are both needed and neither replaces the other.
+// Dates. `DateInput` is the FIELD, and is what most callers want: a masked text
+// input with a button that opens a picker. Which picker is ITS choice, and the
+// two are alternatives — `picker="wheels"` (the default) opens `DatePicker`'s
+// drum, `picker="calendar"` opens `Calendar`'s month grid. Both are exported on
+// their own for a surface that is already a picker, and `Wheel` is the
+// scrolling column underneath. See date-input.props.ts for why the typed field
+// and the picker are both needed and neither replaces the other.
 export { DateInput } from './date-input';
-export type { DateInputMode, DateStatus } from './date-input';
+export type { DateInputMode, DateInputPicker, DateStatus } from './date-input';
 export { DatePicker } from './date-picker';
 export type { DatePickerMode } from './date-picker';
 export { Dialog } from './dialog';

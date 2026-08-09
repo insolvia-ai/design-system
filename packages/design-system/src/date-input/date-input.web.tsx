@@ -19,14 +19,18 @@ import { cn } from '../lib/cn';
 import { focusRing } from '../lib/styles';
 // Explicit `.web`, never the extensionless `'../date-picker'` — see the note in
 // date-picker.web.tsx for why one specifier cannot resolve two ways.
+import { Calendar } from '../calendar/calendar.web';
 import { DatePicker } from '../date-picker/date-picker.web';
 import { PickerIcon } from './date-input-icon.web';
 import {
   isErrorStatus,
   OPEN_LABEL,
+  pickerFor,
+  placeSurface,
   resolveFormat,
   useDateInputState,
   type DateInputOwnProps,
+  type PickerPlacement,
 } from './date-input.props';
 
 // `min`/`max` are Omit-ed from the input props because React declares them as
@@ -55,6 +59,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
     {
       className,
       mode = 'date',
+      picker,
       format,
       value,
       defaultValue,
@@ -100,6 +105,24 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
     const name = nameProp ?? field?.name;
     const surfaceId = `${rootId}-picker`;
     const rootRef = React.useRef<HTMLDivElement | null>(null);
+    const surfaceRef = React.useRef<HTMLDivElement | null>(null);
+
+    // Flip the surface above the field when it does not fit below.
+    //
+    // The calendar is 354px tall against the wheels' ~300, and a field low on a
+    // page put the grid's last rows off the end of the viewport where they
+    // could not be reached at all. Measured in a LAYOUT effect so the flip
+    // happens before paint rather than as a visible jump, and re-measured
+    // whenever the instrument changes, because the two are different heights.
+    const [placement, setPlacement] = React.useState<PickerPlacement>('below');
+    React.useLayoutEffect(() => {
+      if (!open) return;
+      const root = rootRef.current;
+      const surface = surfaceRef.current;
+      if (!root || !surface) return;
+      const box = root.getBoundingClientRect();
+      setPlacement(placeSurface(window.innerHeight - box.bottom, box.top, surface.offsetHeight));
+    }, [open, mode, picker]);
 
     // Pressing anywhere outside closes without committing anything — the
     // behaviour of every native date control, and the reason this listens on
@@ -193,6 +216,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
 
         {open && (
           <div
+            ref={surfaceRef}
             id={surfaceId}
             // A non-modal surface: `role="dialog"` WITHOUT `aria-modal`, which
             // would tell a screen reader the rest of the page is inert while
@@ -203,19 +227,33 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             // blurring when a wheel row is pressed — without it the blur
             // handler closes the picker before the press lands.
             onMouseDown={(event) => event.preventDefault()}
-            className="absolute left-0 top-full z-10 mt-xs"
+            className={cn(
+              'absolute left-0 z-10',
+              placement === 'below' ? 'top-full mt-xs' : 'bottom-full mb-xs',
+            )}
           >
-            <DatePicker
-              mode={mode}
-              value={pickerValue}
-              onValueChange={pick}
-              {...(min === undefined ? {} : { min })}
-              {...(max === undefined ? {} : { max })}
-              minuteInterval={minuteInterval}
-              hourCycle={hourCycle}
-              {...(today === undefined ? {} : { today })}
-              className="shadow-lg"
-            />
+            {pickerFor(mode, picker) === 'calendar' ? (
+              <Calendar
+                value={pickerValue}
+                onValueChange={pick}
+                {...(min === undefined ? {} : { min })}
+                {...(max === undefined ? {} : { max })}
+                {...(today === undefined ? {} : { today })}
+                className="shadow-lg"
+              />
+            ) : (
+              <DatePicker
+                mode={mode}
+                value={pickerValue}
+                onValueChange={pick}
+                {...(min === undefined ? {} : { min })}
+                {...(max === undefined ? {} : { max })}
+                minuteInterval={minuteInterval}
+                hourCycle={hourCycle}
+                {...(today === undefined ? {} : { today })}
+                className="shadow-lg"
+              />
+            )}
           </div>
         )}
 

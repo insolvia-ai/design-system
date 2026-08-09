@@ -29,6 +29,58 @@ import { defaultValueFor, type DatePickerMode } from '../date-picker/date-picker
 export type DateInputMode = DatePickerMode;
 
 /**
+ * The two instruments the button can open. An enum rather than a pair of
+ * booleans, because they are ALTERNATIVES: a surface holding a month grid and a
+ * set of wheels at once is not a design, and a type that cannot express it is
+ * better than a runtime check that forbids it.
+ */
+export type DateInputPicker = 'wheels' | 'calendar';
+
+/**
+ * Which instrument a given mode actually gets.
+ *
+ * A month grid has no hours in it, so anything with a clock takes the wheels
+ * whatever the caller asked for. Stated in ONE place, and returned rather than
+ * thrown: `mode` and `picker` are independent props, and flipping the mode of a
+ * calendar-configured field is an ordinary thing to do — not a bug worth
+ * crashing over, the way a `format` that cannot express its mode is.
+ */
+export function pickerFor(
+  mode: DateInputMode,
+  picker: DateInputPicker | undefined,
+): DateInputPicker {
+  return picker === 'calendar' && mode === 'date' ? 'calendar' : 'wheels';
+}
+
+/** Which side of the field the picker opens on. */
+export type PickerPlacement = 'below' | 'above';
+
+/**
+ * Where to put the picker, given the room around the field.
+ *
+ * BELOW BY DEFAULT, because that is where a popup belongs and where the eye
+ * expects it. It flips only when the surface genuinely does not fit below AND
+ * there is more room above — never merely because above is roomier, since a
+ * picker that jumps to the other side of the field for no visible reason is
+ * worse than one that is a little tight.
+ *
+ * This exists because the CALENDAR is 354px tall against the wheels' ~300, and
+ * a field low on a page put its bottom rows off the end of the viewport, where
+ * they could not be reached at all. That is invisible to every test in this
+ * repo — jsdom computes no layout, so every height here is 0 and this function
+ * always answers 'below' there — which is why it is a pure function with its
+ * own unit tests and a workbench story, rather than arithmetic buried in a leaf.
+ */
+export function placeSurface(
+  spaceBelow: number,
+  spaceAbove: number,
+  surfaceHeight: number,
+): PickerPlacement {
+  if (surfaceHeight <= spaceBelow) return 'below';
+  return spaceAbove > spaceBelow ? 'above' : 'below';
+}
+
+/**
  * The fields a format may name, and how many digits each one takes.
  *
  * Case matters, and it is the one trap here: `MM` is a month and `mm` is a
@@ -319,6 +371,23 @@ export function isErrorStatus(status: DateStatus): boolean {
 export interface DateInputOwnProps {
   /** Which fields the mask accepts, and which wheels the button opens. */
   mode?: DateInputMode | undefined;
+  /**
+   * Which instrument the button opens. **One or the other, never both** — the
+   * two are alternatives, and an enum is how that is made impossible to get
+   * wrong. Two booleans would admit a state with a grid and a set of wheels in
+   * one surface, which is not a design anyone wants to look at.
+   *
+   * `wheels` (the default) is the drum: fast to spin, compact, and the only
+   * instrument that can express a time. `calendar` is the month grid: slower
+   * for a date you already know, and much better for a date you are working
+   * OUT — "the second Tuesday", "the day after the bank holiday" — because a
+   * grid shows the weekdays and a wheel cannot.
+   *
+   * HONOURED FOR `mode="date"` ONLY. A month grid has no hours in it, so
+   * `time` and `datetime` use the wheels whatever this says; see
+   * `pickerFor`, which is the one place that decision is made.
+   */
+  picker?: DateInputPicker | undefined;
   /**
    * How the field READS and is typed — `MM/DD/YYYY`, `DD.MM.YYYY`,
    * `YYYY-MM-DD HH:mm`. Built from `YYYY`, `MM`, `DD`, `HH` and `mm` with any
