@@ -80,6 +80,21 @@
       "consumer installing with a wildcard would otherwise pull in skills about",
       "releasing these packages."
     ],
+    "artifacts:check": [
+      "The RELEASE gate, as distinct from the merge gates: it reads",
+      "`npm pack --dry-run` for both packages and asks whether the TARBALL is",
+      "well-formed — every `exports` target present, no tests leaked, every",
+      "platform leaf pair intact. No reference to what changed, because a",
+      "malformed artifact is malformed regardless.",
+      "",
+      "publish.yml runs it immediately before `npm publish`, which is the copy",
+      "that matters: a bad publish cannot be taken back off GitHub Packages, so",
+      "this has to block the tarball rather than merely report on it. pr.yml",
+      "runs it too, so the failure is found on the PR and not at release time.",
+      "",
+      "It is NOT in `ci` — it shells out to npm pack twice, and the local gate",
+      "is the fast inner loop. scripts/check-artifacts.ts owns the reasoning."
+    ],
     "typecheck:scripts": [
       "The fifth typecheck program — scripts/. See tsconfig.scripts.json for why",
       "it is its own program rather than part of the workbench's."
@@ -155,6 +170,7 @@
     "typecheck:workbench": "tsc -p tsconfig.workbench.json",
     "typecheck:scripts": "tsc -p tsconfig.scripts.json",
     "skills:check": "node scripts/check-skills.ts",
+    "artifacts:check": "node scripts/check-artifacts.ts",
     "test": "npm run test --workspaces --if-present",
     "ci": "npm run tokens:check && npm run skills:check && npm run format && npm run lint && npm run typecheck && npm run typecheck:workbench && npm run typecheck:scripts && npm run test && npm run test:workbench && npm run test:a11y",
     "storybook": "storybook dev -p 6006 --no-open",

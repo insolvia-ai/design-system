@@ -1,20 +1,42 @@
 # scripts
 
-Two entry points a human runs, one gate CI runs, and a deliberate refusal to add
-more.
+Two entry points a human runs, two gates CI runs, and a deliberate refusal to
+add more.
 
 | Script | What it does |
 |---|---|
 | [`dev-setup.sh`](dev-setup.sh) | Checks Node against `engines.node`, then `npm ci`. `--check` reports without changing anything. |
 | [`dev-up.sh`](dev-up.sh) | Starts the component workbench (Storybook) on `http://localhost:6006`. |
 | [`check-skills.ts`](check-skills.ts) | Gates every `SKILL.md` in the repo. Run as `npm run skills:check`, part of `npm run ci`. |
+| [`check-artifacts.ts`](check-artifacts.ts) | Gates the packed tarballs. Run as `npm run artifacts:check`, by both CI workflows. |
 
-`check-skills.ts` is not a shortcut for anything a human types — it is a check,
-reached through `npm run skills:check` like every other one. It lives here
-rather than beside the skills because it walks the whole repository, including
-`.claude/skills`, which belongs to no package. It runs under plain `node` with
-native type-stripping, like the token generator, and is typechecked by
+Neither check is a shortcut for anything a human types — they are checks,
+reached through `npm run` like every other one. Both live here rather than
+beside what they check because both span the whole repository: `check-skills.ts`
+walks every `SKILL.md`, `.claude/skills` included, which belongs to no package;
+`check-artifacts.ts` packs both published packages. Both run under plain `node`
+with native type-stripping, like the token generator, and are typechecked by
 [`tsconfig.scripts.json`](../tsconfig.scripts.json).
+
+## Merge gates and the release gate
+
+`check-artifacts.ts` is the one check here that is not about whether a change
+may merge. It asks whether the **tarball** is well-formed — every `exports`
+target present, no tests leaked, every `.web.tsx`/`.native.tsx` pair intact —
+by reading `npm pack --dry-run`, so `files` and its negations apply and what it
+inspects is what a consumer would actually extract. Every other gate in this
+repo runs against the working tree, where a file excluded from the tarball still
+looks fine.
+
+That difference is why it runs in **both** workflows. `pr.yml` runs it so a
+malformed artifact is found on the PR. `publish.yml` runs it in the same job as
+`npm publish`, immediately before it, and that is the copy that matters: a merge
+gate that fails costs one more commit, but GitHub Packages will not let a bad
+publish be taken back. The version is burned and anyone who installed in between
+has it.
+
+It is not part of `npm run ci` — it shells out to `npm pack` twice, and the
+local gate is the fast inner loop.
 
 ```bash
 ./scripts/dev-setup.sh

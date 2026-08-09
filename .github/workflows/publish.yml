@@ -54,6 +54,28 @@ jobs:
       - name: Install
         run: npm ci
 
+      # THE RELEASE GATE — the last thing between a malformed tarball and a
+      # version number that can never be reused.
+      #
+      # It belongs here, not only in pr.yml, because of an asymmetry the two
+      # workflows do not share. A merge gate that fails costs one more commit.
+      # This one guards a publish that GitHub Packages will not let anyone take
+      # back: a bad tarball is permanent, and any consumer who installed in the
+      # meantime has it. So the check has to run in the same job as `npm
+      # publish`, immediately before it, where nothing can proceed past a
+      # failure.
+      #
+      # pr.yml runs the identical script so this is found on the PR rather than
+      # here. That copy is the early warning; this copy is the gate. If they
+      # ever have to diverge, this is the one that is load-bearing.
+      #
+      # It reads `npm pack --dry-run`, so it inspects what a consumer would
+      # actually extract — `files`, its negations and any .npmignore all
+      # applied — rather than the working tree every other check runs against.
+      # scripts/check-artifacts.ts owns the reasoning for each invariant.
+      - name: Verify the artifacts before publishing
+        run: npm run artifacts:check
+
       # ORDER MATTERS: tokens before design-system.
       #
       # They are independent artifacts, but a design-system release whose
