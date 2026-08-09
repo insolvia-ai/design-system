@@ -158,6 +158,22 @@ jobs:
       - name: Skill checks
         run: npm run skills:check
 
+      # The other half of the version-bump gate above.
+      #
+      # That one makes a changed package take a new version. This one makes the
+      # new version say what a consumer gets. Together they close the gap this
+      # repo shipped through 0.13.0 with: every change was recorded, in an
+      # unusually complete PR body, on a host the installed package cannot reach
+      # — so an agent reading `node_modules/@insolvia-ai/design-system` found
+      # nothing at all, which is exactly where it should have looked.
+      #
+      # Deliberately NOT diff-relative, so it needs no PR base and runs the same
+      # way in `npm run ci`: it asks only whether the version now in the manifest
+      # has an entry. Composed with the bump gate, the property falls out.
+      # scripts/check-changelog.ts owns the reasoning and the format.
+      - name: Changelog checks
+        run: npm run changelog:check
+
       # The RELEASE gate, run early rather than only at release time.
       #
       # Every gate above is a MERGE gate: diff-relative, addressed to the

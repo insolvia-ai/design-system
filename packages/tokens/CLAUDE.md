@@ -62,5 +62,8 @@ The single source of truth for every design token, published as
   property or a runtime fallback.
 - **This package is published and version-gated** (it was neither until 0.2.0,
   when it left the monorepo). Any change here is its own PR with a `version`
-  bump — consumers install it from the registry,
-  and an unbumped change publishes nothing and silently rots.
+  bump **and that version's `CHANGELOG.md` entry** — consumers install it from
+  the registry, and an unbumped change publishes nothing and silently rots. The
+  changelog ships inside the tarball, so it is the only account of a change a
+  consumer can read without leaving its own project; `design-system-release`
+  has the format, which CI parses.

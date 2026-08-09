@@ -1,6 +1,6 @@
 {
   "name": "@insolvia-ai/tokens",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Design tokens: one JSON source of truth rendered into typed TypeScript for React Native, CSS custom properties for the web, and plain JSON for tools with no compiler.",
   "type": "module",
   "license": "UNLICENSED",
@@ -34,7 +34,8 @@
   ],
   "files": [
     "src",
-    "tokens.json"
+    "tokens.json",
+    "CHANGELOG.md"
   ],
   "//files": [
     "tokens.json ships too, though nothing imports it. It is the source both",

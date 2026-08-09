@@ -1,6 +1,6 @@
 # scripts
 
-Two entry points a human runs, two gates CI runs, and a deliberate refusal to
+Two entry points a human runs, three gates CI runs, and a deliberate refusal to
 add more.
 
 | Script | What it does |
@@ -8,15 +8,38 @@ add more.
 | [`dev-setup.sh`](dev-setup.sh) | Checks Node against `engines.node`, then `npm ci`. `--check` reports without changing anything. |
 | [`dev-up.sh`](dev-up.sh) | Starts the component workbench (Storybook) on `http://localhost:6006`. |
 | [`check-skills.ts`](check-skills.ts) | Gates every `SKILL.md` in the repo. Run as `npm run skills:check`, part of `npm run ci`. |
+| [`check-changelog.ts`](check-changelog.ts) | Gates each package's `CHANGELOG.md`, and prints a version's entry for the release notes. Run as `npm run changelog:check`, part of `npm run ci`. |
 | [`check-artifacts.ts`](check-artifacts.ts) | Gates the packed tarballs. Run as `npm run artifacts:check`, by both CI workflows. |
 
-Neither check is a shortcut for anything a human types — they are checks,
-reached through `npm run` like every other one. Both live here rather than
-beside what they check because both span the whole repository: `check-skills.ts`
+None of the checks is a shortcut for anything a human types — they are checks,
+reached through `npm run` like every other one. All live here rather than
+beside what they check because all span the whole repository: `check-skills.ts`
 walks every `SKILL.md`, `.claude/skills` included, which belongs to no package;
-`check-artifacts.ts` packs both published packages. Both run under plain `node`
+the other two work across both published packages. All run under plain `node`
 with native type-stripping, like the token generator, and are typechecked by
 [`tsconfig.scripts.json`](../tsconfig.scripts.json).
+
+## The changelog gate, and why it is not diff-relative
+
+`check-changelog.ts` completes the version-bump gate in `pr.yml` rather than
+duplicating it. That one makes a changed package take a new version; this one
+makes the new version say what a consumer gets, by requiring the **top** entry
+in `packages/<name>/CHANGELOG.md` to be the version in the manifest.
+
+It asks that question absolutely — no PR base, no git, no network — which is why
+it runs identically in `npm run ci` and in CI. Composed with the bump gate the
+property falls out, and neither gate has to know about the other.
+
+It checks the `patch`/`minor` label against the version numbers themselves,
+because under `0.x` caret rules that label is the one fact a consumer acts on:
+`^0.12.0` resolves `<0.13.0`, so a minor does not arrive until someone widens
+the range. A minor mislabelled as a patch is a documented failure here — a
+consumer once sat five minors behind — so it is checkable and therefore checked.
+
+`--section packages/<name>` prints the current version's entry. `publish.yml`
+uses it for the GitHub Release body, so the changelog stays the single owner of
+what a version says and the Release quotes it rather than growing a second
+description free to drift.
 
 ## Merge gates and the release gate
 

@@ -45,7 +45,7 @@ claims about who consumes what.
 | adding or changing a component | `design-system-component` skill |
 | changing the skills consumers install | [`plugins/design-system/README.md`](plugins/design-system/README.md) — bump the plugin, all three manifests |
 | adding a skill for working HERE | `.claude/skills/<name>/SKILL.md`, description opening `Contributor.`, and `metadata.internal: true` — without the flag it is offered to third parties installing the consumer skills |
-| releasing — version bumps, publishing | `design-system-release` skill |
+| releasing — version bumps, changelog entries, publishing | `design-system-release` skill |
 | opening a PR | `design-system-pr` skill |
 | running or setting anything up | [`scripts/README.md`](scripts/README.md) |
 | **needing to SEE a component** | `./scripts/dev-up.sh` — both leaves, side by side |
@@ -93,6 +93,13 @@ class.
   PR.** CI fails it otherwise. Both packages publish on merge to `main`, and
   the publish is idempotent by version: an unbumped change merges green,
   publishes nothing, and silently rots the registry.
+- **And that version needs its entry at the top of `packages/<name>/CHANGELOG.md`**,
+  which ships inside the tarball — npm leaves a changelog out unless `files`
+  names it, which is how this repo reached 0.13.0 with nothing a consumer could
+  read from its own `node_modules`. The PR body is not a substitute: it is on a
+  host the installed package cannot reach. The entry says what a consumer gets
+  and links the PR for why; `publish.yml` tags each published version and puts
+  that same entry in a GitHub Release.
 - **Any change under `plugins/` needs the plugin's `version` bumped** in all
   three manifests (Claude, Codex, Cursor). Same failure, different channel: an
   installed plugin updates only when that string moves, so an unbumped skill

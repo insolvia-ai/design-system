@@ -112,6 +112,30 @@ install; new components, new props and visual changes do not. Check for a newer
 minor deliberately — a consumer once sat five minors behind with nothing
 surfacing the gap.
 
+**Read the changelog before you widen it.** Both packages ship one inside the
+tarball, so it is already on disk and needs no registry access, no token and no
+network:
+
+```bash
+cat node_modules/@insolvia-ai/design-system/CHANGELOG.md
+```
+
+Every published version is there, newest first, each labelled `patch` or
+`minor` — and a minor is the one that says *widen your range to take this*. That
+label is the fact to act on: it is the difference between a release that is
+already installed and one that is not. Each entry links the pull request behind
+it, for the reasoning and the rejected alternatives.
+
+To see what is available rather than what you have, the repository's releases
+list the same entries per version:
+
+```bash
+gh release list --repo insolvia-ai/design-system
+```
+
+Tags are per package — `design-system-v0.13.1`, `tokens-v0.3.1` — because the
+two version independently.
+
 Deprecations reach you the same way nothing else here can. Because the package
 publishes source, your TypeScript reads the real props module, so a `@deprecated`
 tag shows up struck through in your editor, naming its replacement and the
