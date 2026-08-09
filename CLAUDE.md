@@ -68,6 +68,14 @@ colour, in the wrong place, or painted underneath the thing below it — and tha
 last one shipped as the 0.7.1 Select bug, whose report opens *"reported from a
 real browser, and invisible to every test in this package"*.
 
+`npm run test:a11y` is the one exception, and only for what axe can score: it
+runs every story in a real browser, **once per colour scheme**. That second
+half is new in 0.11.0 — the gate seeded `light` and nothing else, so every
+dark-scheme colour was checked by a human clicking the Scheme toolbar and
+`--color-danger` sat at 2.9:1 on the dark canvas, under the 4.5:1 floor, in the
+colour `Field.Error` paints its message, green in CI throughout. A story
+renders in ONE scheme per run; that is why there are two runs and not one.
+
 The workbench renders **both leaves side by side**, which is the only place the
 claim this package rests on — that two implementations of one design agree —
 can be checked at all. The Scheme toolbar drives both at once; see

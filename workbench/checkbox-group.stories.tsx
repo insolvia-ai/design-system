@@ -7,6 +7,7 @@ import { CheckboxGroup as CheckboxGroupWeb } from '@design-system/checkbox-group
 import { CheckboxGroup as CheckboxGroupNative } from '@design-system/checkbox-group/checkbox-group.native.tsx';
 import { Checkbox as CheckboxWeb } from '@design-system/checkbox/checkbox.web.tsx';
 import { Checkbox as CheckboxNative } from '@design-system/checkbox/checkbox.native.tsx';
+import { colors, type ColorSchemeName } from '@tokens/tokens.ts';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
 import { InkText } from './ink-text.tsx';
@@ -85,8 +86,14 @@ function checkGlyphColour(scope: HTMLElement): string {
   return getComputedStyle(glyph ?? box).color;
 }
 
+/** `#RRGGBB` in the tokens → the `rgb(r, g, b)` form `getComputedStyle` reports. */
+function asComputedRgb(hex: string): string {
+  const [r, g, b] = [1, 3, 5].map((offset) => parseInt(hex.slice(offset, offset + 2), 16));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 export const Basic: Story = {
-  play: async ({ canvasElement, args, step }) => {
+  play: async ({ canvasElement, args, step, globals }) => {
     const { web, native } = pair(canvasElement);
 
     await step('both leaves paint the tick the same colour', async () => {
@@ -96,6 +103,15 @@ export const Basic: Story = {
       // about 1.6:1, and invisible to every other check here. axe does not read
       // the box as text for contrast purposes, and the jsdom suite computes no
       // colour at all. Comparing the two panes is what catches it.
+      //
+      // The expected value is READ FROM THE TOKENS for whichever scheme this
+      // story is running in, never written as a literal. `primaryText` is white
+      // on light and near-black navy on dark, so the old hard-coded
+      // 'rgb(255, 255, 255)' encoded "light" into an assertion that says
+      // nothing about the scheme — and it failed the moment `test:a11y:dark`
+      // started running this same story with the toolbar flipped. A literal
+      // here is a light-mode assumption wearing a colour value.
+      const scheme = (globals['scheme'] as ColorSchemeName | undefined) ?? 'light';
       const webColour = checkGlyphColour(
         canvasElement.querySelector('[data-testid="leaf-pair-web"]')!,
       );
@@ -103,7 +119,7 @@ export const Basic: Story = {
         canvasElement.querySelector('[data-testid="leaf-pair-native"]')!,
       );
       await expect(nativeColour).toBe(webColour);
-      await expect(nativeColour).toBe('rgb(255, 255, 255)');
+      await expect(nativeColour).toBe(asComputedRgb(colors[scheme].primaryText));
     });
 
     await step('web leaf: group is named, selecting a member updates the value', async () => {

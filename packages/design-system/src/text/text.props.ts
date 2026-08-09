@@ -30,27 +30,37 @@ export const variantStyles: Record<TextVariant, string> = {
  * contrast in both schemes. Measured against `theme.css`'s own values, on the
  * app background (`bg`) at 14px:
  *
- *   ink      light 15.9:1   dark 14.7:1   ✅
+ *   ink      light 16.7:1   dark 16.5:1   ✅
  *   muted    light  5.6:1   dark 11.2:1   ✅
- *   primary  light 13.7:1   dark  7.9:1   ✅
- *   danger   light  5.8:1   dark  2.9:1   ❌ dark
- *   success  light  4.8:1   dark  3.5:1   ❌ dark
- *   warning  light  3.1:1   dark  7.9:1   ❌ light
+ *   primary  light 13.8:1   dark  7.8:1   ✅
+ *   danger   light  5.8:1   dark  6.2:1   ✅ since tokens 0.3.0
+ *   success  light  4.7:1   dark  6.4:1   ✅ since tokens 0.3.0
+ *   warning  light  3.1:1   dark  7.8:1   ❌ light
  *
- * A `warning` tone is unreadable in light and a `danger` tone in dark, and
- * `Text` is the one component with no box of its own to sit the colour
- * against — so there is no arrangement that rescues them. Offering a tone that
- * fails in one scheme is worse than not offering it: it fails on exactly the
- * half of users the author was not looking at.
+ * A `warning` tone is unreadable in light, and `Text` is the one component with
+ * no box of its own to sit the colour against — so there is no arrangement that
+ * rescues it. Offering a tone that fails in one scheme is worse than not
+ * offering it: it fails on exactly the half of users the author was not looking
+ * at.
  *
  * `warning` at 3.06:1 is not a guess. It is what the a11y gate returned the
  * first time this component shipped six tones, which is the only reason the
  * measurements above exist.
  *
- * This is the same token gap `button.props.ts` records as its reason for
- * having no `danger` intent, and `badge.props.ts` for carrying intent as a dot.
- * A semantic colour is safe as a FILL behind `primary-text`, or as a border —
- * neither has a text-contrast requirement to meet. It is not safe as ink.
+ * THE DANGER AND SUCCESS ROWS USED TO READ 2.9:1 AND 3.5:1 IN DARK, and both
+ * were real failures rather than reasons — the dark scheme aliased the same
+ * mid-lightness hue the light scheme uses, which no dark canvas can carry.
+ * tokens 0.3.0 gave each a lifted dark value, so the constraint that kept them
+ * out of this set is gone. They are NOT added here: a new tone is an API
+ * change, and this file's job is to stop recording a limit that no longer
+ * exists. Adding them is a deliberate, separate decision — and `warning` still
+ * cannot come with them, so the set would be five, not six.
+ *
+ * `button.props.ts` records the same token gap as its reason for having no
+ * `danger` intent, and `badge.props.ts` for carrying intent as a dot; both
+ * predate the token fix and neither has been re-argued. A semantic colour is
+ * always safe as a FILL behind `primary-text`, or as a border — neither has a
+ * text-contrast requirement to meet.
  */
 export const toneStyles: Record<TextTone, string> = {
   ink: 'text-ink',

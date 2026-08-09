@@ -48,9 +48,13 @@ export const stripeStyles: Record<AlertIntent, string> = {
  * The intent is a STRIPE, and the text stays `ink`/`muted`.
  *
  * Same constraint `badge.props.ts` documents at length: `warning` as a text
- * colour is 3.2:1 on `card` in light, and `success` is 3.5:1 in dark, so an
- * intent-coloured heading would fail the a11y gate in one scheme or the other.
- * A border has no text-contrast requirement, and the alert's own words say
- * what happened — colour is never the only carrier.
+ * colour is 3.2:1 on `card` in light, so an intent-coloured heading would fail
+ * the a11y gate for one of the four intents. A border has no text-contrast
+ * requirement, and the alert's own words say what happened — colour is never
+ * the only carrier.
+ *
+ * The `success` half of that sentence ("3.5:1 in dark") was true until tokens
+ * 0.3.0 and is now 6.5:1; it was a dark-scheme token bug, not a constraint.
+ * `warning` in light is what still holds this shape in place.
  */
 export const DEFAULT_DISMISS_LABEL = 'Dismiss';

@@ -29,12 +29,12 @@
     "accent": "#D2A857",
     "muted": "#C9D0D8",
     "line": "#FFFFFF33",
-    "success": "#2E7D5B",
+    "success": "#39B17E",
     "warning": "#D2A857",
-    "danger": "#B3352E",
+    "danger": "#E27F79",
     "primaryHover": "#D7B26B",
     "primaryActive": "#B08D49",
     "accentHover": "#D7B26B",
-    "dangerHover": "#BC4D47"
+    "dangerHover": "#E58E89"
   }
 }
