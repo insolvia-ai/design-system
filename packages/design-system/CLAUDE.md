@@ -32,7 +32,9 @@ Repo-level rules and the publishing flow: [`../../CLAUDE.md`](../../CLAUDE.md).
 - **No build step, ever.** The package publishes `src/` as-is; a tsup/tsc
   emit would collapse the leaf pairs and break resolution in the consumer's
   bundler. `package.json`'s comment block owns the full reasoning.
-- **Any change here is its OWN PR with a `version` bump** (CI-enforced).
+- **Any change here is its OWN PR with a `version` bump and a `CHANGELOG.md`
+  entry for that version** (both CI-enforced; `design-system-release` has the
+  format).
   Consumers install the PUBLISHED version, so nothing you merge reaches any of
   them until it publishes and they bump. This package was once a workspace
   sibling of a consumer, read through a symlink, so a merge was live for that

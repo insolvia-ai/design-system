@@ -160,9 +160,26 @@ for (const packageDir of PACKAGES) {
     }
   }
 
+  // 5. The changelog ships.
+  //
+  // npm carries README.md and package.json into a tarball on its own, but NOT a
+  // changelog — with `files: ["src"]` it is simply left behind. That is how this
+  // package reached 0.13.0 with no record a consumer could read: the material
+  // existed, in pull request bodies, on a host the installed package cannot
+  // reach. `files` must name CHANGELOG.md explicitly, and a `files` edit is
+  // exactly the kind of change that would quietly undo it.
+  //
+  // scripts/check-changelog.ts owns whether the changelog SAYS the right thing;
+  // this owns whether it is in the box.
+  if (!packed.has('CHANGELOG.md')) {
+    problems.push(
+      `${label}: CHANGELOG.md is not in the tarball. npm does not include a changelog automatically — add "CHANGELOG.md" to \`files\`. Without it a consumer cannot read what changed from inside its own node_modules, which is the only place it is guaranteed to be able to look.`,
+    );
+  }
+
   if (problems.length === before) {
     console.log(
-      `✓ ${label} — ${files.length} files, ${web.size} leaf pairs, ${exportTargets(manifest.exports).length} exports resolve.`,
+      `✓ ${label} — ${files.length} files, ${web.size} leaf pairs, ${exportTargets(manifest.exports).length} exports resolve, changelog ships.`,
     );
   }
 }

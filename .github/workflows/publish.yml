@@ -16,11 +16,18 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# `packages: write` is the whole privilege set this job needs — it publishes to
-# GitHub Packages, not to any cloud account. No `id-token: write`: there is no
-# OIDC role here.
+# `packages: write` to publish to GitHub Packages, and `contents: write` for the
+# tag and GitHub Release each published version now gets — that is the whole
+# privilege set. No `id-token: write`: there is no OIDC role here, and this job
+# reaches no cloud account.
+#
+# `contents: write` is the one real escalation in this workflow, so keep its
+# blast radius in mind: it can push to this repository. It is used for exactly
+# one thing, `gh release create`, which writes a tag and a release and nothing
+# else. Nothing here should ever commit to main — the changelog is written by the
+# PR that ships the change, precisely so no bot needs to.
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 concurrency:
@@ -101,9 +108,11 @@ jobs:
       # the decision is made on whether stdout came back empty. stderr is
       # discarded: on auth trouble npm can echo the request headers.
       - name: Publish each package whose version is new
+        id: publish
         run: |
           set -uo pipefail
           published=()
+          published_dirs=()
           skipped=()
 
           for pkg_dir in packages/tokens packages/design-system; do
@@ -118,9 +127,14 @@ jobs:
               echo "$name@$version is not in the registry — publishing."
               ( cd "$pkg_dir" && npm publish ) || exit 1
               published+=("$name@$version")
+              published_dirs+=("$pkg_dir")
             fi
             echo "::endgroup::"
           done
+
+          # Hand the DIRECTORIES to the release step below, so it tags exactly
+          # what went to the registry — never a version that was only skipped.
+          echo "published_dirs=${published_dirs[*]:-}" >> "$GITHUB_OUTPUT"
 
           {
             echo "### Publish"
@@ -131,3 +145,75 @@ jobs:
               printf -- '- skipped (already published) `%s`\n' "${skipped[@]}"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # A tag and a GitHub Release per published version.
+      #
+      # Until this existed the repo had NO anchor from a version number to a
+      # commit — `git tag` was empty and so was the release list — so "what
+      # changed between 0.12.0 and 0.13.0" could not be asked of git at all, only
+      # reconstructed by reading merge commits and guessing which carried a bump.
+      #
+      # The notes are not generated from commits. They are the entry that already
+      # shipped inside the tarball, printed by the same script that gates it, so
+      # the changelog is the single owner of what a version says and this quotes
+      # it rather than growing a second, drifting description. The PR link under
+      # it is the door to the why — one PR, one responsibility, one version.
+      #
+      # Tags are per package (`tokens-v0.3.1`), because the two version
+      # independently and a bare `v0.3.1` would collide across them.
+      #
+      # Skipped entirely when nothing published, which is most pushes to main.
+      - name: Tag and release each published version
+        if: steps.publish.outputs.published_dirs != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Through the environment rather than interpolated into the script
+          # below. The value is this workflow's own, so nothing hostile can
+          # reach it, but `${{ }}` expands before the shell parses the line —
+          # the habit is worth keeping even where the input is trusted.
+          PUBLISHED_DIRS: ${{ steps.publish.outputs.published_dirs }}
+        run: |
+          set -euo pipefail
+
+          # The pull request this merge came from, for the "why". Resolved from
+          # the commit rather than from the event, so a re-run via
+          # workflow_dispatch finds it too. A direct push to main has no PR — the
+          # notes simply carry no link, rather than failing the release.
+          pr_url="$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" \
+            --jq '.[0].html_url // empty' 2>/dev/null || true)"
+
+          # Split explicitly rather than leaning on the shell to word-split an
+          # unquoted variable. `run:` is bash, which would, but the implicit
+          # version fails silently and weirdly if it ever is not — one iteration
+          # over the whole string, producing a tag built from two paths.
+          read -ra published_dirs <<< "$PUBLISHED_DIRS"
+
+          for pkg_dir in "${published_dirs[@]}"; do
+            name="$(node -p "require('./$pkg_dir/package.json').name")"
+            version="$(node -p "require('./$pkg_dir/package.json').version")"
+            tag="${pkg_dir#packages/}-v$version"
+
+            # Exits non-zero if the entry is missing, so a release can never go
+            # out with empty notes. The PR gate makes that unreachable; this is
+            # the backstop for a direct push to main.
+            notes="$(node scripts/check-changelog.ts --section "$pkg_dir")"
+
+            if [ -n "$pr_url" ]; then
+              notes="$notes"$'\n\n'"---"$'\n\n'"Shipped by $pr_url"
+            fi
+            notes="$notes"$'\n'"Install: \`npm install $name@$version\`"
+
+            # Idempotent, like the publish above: a workflow_dispatch re-run
+            # after a partial failure should finish the job, not red-X on the
+            # half that already succeeded.
+            if gh release view "$tag" >/dev/null 2>&1; then
+              echo "release $tag already exists — nothing to do."
+            else
+              gh release create "$tag" \
+                --target "$GITHUB_SHA" \
+                --title "$name $version" \
+                --notes "$notes"
+              echo "- released [\`$tag\`]($(gh release view "$tag" --json url --jq .url))" \
+                >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done

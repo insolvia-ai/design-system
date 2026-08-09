@@ -49,6 +49,12 @@ component.
   are `0.x` packages: `^0.7.1` means `<0.8.0`, so a minor does not reach a
   consumer until someone widens the range there. A consumer once sat five minors
   behind without anything surfacing it.
+- **The changelog entry, written** — `packages/<name>/CHANGELOG.md`, top of the
+  file, format gated by CI (`design-system-release` has it). Do not paste the
+  body into it, and do not paste it into the body: the entry says what a
+  consumer gets and ships inside the tarball; this body says why, what was
+  rejected and how it was verified, and stays here. The entry links back to this
+  PR, and `publish.yml` puts it in the GitHub Release.
 - **Verification with evidence**, never "tested locally". Test counts before
   and after, which typecheck programs ran, what the workbench showed.
 - **A screenshot of BOTH leaves for any visual change**, from

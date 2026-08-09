@@ -1,10 +1,13 @@
 ---
 name: design-system-release
 description: >-
-  Contributor. How a change here reaches a consumer — version bump,
-  publish on merge, then a dependency bump in the consuming repo. Use this
-  BEFORE editing anything under packages/, including a README or CLAUDE.md,
-  because CI fails any PR that changes a package without bumping its version.
+  Contributor. How a change here reaches a consumer — version bump and
+  changelog entry, publish on merge, then a dependency bump in the consuming
+  repo. Use this BEFORE editing anything under packages/, including a README or
+  CLAUDE.md, because CI fails any PR that changes a package without bumping its
+  version and adding that version's CHANGELOG.md entry. Read it when writing
+  that entry: the heading format is parsed, and the patch/minor label is checked
+  against the version numbers.
   Also read it when asked "why hasn't my change shown up downstream", when a
   publish is skipped or the registry looks stale, and before choosing a version
   number for a component change. Read it BEFORE removing or renaming anything
@@ -28,9 +31,12 @@ Two packages publish from here, independently:
 ## The rule
 
 **Any change under `packages/<name>/` bumps that package's `version` in the
-same PR.** CI enforces it (`.github/workflows/pr.yml`, *Require a version bump
-for every changed package*), and the rule covers README and CLAUDE.md edits
-too — the gate diffs the directory, not the file types.
+same PR, and adds that version's entry to that package's `CHANGELOG.md`.** CI
+enforces both (`.github/workflows/pr.yml`, *Require a version bump for every
+changed package* and *Changelog checks*), and the rule covers README and
+CLAUDE.md edits too — the gate diffs the directory, not the file types. A
+docs-only release earns a one-line entry saying so; that is cheaper than an
+exception the next person has to reason about.
 
 That is not bureaucracy. `publish.yml` is **idempotent by version**: it asks
 the registry whether `name@version` exists and skips cleanly if it does. So an
@@ -54,19 +60,56 @@ not reach a consumer until someone widens the range there.
 
 A consumer once sat on `^0.2.1` while this package reached 0.6.0 — five minors
 it could never install, and nothing surfaced the gap. If you ship a minor, say
-so in the PR body.
+so in the PR body **and in the changelog entry**.
+
+## Writing the entry
+
+`packages/<name>/CHANGELOG.md`, a new section at the top:
+
+```markdown
+## 0.13.1 — patch
+
+- What a consumer gets, in their terms.
+
+[#14](https://github.com/insolvia-ai/design-system/pull/14)
+```
+
+The heading format is exact — `## <version> — <major|minor|patch>` — because
+`scripts/check-changelog.ts` parses it, prints it into the GitHub Release, and
+**derives the type from the version numbers to check your label**. A minor
+mislabelled as a patch is the five-minors-behind failure written down as a fact;
+the gate refuses it. There is no Unreleased section and cannot be one: merging
+to `main` publishes, so the top entry is always the version in the manifest, and
+the gate enforces that too.
+
+Write it for someone holding the installed package, not for a reviewer. **What
+changed and what they must do** — the PR link carries the why, the rejected
+alternatives and the verification, so do not restate any of it here. A minor
+opens with the line that tells them it will not arrive on its own:
+
+```markdown
+**Widen your range to take this:** `^0.12.x` will not resolve it.
+```
 
 ## Removing or renaming public API
 
 `src/index.ts` is the export surface. Deleting a line from it — or dropping a
 prop, or renaming one — breaks a consumer at the moment it widens its range,
-and this repo has no way to warn anyone: it is not allowed to name a consumer,
-there is no changelog, and nobody here can see who installed what.
+and this repo cannot go and tell anybody: it is not allowed to name a consumer,
+and nobody here can see who installed what.
 
-There is exactly one channel, and it is a good one. **Both packages publish
-source** — `files: ["src"]`, `exports` pointing at `.ts`, no build step — so
-the consumer's TypeScript reads the real `.props.ts`. A JSDoc tag written here
-shows up struck through in that consumer's editor on their next install,
+There are exactly two channels, and both are pushed rather than pulled — they
+reach a consumer without anyone thinking to look.
+
+**The changelog ships inside the tarball.** `CHANGELOG.md` is in each package's
+`files`, so the entry lands in the consumer's `node_modules` on install and is
+readable with no registry access and no network. State the deprecation in the
+entry for the minor that introduces it, and the removal in the entry for the
+minor that performs it.
+
+**Both packages publish source** — `exports` pointing at `.ts`, no build step —
+so the consumer's TypeScript reads the real `.props.ts`. A JSDoc tag written
+here shows up struck through in that consumer's editor on their next install,
 without anyone being told anything.
 
 So removal is two releases, never one:
@@ -93,10 +136,14 @@ to move, then takes every removal since in one step.
 
 ## The whole path to a consumer
 
-1. Branch, change, **bump the version**, open a PR. CI is the only gate.
+1. Branch, change, **bump the version and write the changelog entry**, open a
+   PR. CI is the only gate.
 2. Merge. `publish.yml` publishes on push to `main` — tokens first, then the
    design system, so the registry never shows the second half of a paired
-   change without the first.
+   change without the first. It then tags each published version
+   (`design-system-v0.13.1`, `tokens-v0.3.1` — per package, since the two
+   version independently) and cuts a GitHub Release whose body is that
+   changelog entry plus a link to the PR. Nothing to do by hand.
 3. In the consuming repo, bump the dependency. That is that repo's change,
    with its own manifests and lockfiles to keep in step.
 
