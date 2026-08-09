@@ -183,18 +183,16 @@ const DialogPopupImpl = React.forwardRef<HTMLDivElement, DialogPopupProps>(
         tabIndex={-1}
         onKeyDown={handleKeyDown}
         className={cn(
-          // `max-w-[28rem]`, NOT `max-w-md`. theme.css names its spacing scale
-          // with t-shirt sizes (`--spacing-md: 1rem`), and Tailwind v4 resolves
-          // a named `max-w-*` from the spacing namespace ahead of its built-in
-          // `--container-*` scale — so `max-w-md` compiles to
-          // `max-width: var(--spacing-md)`, i.e. 16px, not the 28rem it reads
-          // as. The card then collapsed below its own `p-lg` padding and every
-          // word wrapped onto its own line. Nothing in CI could see it: jsdom
-          // computes no layout, tsc reads no CSS, and axe passes an overflowing
-          // dialog whose contrast and accessible name are both fine. Same trap
-          // for every named width utility (`max-w-sm` is 0.5rem, `max-w-lg`
-          // 1.5rem) — reach for an explicit length here, never a t-shirt size.
-          'fixed left-1/2 top-1/2 z-50 flex w-full max-w-[28rem] -translate-x-1/2 -translate-y-1/2 flex-col gap-md rounded-lg bg-card p-lg shadow-lg outline-none',
+          // `max-w-md` is the 28rem container width — and for a long while it
+          // was not. theme.css names its spacing steps with t-shirt sizes, and
+          // Tailwind v4 resolves a named `max-w-*` from `--spacing-*` ahead of
+          // its own `--container-*`, so `max-w-md` compiled to 16px: the card
+          // collapsed below its own `p-lg` padding and every word wrapped onto
+          // its own line. This read `max-w-[28rem]` to dodge that. theme.css now
+          // holds the four width utilities on the container scale instead, so
+          // the class can say what it means; `styles/theme.test.ts` is what
+          // fails if the shadowing ever comes back.
+          'fixed left-1/2 top-1/2 z-50 flex w-full max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-md rounded-lg bg-card p-lg shadow-lg outline-none',
           className,
         )}
         {...props}

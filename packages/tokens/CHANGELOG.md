@@ -16,6 +16,17 @@ the PR is why, what was rejected, and how it was verified.
 > `0.1.x` is absent because it was never published — the package was
 > `private: true` while every consumer resolved it from the same workspace.
 
+## 0.3.2 — patch
+
+- **No token value changed, and nothing this package exports changed.** The
+  generator learned to emit one more block into the Tailwind stylesheet it
+  renders for `@insolvia-ai/design-system`, so that the named spacing steps stop
+  redefining Tailwind's `w-*`, `min-w-*`, `max-w-*` and `basis-*` utilities.
+  `tokens.json`, `src/tokens.ts` and `src/colors.json` are byte-identical — take
+  `@insolvia-ai/design-system` 0.14.0 for the fix itself.
+
+[#14](https://github.com/insolvia-ai/design-system/pull/14)
+
 ## 0.3.1 — patch
 
 - **This file, and it now ships inside the package.** `CHANGELOG.md` is listed

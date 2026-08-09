@@ -75,6 +75,27 @@ const COLORS_JSON_OUT = 'packages/tokens/src/colors.json';
 const MODES = ['light', 'dark'] as const;
 type Mode = (typeof MODES)[number];
 
+// The four Tailwind v4 theme namespaces that a width-ish utility consults
+// BEFORE falling through to `--container-*`, paired with the utility that
+// reads each one: `--width` → `w-*`, `--min-width` → `min-w-*`,
+// `--max-width` → `max-w-*`, `--flex-basis` → `basis-*`.
+//
+// Those four utilities resolve `--<own namespace>`, then `--spacing`, then
+// `--container`. Naming the spacing steps with t-shirt sizes therefore
+// redefines them: with `--spacing-md: 1rem` declared, `max-w-md` compiles to
+// `max-width: var(--spacing-md)` — 16px, not the 28rem the class reads as, and
+// not a value any author of `max-w-md` intended. Height has no such conflict
+// (`h-*`/`min-h-*`/`max-h-*` never consult `--container`), and neither does
+// `p-*`/`m-*`/`gap-*`/`size-*`, which read `--spacing` and nothing else.
+//
+// Emitting a key in the utility's own namespace wins the lookup outright, so
+// `renderCss` re-points every spacing key at the container scale through these
+// four. It is a `var()` fallback rather than a copied length so the values stay
+// whatever Tailwind says they are, and so a spacing step with no container key
+// of that name — one Tailwind's scale simply does not have — keeps its spacing
+// value instead of resolving to nothing.
+const WIDTH_NAMESPACES = ['--width', '--min-width', '--max-width', '--flex-basis'] as const;
+
 function main(args: string[]): void {
   const check = args.includes('--check');
   const root = repoRoot();
@@ -375,6 +396,22 @@ function renderCss(tokens: JsonObject): string {
   for (const [name, body] of group(tokens, 'spacing')) {
     const rem = asNumber(body['value'], `spacing.${name}.value`) / 16;
     out.writeln(`  --spacing-${kebab(name)}: ${trim(rem)}rem;`);
+  }
+
+  out.writeln();
+  out.writeln(`  /* Width utilities, held on Tailwind's container scale.
+   *
+   * \`w-*\`, \`min-w-*\`, \`max-w-*\` and \`basis-*\` resolve a named key from
+   * \`--spacing-*\` before Tailwind's own \`--container-*\`, so the t-shirt
+   * spacing steps above would otherwise redefine them — \`max-w-md\` would mean
+   * 1rem rather than the 28rem it reads as. Each key below takes the container
+   * width, and keeps its spacing step only where Tailwind has no container key
+   * of that name. */`);
+  for (const namespace of WIDTH_NAMESPACES) {
+    for (const [name] of group(tokens, 'spacing')) {
+      const key = kebab(name);
+      out.writeln(`  ${namespace}-${key}: var(--container-${key}, var(--spacing-${key}));`);
+    }
   }
 
   section('Corner radii.');

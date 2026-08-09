@@ -173,11 +173,6 @@ const DrawerPanelImpl = React.forwardRef<HTMLDivElement, DrawerPanelProps>(
           if (event.key === 'Tab') trapTabKey(event, panelRef.current);
         }}
         className={cn(
-          // `max-w-[20rem]` and `max-h-[80vh]` are explicit lengths, NOT
-          // `max-w-sm`/`max-h-md`: theme.css names its spacing scale with
-          // t-shirt sizes, and Tailwind v4 resolves a named `max-w-*` from the
-          // spacing namespace first — so `max-w-sm` compiles to 8px. Dialog's
-          // popup carries the full account of that trap.
           'fixed z-50 flex flex-col gap-md overflow-auto border-line bg-card p-lg shadow-lg outline-none',
           sideStyles[side],
           className,

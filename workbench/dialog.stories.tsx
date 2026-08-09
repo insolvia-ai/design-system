@@ -146,10 +146,17 @@ export const OpenWebLeaf: Story = {
     // container scale. The popup collapsed below its own `p-lg` padding and
     // every word wrapped onto its own line.
     //
+    // 0.8.4 dodged that here, by writing the length out as `max-w-[28rem]`.
+    // 0.14.0 fixed it in theme.css instead — the four utilities that resolve
+    // through `--spacing` are held on the container scale — so the class reads
+    // `max-w-md` again and this assertion measures the theme, not a literal.
+    //
     // Nothing else in the repo can catch that. tsc never reads CSS, jsdom
     // computes no layout, and axe passed it happily: an overflowing dialog
     // still has fine contrast and a valid accessible name. Only a computed
     // length read in a real browser sees it, which is exactly what this is.
+    // `styles/theme.test.ts` covers every spacing key at once through the
+    // compiler; this one is the layout engine's word on the same fact.
     //
     // 448 is the same number the native leaf hard-codes, so this doubles as
     // the cross-leaf agreement check. Only the web side needs pinning — the

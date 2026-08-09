@@ -134,7 +134,8 @@ export const OpenWebLeaf: Story = {
   ),
   play: async ({ args }) => {
     // Same computed-width pin as `dialog.stories.tsx` — this card carried the
-    // identical `max-w-md` bug and the identical 0.8.4 fix.
+    // identical `max-w-md` bug, the identical 0.8.4 dodge, and now the same
+    // 0.14.0 theme fix that let the class go back to reading `max-w-md`.
     const dialog = await screen.findByRole('alertdialog', { name: args.title });
     await expect(getComputedStyle(dialog).maxWidth).toBe('448px');
   },

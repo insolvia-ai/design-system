@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    maxWidth: 448, // matches the web leaf's max-w-[28rem]
+    maxWidth: 448, // matches the web leaf's max-w-md (28rem)
     borderRadius: radii.lg,
     padding: spacing.lg,
     gap: spacing.md,
