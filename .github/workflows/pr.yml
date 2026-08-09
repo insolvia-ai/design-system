@@ -9,10 +9,27 @@ name: PR
 # generator writes across both, and the entire suite runs in well under a
 # minute. Splitting it would buy nothing and add a way for a PR that changes
 # tokens to skip the design system's tests.
+#
+# TWO KINDS OF CHECK LIVE HERE, and the difference decides where a new one goes.
+#
+# Most of them are MERGE gates: diff-relative, addressed to the author, and
+# meaningful only before a merge — the version-bump gates literally compare
+# against a PR base and are `if: pull_request` for that reason. Failing one
+# costs a commit.
+#
+# `Artifacts are publishable` is a RELEASE gate: it asks whether the packed
+# tarball is well-formed, with no reference to what changed. Its authoritative
+# copy is in publish.yml, in the same job as `npm publish` and immediately
+# before it, because a bad publish cannot be taken back off GitHub Packages.
+# The copy here is the early warning. A new check that would still make sense
+# with nothing changed belongs in that group, not this one — which in practice
+# means adding it to scripts/check-artifacts.ts, where both copies come from.
 on:
   pull_request:
   # `main` too, so a merge that somehow lands red is visible on the branch
-  # rather than only in the publish job's fallout.
+  # rather than only in the publish job's fallout. Note what this does NOT do:
+  # it does not gate the publish, which starts on the same push and runs
+  # concurrently. Anything that must block a release goes in publish.yml.
   push:
     branches: [main]
 
@@ -141,6 +158,30 @@ jobs:
       - name: Skill checks
         run: npm run skills:check
 
+      # The RELEASE gate, run early rather than only at release time.
+      #
+      # Every gate above is a MERGE gate: diff-relative, addressed to the
+      # author, meaningful only before a merge. This one is different in kind —
+      # it asks whether the TARBALL is well-formed, with no reference to what
+      # changed. Its authoritative copy is in publish.yml, in the same job as
+      # `npm publish` and immediately before it, because a bad publish cannot be
+      # undone on GitHub Packages. The copy here exists so the failure surfaces
+      # on the PR rather than after the merge, when the only remedy left is a
+      # forward version bump.
+      #
+      # Up here with the other cheap gates for the same reason the version-bump
+      # gate is: two `npm pack --dry-run` calls take seconds, and a malformed
+      # `files` list should not be reported after the browser suite.
+      #
+      # Packing is what lets it see three things no other check can, because
+      # every other one reads the working tree: a collapsed `.web`/`.native`
+      # pair (someone added a build step), test files leaking into the tarball,
+      # and an `exports` target pointing at nothing. The last is invisible even
+      # to the workbench, which reaches past `exports` into source.
+      # scripts/check-artifacts.ts owns the reasoning.
+      - name: Artifacts are publishable
+        run: npm run artifacts:check
+
       # Before lint/typecheck/test, for the honest failure: if someone
       # hand-edited a generated file, the error should say "you edited the
       # wrong file", not surface as a downstream complaint about the edit.
@@ -243,38 +284,3 @@ jobs:
       # compile every story, which is the failure being guarded.
       - name: Workbench builds
         run: npm run storybook:build
-
-      # The platform-split invariant, machine-checked against the artifact that
-      # actually ships rather than against the working tree.
-      #
-      # `npm pack` applies `files`, so this catches two failures the tests
-      # cannot: a `.web`/`.native` pair that got collapsed (someone added a
-      # build step), and test files leaking into the tarball. Both are silent
-      # in every other check and only surface in a consumer's bundler.
-      - name: Packaged artifact keeps the platform split
-        run: |
-          set -euo pipefail
-          cd packages/design-system
-          files="$(npm pack --dry-run --json | node -e '
-            let s = "";
-            process.stdin.on("data", (d) => (s += d)).on("end", () => {
-              const [pkg] = JSON.parse(s);
-              for (const f of pkg.files) console.log(f.path);
-            });
-          ')"
-
-          web="$(printf "%s\n" "$files" | grep -c "\.web\.tsx$" || true)"
-          native="$(printf "%s\n" "$files" | grep -c "\.native\.tsx$" || true)"
-          tests="$(printf "%s\n" "$files" | grep -Ec "\.test\.tsx?$" || true)"
-
-          echo "web leaves: $web · native leaves: $native · test files: $tests"
-
-          if [ "$web" -eq 0 ] || [ "$native" -eq 0 ]; then
-            echo "::error::The packed tarball is missing a platform leaf ($web web, $native native). This package publishes SOURCE so the consumer's bundler can pick the leaf; a build step that collapses the pair breaks resolution for every consumer."
-            exit 1
-          fi
-
-          if [ "$tests" -ne 0 ]; then
-            echo "::error::$tests test file(s) leaked into the tarball. Check the \`files\` negations in package.json."
-            exit 1
-          fi
