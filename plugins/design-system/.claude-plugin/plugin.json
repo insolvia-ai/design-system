@@ -1,6 +1,6 @@
 {
   "name": "design-system",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Install, theme, and correctly call the components in @insolvia-ai/design-system, on web and on React Native",
   "author": {
     "name": "insolvia-ai"

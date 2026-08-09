@@ -34,15 +34,26 @@ So these skills say *which* source to read, *what* to reach for, and *why* a
 thing is shaped the way it is — the parts a README cannot infer and an agent
 usually gets wrong.
 
-## Every description declares its audience
+## Two audiences, kept apart by a flag
 
-Every `SKILL.md` in this repository opens its `description` with `Consumer.` or
-`Contributor.`, and `npm run skills:check` fails the build otherwise.
+This repo holds two sets of skills. These four are for a third party consuming
+the packages. The four in [`../../.claude/skills`](../../.claude/skills) are for
+working in this repo, and they never need installing — a contributor has already
+cloned.
 
-The reason is concrete. The skills CLI discovers `SKILL.md` files across the
-whole repository — including `.claude/skills/`, which holds contributor-only
-skills about opening PRs here and publishing these packages. Someone installing
-with a wildcard would sweep those into their own project, where every one of
-them is wrong. Publishing the explicit named install command is the first
-defence; the prefix is the second, visible in the always-loaded metadata even
-when the first fails.
+They leaked. Every skills installer walks a fixed list of container directories,
+`.claude/skills` among them, so `npx skills add insolvia-ai/design-system`
+offered a third party all eight in one picker — "how to open a PR here" and "how
+to publish these packages" beside the four they came for, each one telling their
+agent to act on a repository it does not have.
+
+The Agent Skills spec has a field for it: `metadata.internal: true` hides a
+skill from discovery unless `INSTALL_INTERNAL_SKILLS=1` is set, and Claude Code
+ignores the key, so contributor skills still load from a checkout. Every
+contributor skill carries it.
+
+`npm run skills:check` derives the expectation from the skill's **location**
+rather than trusting anyone to remember: anything under `.claude/skills/` must
+be `Contributor.` and internal, anything here must be `Consumer.` and not. A
+new contributor skill cannot leak by omission, and a consumer skill cannot be
+accidentally hidden from the people it was written for.

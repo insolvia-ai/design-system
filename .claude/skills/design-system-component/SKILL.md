@@ -12,6 +12,8 @@ description: >-
   when a leaf will not resolve, when a component renders unstyled, or when a
   change looks right on web and wrong on native (or the reverse) — those
   symptoms all trace back to rules here.
+metadata:
+  internal: true
 ---
 
 # Working on a component

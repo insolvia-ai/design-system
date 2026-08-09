@@ -15,8 +15,12 @@ Each skill is a sibling folder holding a `SKILL.md`, discovered one level deep â
 1. Create `skills/<name>/SKILL.md`. Frontmatter needs `name` (matching the
    directory) and `description`.
 2. Open the description with `Consumer.` â€” everything in this plugin is for
-   someone consuming the packages. Say when to reach for the skill, not only
-   what it contains: the description is all an agent sees before loading it.
+   someone consuming the packages, and a skill here must NOT set
+   `metadata.internal` (that flag is what keeps the contributor skills in
+   `.claude/skills/` out of a third party's picker; setting it here would hide
+   the skill from the people it is for). Say when to reach for the skill, not
+   only what it contains: the description is all an agent sees before loading
+   it.
 3. Keep the body under 500 lines. Long material belongs in
    `skills/<name>/references/*.md`, loaded only when needed.
 4. Bump `version` in all three `plugin.json` manifests.
