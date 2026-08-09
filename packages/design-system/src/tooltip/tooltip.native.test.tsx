@@ -32,6 +32,23 @@ describe('Tooltip (native leaf)', () => {
     expect(screen.getByRole('tooltip')).toBeInTheDocument();
   });
 
+  // Same defect popover.native.test.tsx records: the bubble WAS the absolutely
+  // positioned box, with `maxWidth: 256` and no width, so it shrink-to-fit
+  // against the trigger-hugging root and came out one short word per line
+  // (73px against the web leaf's 251). A fixed width would be the wrong repair
+  // here in particular — the web bubble hugs its label, which is why it
+  // measures 251 and not the 256 cap.
+  it('anchors the bubble in a width-stating layer rather than sizing it', async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+
+    await user.hover(screen.getByRole('button', { name: 'Jump drive' }));
+    const bubble = screen.getByRole('tooltip');
+
+    expect(bubble.parentElement).toHaveStyle({ width: '256px' });
+    expect(bubble).not.toHaveStyle({ width: '256px' });
+  });
+
   it('describes the trigger only while the bubble exists', async () => {
     const user = userEvent.setup();
     render(<Example />);

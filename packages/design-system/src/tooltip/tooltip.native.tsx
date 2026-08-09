@@ -78,17 +78,29 @@ const TooltipContent = ({ children, style, ...props }: TooltipContentProps) => {
   const c = useNativeColors();
   if (!open) return null;
   return (
-    <View
-      nativeID={tooltipId}
-      // RN's `Role` union has no `tooltip`; react-native-web passes the string
-      // to the DOM regardless, and the trigger's `aria-describedby` above is
-      // pointing at this element. Same omission select.native.tsx documents
-      // for `listbox`.
-      {...({ role: 'tooltip' } as unknown as Partial<ViewProps>)}
-      style={[styles.bubble, { backgroundColor: c.ink }, style]}
-      {...props}
-    >
-      <Text style={[styles.bubbleLabel, { color: c.bg }]}>{children}</Text>
+    // TWO VIEWS, and the outer one is the fix — the same shape, and the same
+    // defect, as popover.native.tsx; see the longer note there. The bubble
+    // used to be the absolutely positioned box itself with `maxWidth: 256` and
+    // no width, so it shrink-to-fit against the trigger-hugging root and came
+    // out one short word per line, while the cap never applied.
+    //
+    // A fixed width would be especially wrong HERE: the web leaf's
+    // `w-max max-w-[16rem]` means a short tooltip is a small bubble, and it
+    // measures 251 rather than 256 even on this story's fairly long label. The
+    // anchor states the cap; `alignItems: 'flex-start'` lets the bubble hug.
+    <View style={styles.anchor}>
+      <View
+        nativeID={tooltipId}
+        // RN's `Role` union has no `tooltip`; react-native-web passes the string
+        // to the DOM regardless, and the trigger's `aria-describedby` above is
+        // pointing at this element. Same omission select.native.tsx documents
+        // for `listbox`.
+        {...({ role: 'tooltip' } as unknown as Partial<ViewProps>)}
+        style={[styles.bubble, { backgroundColor: c.ink }, style]}
+        {...props}
+      >
+        <Text style={[styles.bubbleLabel, { color: c.bg }]}>{children}</Text>
+      </View>
     </View>
   );
 };
@@ -106,13 +118,21 @@ const styles = StyleSheet.create({
   rootOpen: { zIndex: 20 },
   trigger: { alignSelf: 'flex-start' },
   triggerLabel: { ...textScale.sm, fontWeight: '500' },
-  bubble: {
+  // The positioning layer — `max-w-[16rem]` as a real width, because a cap
+  // alone cannot size an absolutely positioned box. `alignItems: 'flex-start'`
+  // is the `w-max` half: the bubble hugs its label inside this.
+  anchor: {
     position: 'absolute',
     bottom: '100%',
     left: 0,
     marginBottom: spacing.xs,
     zIndex: 20,
-    maxWidth: 256,
+    width: 256,
+    alignItems: 'flex-start',
+  },
+  bubble: {
+    // Of the anchor, so the label wraps at 256 and never exceeds it.
+    maxWidth: '100%',
     borderRadius: radii.md,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,

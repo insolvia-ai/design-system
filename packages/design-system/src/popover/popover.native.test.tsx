@@ -49,6 +49,27 @@ describe('Popover (native leaf)', () => {
     expect(surface).not.toHaveAttribute('aria-modal');
   });
 
+  // The panel used to BE the absolutely positioned box, carrying `maxWidth:
+  // 320` and no width — and a cap cannot size an absolutely positioned box. It
+  // fell back to shrink-to-fit against the root, which hugs the trigger, so the
+  // surface came out trigger-wide (74px against the web leaf's 320) with the
+  // prose wrapping a word per line. jsdom does no layout, so what is checkable
+  // is the arrangement that replaced it: an anchor stating the width, and a
+  // panel free to hug inside it.
+  it('anchors the panel in a width-stating layer rather than sizing it', async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+
+    await user.click(screen.getByRole('button', { name: 'Filters' }));
+    const surface = screen.getByRole('dialog');
+
+    // The cap, as the web leaf's `max-w-[20rem]` states it.
+    expect(surface.parentElement).toHaveStyle({ width: '320px' });
+    // And the panel hugs inside it — the `w-max` half. A width here instead
+    // would pad every short popover out to 320.
+    expect(surface).not.toHaveStyle({ width: '320px' });
+  });
+
   it('closes from the Close part — the native dismissal', async () => {
     const user = userEvent.setup();
     render(<Example />);
