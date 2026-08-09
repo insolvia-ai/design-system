@@ -9,6 +9,8 @@ description: >-
   "coordinate agents", "fan out", "parallelize", or "delegate" a task, or hands
   over a large multi-part job — a repo-wide audit or migration, broad research,
   a review from several angles, anything whose parts can proceed independently.
+metadata:
+  internal: true
 ---
 
 # Orchestrate — run the work through sub-agents

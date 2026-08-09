@@ -147,12 +147,13 @@ repository, not the private package registry. Updates follow `main`.
 rest — via the skills CLI:
 
 ```bash
-npx skills@latest add insolvia-ai/design-system --skill design-system-setup --skill design-system-catalogue --skill design-system-theming --skill design-system-platforms
+npx skills@latest add insolvia-ai/design-system
 ```
 
-**Name the skills explicitly, as above; never `--skill '*'`.** That CLI walks
-the whole repository, `.claude/skills` included, and those skills are for
-working *in* here — they would tell a consumer's agent to bump versions and open
-PRs in a repo it does not have. Every description declares its audience
-(`Consumer.` / `Contributor.`) as a second line of defence, and
-`npm run skills:check` enforces it.
+That offers exactly the four consumer skills. This repo also holds four skills
+for working *in* here, in `.claude/skills/`, and every skills installer scans
+that directory — so they are marked `metadata.internal: true`, which hides them
+from discovery while leaving them loaded for anyone with a checkout. Their
+descriptions open with `Contributor.` and the consumer ones with `Consumer.`;
+`npm run skills:check` enforces both the flag and the prefix against each
+skill's location, so a new contributor skill cannot leak by being forgotten.

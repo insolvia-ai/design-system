@@ -13,6 +13,8 @@ description: >-
   both leaves", "upload this image" — because there is a working token-based
   upload for that, a 404 that makes a successful upload look broken, and a
   branch-based approach that has already destroyed one merged PR's evidence.
+metadata:
+  internal: true
 ---
 
 # Writing a PR in this repo

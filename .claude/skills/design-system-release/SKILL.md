@@ -12,6 +12,8 @@ description: >-
   two-release deprecation here, not a single edit. Covers which of the two
   packages you are releasing, why both publish source with no build step, and
   the one-time GitHub Packages access this repo needs.
+metadata:
+  internal: true
 ---
 
 # Releasing from this repo

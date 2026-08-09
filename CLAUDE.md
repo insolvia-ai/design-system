@@ -44,6 +44,7 @@ claims about who consumes what.
 |---|---|
 | adding or changing a component | `design-system-component` skill |
 | changing the skills consumers install | [`plugins/design-system/README.md`](plugins/design-system/README.md) — bump the plugin, all three manifests |
+| adding a skill for working HERE | `.claude/skills/<name>/SKILL.md`, description opening `Contributor.`, and `metadata.internal: true` — without the flag it is offered to third parties installing the consumer skills |
 | releasing — version bumps, publishing | `design-system-release` skill |
 | opening a PR | `design-system-pr` skill |
 | running or setting anything up | [`scripts/README.md`](scripts/README.md) |

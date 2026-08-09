@@ -7,20 +7,30 @@
 // all three (`erasableSyntaxOnly` in tsconfig.base.json enforces it, via
 // tsconfig.scripts.json).
 //
-// WHY THE AUDIENCE PREFIX IS CHECKED
+// TWO AUDIENCES, AND THE FLAG THAT KEEPS THEM APART
 //
-// The skills CLI (`npx skills add <owner>/<repo>`) discovers SKILL.md files
-// across a whole repository — the well-known agent directories, `.claude/skills`
-// among them, plus any paths a plugin manifest declares. This repo's
-// `.claude/skills` holds contributor-only skills about opening PRs here and
-// publishing these packages. A consumer installing with a wildcard sweeps those
-// into their own project, where every one of them is wrong: it would tell their
-// agent to bump versions in a repo they do not have.
+// This repo holds two sets of skills. `plugins/design-system/skills/` is for a
+// THIRD PARTY whose app consumes the published packages. `.claude/skills/` is
+// for someone working in this repo, and those never need installing at all — a
+// contributor has already cloned.
 //
-// Publishing the explicit `--skill <name>` form is the first defence. This
-// prefix is the second: `Consumer.` or `Contributor.` sits in the description,
-// which is metadata an agent always has loaded, so the boundary is visible even
-// when a wildcard install got past the first.
+// They leaked into each other. Every skills installer walks a fixed list of
+// container directories, `.claude/skills` among them, so
+// `npx skills add insolvia-ai/design-system` offered a third party all eight
+// skills in one picker: "how to open a PR here" and "how to publish these
+// packages" beside the four they came for, each instructing their agent to act
+// on a repository it does not have.
+//
+// The Agent Skills spec has a field for precisely this: `metadata.internal:
+// true` hides a skill from discovery unless `INSTALL_INTERNAL_SKILLS=1` is set.
+// Claude Code ignores the key, so a contributor's skills still load from a
+// checkout. This script makes that structural rather than remembered — a
+// skill's LOCATION decides the audience it must declare, and every
+// `.claude/skills` entry must carry the flag.
+//
+// The `Consumer.` / `Contributor.` prefix stays as the human-readable half: it
+// sits in the always-loaded description, so anyone who does set
+// INSTALL_INTERNAL_SKILLS still sees which side a skill is on.
 //
 // WHY THE LENGTH LIMITS
 //
@@ -63,7 +73,9 @@ function findSkillFiles(dir: string): string[] {
 // Frontmatter is read with a regex rather than a YAML parser on purpose: this
 // script has no dependencies, and the two fields it needs are the two fields
 // the Agent Skills spec requires.
-function parse(content: string): { name: string; description: string; bodyLines: number } | null {
+function parse(
+  content: string,
+): { name: string; description: string; internal: boolean; bodyLines: number } | null {
   const match = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(content);
   if (!match) return null;
 
@@ -80,7 +92,37 @@ function parse(content: string): { name: string; description: string; bodyLines:
     .replace(/^["']|["']$/g, '')
     .trim();
 
-  return { name, description: description ?? '', bodyLines: body.trimEnd().split('\n').length };
+  // `metadata.internal` is nested, so match the key only where it is indented
+  // under a `metadata:` line rather than anywhere in the frontmatter.
+  const internal = /^metadata:[ \t]*\n(?:[ \t]+.*\n)*?[ \t]+internal:[ \t]*true[ \t]*$/m.test(
+    frontmatter,
+  );
+
+  return {
+    name,
+    description: description ?? '',
+    internal,
+    bodyLines: body.trimEnd().split('\n').length,
+  };
+}
+
+// A skill's location decides its audience. `.claude/skills/` is a directory
+// every installer scans, so anything living there is contributor-only AND must
+// be hidden from discovery; the plugin's tree is the published surface and must
+// not be.
+function expectationsFor(where: string): { audience: string; internal: boolean; why: string } {
+  if (where.startsWith(`.claude${sep}skills${sep}`)) {
+    return {
+      audience: 'Contributor.',
+      internal: true,
+      why: 'every skills installer scans .claude/skills, so a skill here reaches third parties unless it is marked internal',
+    };
+  }
+  return {
+    audience: 'Consumer.',
+    internal: false,
+    why: 'this is the published plugin surface',
+  };
 }
 
 const problems: string[] = [];
@@ -105,12 +147,25 @@ for (const file of files) {
     );
   }
 
+  const expected = expectationsFor(where);
+
+  if (parsed.internal !== expected.internal) {
+    problems.push(
+      expected.internal
+        ? `${where}: frontmatter needs a \`metadata\` block setting \`internal: true\` — ${expected.why}.`
+        : `${where}: must not set \`metadata.internal\` — ${expected.why}, and an internal skill is invisible to the people it is written for.`,
+    );
+  }
+
   if (parsed.description === '') {
     problems.push(`${where}: frontmatter has no \`description\`. It is all an agent sees.`);
   } else {
-    if (!AUDIENCES.some((prefix) => parsed.description.startsWith(prefix))) {
+    if (!parsed.description.startsWith(expected.audience)) {
+      const found = AUDIENCES.find((prefix) => parsed.description.startsWith(prefix));
       problems.push(
-        `${where}: description must open with ${AUDIENCES.join(' or ')} — see plugins/design-system/README.md for why.`,
+        found === undefined
+          ? `${where}: description must open with \`${expected.audience}\` — see plugins/design-system/README.md for why.`
+          : `${where}: description opens with \`${found}\` but its location says \`${expected.audience}\`. Move the skill or fix the prefix.`,
       );
     }
     if (parsed.description.length > MAX_DESCRIPTION) {
