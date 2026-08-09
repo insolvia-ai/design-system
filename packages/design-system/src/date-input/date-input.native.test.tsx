@@ -52,7 +52,7 @@ describe('DateInput (native leaf)', () => {
     // elevation set inside this component — or the enclosing Field — could
     // lift the picker past a sibling of whatever wrapper a consumer added.
     // In a browser the surface therefore renders as a child of document.body;
-    // src/lib/overlay-portal.native.tsx owns the mechanism. Select's native
+    // src/lib/overlay-portal.native.ts owns the mechanism. Select's native
     // suite pins the inline (real native) route for both components.
     const user = userEvent.setup();
     render(

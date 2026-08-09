@@ -147,7 +147,7 @@ export const Basic: Story = {
  * react-native-web every wrapper View is a stacking context, and z-index only
  * orders siblings. That is why the native pane here nests the Field inside a
  * plain wrapper View: the wrapper is the regression's trigger, and the portal
- * (`src/lib/overlay-portal.native.tsx` — the open list renders as a child of
+ * (`src/lib/overlay-portal.native.ts` — the open list renders as a child of
  * document.body) is what makes it survivable. If the wrapper ever hides the
  * list again, this story is the thing that shows it.
  *
@@ -198,7 +198,7 @@ function expectPaintsOnTop(list: HTMLElement): void {
       `The open listbox is painted OVER at ${covered.join(', ')} of its height. ` +
         'Something is on top of it — the 0.7.1 stacking bug. ' +
         'Check that the open list still portals to document.body ' +
-        '(src/lib/overlay-portal.native.tsx) — inline, no elevation can carry ' +
+        '(src/lib/overlay-portal.native.ts) — inline, no elevation can carry ' +
         'it past a consumer wrapper.',
     );
   }

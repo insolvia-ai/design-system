@@ -34,7 +34,7 @@ export interface FieldContextValue {
    *
    * Load-bearing on a REAL NATIVE DEVICE only, where the overlays render
    * inline. In a browser (react-native-web) the open overlay now portals to
-   * `document.body` — `src/lib/overlay-portal.native.tsx` — because this
+   * `document.body` — `src/lib/overlay-portal.native.ts` — because this
    * elevation, reaching exactly one level, stopped at the first wrapper a
    * consumer added around the Field and the bug returned one level up. The
    * controls still signal it unconditionally; elevating a Field whose overlay

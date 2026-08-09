@@ -31,6 +31,11 @@
 // (Vite's workbench, both vitest projects) run it as ESM where `require` is
 // undefined, which would silently disable the portal exactly where it is
 // tested and looked at.
+//
+// A `.ts` file, not `.tsx`, ON PURPOSE: the publish gate holds every
+// `.native.tsx` under src/ to the leaf-pair invariant (a `.web.tsx` sibling),
+// and this is not a leaf pair — the web leaves never had the stacking problem.
+// `OverlayPortal` therefore returns nodes without JSX.
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { Platform, type View, type ViewStyle } from 'react-native';
@@ -190,9 +195,9 @@ export function overlayPortalPosition(place: {
  * still inline — which is what preserves the leaves' focus-stays-on-trigger
  * wiring unchanged.
  */
-export function OverlayPortal({ children }: { children: React.ReactNode }): React.ReactElement {
-  if (!overlayPortalEnabled()) return <>{children}</>;
+export function OverlayPortal({ children }: { children: React.ReactNode }): React.ReactNode {
+  if (!overlayPortalEnabled()) return children;
   // The container parameter's DOM type is unresolvable in the native program
   // (no DOM lib); the value really is document.body.
-  return <>{createPortal(children, web.document!.body as never)}</>;
+  return createPortal(children, web.document!.body as never);
 }
