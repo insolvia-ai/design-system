@@ -1,7 +1,7 @@
 ---
 name: design-system-pr
 description: >-
-  How to write a pull request in this repo — what its body must carry, and the
+  Contributor. How to write a pull request in this repo — what its body must carry, and the
   verification a UI change owes. Use this BEFORE `gh pr create` or
   `gh pr edit --body`, and whenever a task says "open a PR" or "describe these
   changes". Reach for it when you finish the code, not after pasting a commit

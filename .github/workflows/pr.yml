@@ -94,6 +94,53 @@ jobs:
 
           exit "$failed"
 
+      # The same gate for the agent-skills plugin, which is versioned
+      # independently of the packages — it lives outside packages/ precisely so
+      # that a wording fix in a skill does not publish a component release.
+      #
+      # Marketplace consumers only receive an update when this string changes,
+      # and the plugin has THREE manifests (Claude, Codex, Cursor) that must
+      # agree. `npm run skills:check` below checks that they agree; this checks
+      # that a change moved them at all.
+      - name: Require a version bump when the plugin changes
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+
+          git cat-file -e "$BASE_SHA^{commit}"
+
+          manifest="plugins/design-system/.claude-plugin/plugin.json"
+
+          if git diff --quiet "$BASE_SHA" HEAD -- plugins/; then
+            echo "· plugins/ — unchanged."
+            exit 0
+          fi
+
+          if ! git cat-file -e "$BASE_SHA:$manifest" 2>/dev/null; then
+            echo "· plugins/ — introduced by this PR; nothing to compare."
+            exit 0
+          fi
+
+          base_pkg="$(git show "$BASE_SHA:$manifest")"
+          base_version="$(node -p 'JSON.parse(process.argv[1]).version' "$base_pkg")"
+          head_version="$(node -p "require('./$manifest').version")"
+
+          if [ "$head_version" = "$base_version" ]; then
+            echo "::error file=$manifest::This PR changes plugins/ but leaves the plugin at $base_version. Installed plugins update only when this version changes, so an unbumped skill edit reaches nobody. Bump it in all three manifests."
+            exit 1
+          fi
+
+          echo "· plugins/ — $base_version -> $head_version."
+
+      # Every SKILL.md in the repo: audience prefix, description and body
+      # limits, name matching its directory, and the three plugin manifests
+      # agreeing on a version. Dependency-free and instant, so it sits with the
+      # other cheap gates rather than after the suite.
+      - name: Skill checks
+        run: npm run skills:check
+
       # Before lint/typecheck/test, for the honest failure: if someone
       # hand-edited a generated file, the error should say "you edited the
       # wrong file", not surface as a downstream complaint about the edit.
@@ -136,6 +183,12 @@ jobs:
       # types). See tsconfig.workbench.json.
       - name: Typecheck (workbench stories)
         run: npm run typecheck:workbench
+
+      # The fifth program: scripts/. A gate script nobody typechecks is a gate
+      # that can silently stop gating — the same failure the workbench program
+      # above was added to fix. See tsconfig.scripts.json.
+      - name: Typecheck (scripts)
+        run: npm run typecheck:scripts
 
       - name: Test
         run: npm run test

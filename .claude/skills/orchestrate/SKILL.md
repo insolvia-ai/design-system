@@ -1,7 +1,7 @@
 ---
 name: orchestrate
 description: >-
-  Run a piece of work as an ORCHESTRATOR of sub-agents instead of doing it all
+  Contributor. Run a piece of work as an ORCHESTRATOR of sub-agents instead of doing it all
   inline: decompose the task, dispatch scoped sub-agents — each on the cheapest
   model that can do its piece well — then verify and synthesize their results.
   The work to perform is whatever is passed as the skill's argument

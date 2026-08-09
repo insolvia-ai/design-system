@@ -122,3 +122,37 @@ and supply `NODE_AUTH_TOKEN` at install time. Never commit a real token.
 local checkout gives one package two simultaneous truths — what the consumer
 reads and what the registry holds — and the two drift the moment either moves.
 To try an unreleased change, publish a prerelease.
+
+## Agent skills
+
+Consumers can hand their coding agent the same knowledge: setting the packages
+up, choosing a component, re-branding, and reading what happens when one
+component name resolves to two implementations.
+[`plugins/design-system`](plugins/design-system) holds them.
+
+**Claude Code** — add this repository as a plugin marketplace, then install:
+
+```
+/plugin marketplace add insolvia-ai/design-system
+```
+
+```
+/plugin install design-system@insolvia-ai
+```
+
+No registry token is needed for this: the marketplace is the public
+repository, not the private package registry. Updates follow `main`.
+
+**Every other agent** — Cursor, Codex, Copilot, Windsurf, Gemini, Cline and the
+rest — via the skills CLI:
+
+```bash
+npx skills@latest add insolvia-ai/design-system --skill design-system-setup --skill design-system-catalogue --skill design-system-theming --skill design-system-platforms
+```
+
+**Name the skills explicitly, as above; never `--skill '*'`.** That CLI walks
+the whole repository, `.claude/skills` included, and those skills are for
+working *in* here — they would tell a consumer's agent to bump versions and open
+PRs in a repo it does not have. Every description declares its audience
+(`Consumer.` / `Contributor.`) as a second line of defence, and
+`npm run skills:check` enforces it.
