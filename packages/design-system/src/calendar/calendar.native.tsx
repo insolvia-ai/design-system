@@ -17,10 +17,10 @@ import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
+import { isOutOfRange } from '../lib/date';
 import {
   calendarKeyIntent,
   dayLabel,
-  isOutOfRange,
   monthLabel,
   shiftMonths,
   useCalendarState,

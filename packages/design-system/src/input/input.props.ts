@@ -21,10 +21,12 @@ import { useControllableState } from '../lib/controllable';
  * WHAT IS STILL ABSENT, and why — each of these is a component or a native
  * module, not a `type`:
  *
- * - `date`, `time`, `datetime-local` — `DateInput` owns typed dates and
- *   `Calendar` owns picked ones. The reasoning is at the top of
- *   `date-input.props.ts`; a second, differently-behaved date control reached
- *   through a string prop would undo it.
+ * - `date`, `time`, `datetime-local` — `DatePicker` owns all three, through a
+ *   `mode` prop. The reasoning is at the top of `date-picker.props.ts`; a
+ *   second, differently-behaved date control reached through a string prop
+ *   would undo it. The browser's own date control is also the one input whose
+ *   appearance cannot be styled consistently, and it has no native counterpart
+ *   at all.
  * - `file` — React Native has no file input at all. It needs a document-picker
  *   native module, which this package cannot declare (see the dependency rule
  *   in CLAUDE.md).
@@ -39,8 +41,8 @@ export type InputType = 'text' | 'number' | 'email' | 'password' | 'search' | 't
  *
  * This shipped with an `sm`/`md`/`lg` scale whose `md` was 44px, justified by
  * the WCAG 2.5.5 target-size floor. That justification was wrong here, and the
- * package was already saying so: `date-input.web.tsx` and `select.web.tsx`
- * both take 44 BECAUSE they are press targets, and both record that
+ * package was already saying so: `select.web.tsx` and the date field of the
+ * day both took 44 BECAUSE they are press targets, and both recorded that
  * "Field.Control stays 40" precisely because a text field is not one. A plain
  * text input is the Field.Control case, so 44 put the package in the position
  * of answering the same question two ways.
@@ -50,8 +52,8 @@ export type InputType = 'text' | 'number' | 'email' | 'password' | 'search' | 't
  * denser row — is better served by the caller's own layout than by a prop
  * every leaf has to carry.
  *
- * 44 still belongs where it was earned: Select's trigger, DateInput and
- * Combobox are TAPPED, not typed into first.
+ * 44 still belongs where it was earned: Select's trigger, Combobox and every
+ * row of a `Wheel` are TAPPED, not typed into first.
  */
 export const CONTROL_HEIGHT_PX = 40;
 

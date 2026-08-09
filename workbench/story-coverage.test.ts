@@ -63,6 +63,7 @@ const INTERACTIVE = [
   'collapsible',
   'combobox',
   'date-input',
+  'date-picker',
   'dialog',
   'drawer',
   'dropdown',
@@ -80,6 +81,7 @@ const INTERACTIVE = [
   'toggle',
   'toggle-group',
   'tooltip',
+  'wheel',
 ] as const;
 
 for (const name of INTERACTIVE) {

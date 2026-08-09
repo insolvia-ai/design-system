@@ -9,7 +9,7 @@ It succeeded a web-only predecessor (0.1.x, Base UI), retired at 0.2.x.
 
 ## Components
 
-Forty-one components, shelved the way a component library's documentation site
+Forty-two components, shelved the way a component library's documentation site
 conventionally shelves them — by what you reach for them FOR. The workbench's
 sidebar uses these same five groups in this same order (`.storybook/preview.tsx`
 pins it), so the catalogue and the place you look at it agree.
@@ -31,10 +31,16 @@ pins it), so the catalogue and the place you look at it agree.
 `InputGroup` · `RadioGroup` · `Select` · `Switch` · `Textarea` · `Toggle` ·
 `ToggleGroup`
 
-**Dates** — the typed and the pointed way to say the same thing. They share
-`daysInMonth` and `isRealDate`, because they must agree about what a date is.
+**Dates.** `DateInput` is the FIELD most callers want: a masked text input with
+a button that opens a picker. WHICH picker is its `picker` prop — `wheels` (the
+default) or `calendar` — and they are alternatives, never both at once.
+`DatePicker` is those wheels alone and `Calendar` the month grid alone, for a
+surface that is already a picker; `Wheel` is the scrolling column underneath.
+`mode="date" | "time" | "datetime"` runs through all of them, `format` decides
+how the field reads, and the date arithmetic they share lives in
+`src/lib/date.ts`.
 
-`Calendar` · `DateInput`
+`DateInput` · `DatePicker` · `Calendar` · `Wheel`
 
 **Layout** — page furniture. This shelf is ours; the convention above has no
 home for it.
@@ -54,17 +60,35 @@ The original surfaces were `Accordion` · `Button` · `Card` · `Field` · `Foot
 `Checkbox` · `CheckboxGroup` · `Collapsible` · `Dialog` · `Meter` · `Progress` ·
 `RadioGroup` · `Separator` · `Switch` · `Tabs` · `Toggle` · `ToggleGroup`. 0.4.0
 added `Select`, the first anchored-popup component — see the note below on why
-it stopped being deferred. 0.5.0 added `DateInput`, a masked `YYYY-MM-DD` text
-field with no calendar (the reasoning is at the top of `date-input.props.ts`);
-0.6.0 gave its `onValueChange` a second argument, because `''` alone cannot
-distinguish "cleared" from "still typing" and an autosaving caller wiped saved
-dates on that ambiguity.
+it stopped being deferred. 0.5.0 added `DateInput`, then a masked `YYYY-MM-DD`
+text field with no picker at all (0.12.0 gave it one — see below); 0.6.0 gave
+its `onValueChange` a second argument, because `''` alone cannot distinguish
+"cleared" from "still typing" and an autosaving caller wiped saved dates on
+that ambiguity.
 
 **0.11.0 added nineteen components and two parts** — `Text` · `Badge` ·
 `Spinner` · `Alert` · `Ribbon` · `Breadcrumbs` · `Table` · `Input` · `Textarea` ·
 `InputGroup` · `Combobox` · `Tooltip` · `Popover` · `Dropdown` · `Drawer` ·
 `Toast` · `Sidebar` · `Calendar`, plus `Avatar.Group` and `Card.Image` — closing
 the gap against a mainstream React component library's catalogue.
+
+**0.12.0 rebuilt the date surfaces around one field.** `DateInput` keeps its
+name, its mask and its `onValueChange(next, status)` contract, and gains a
+button that opens a picker: `DatePicker`'s wheels by default, or `Calendar`'s
+month grid with `picker="calendar"`. It also gains `mode`, so the package has a
+time and a datetime field for the first time, and `format`, so the mask can
+read `MM/DD/YYYY` or `DD.MM.YYYY` while still storing one ISO value.
+
+The instruments are alternatives and the prop is an enum, not two booleans: a
+surface holding a grid and a set of wheels at once is not a design, and a type
+that cannot express it beats a runtime check that forbids it. Each is better at
+something. Typing wins for a date you already know — a registration from 2011.
+The grid wins whenever the weekday matters, which a wheel cannot show. The
+wheels are the only instrument that can express a time, so `time` and
+`datetime` take them whatever `picker` says.
+
+Breaking: `Calendar`'s date arithmetic moved to `src/lib/date.ts`, and
+`DateInput`'s props changed shape.
 
 That wave answers most of the deferral list this section used to carry, so the
 list is reproduced here with what actually happened to each:
@@ -85,7 +109,7 @@ list is reproduced here with what actually happened to each:
 - **`Input` overlapping with `Field`** — the objection was right, and the first
   attempt at answering it was not. `Input` and `Textarea` read `Field`'s
   context for their id, name, description and invalid state, exactly as
-  `Select` and `DateInput` already do — but `Field.Control` went on rendering a
+  `Select` and `DatePicker` already do — but `Field.Control` went on rendering a
   bare `<input>` of its own, so the package shipped two components drawing the
   same box with nothing to say which to reach for. **`Field.Control` no longer
   renders a control.** Put one inside the field:

@@ -1,27 +1,23 @@
-// SHARED — `react`, `../lib/controllable` and DateInput's own shared module.
-// No react-dom, no react-native.
+// SHARED — `react`, `../lib/date` and `../lib/controllable`. No react-dom, no
+// react-native.
 //
-// The whole calendar lives here: the month grid, the range check, and the
-// keyboard grammar. The leaves render a table of buttons or a grid of
-// Pressables and nothing else — the same division `select.props.ts` makes, and
-// for the same reason: a date grid that stepped differently on one platform
-// would be two calendars claiming to be one.
+// What is left of the calendar once the date arithmetic is shared: the month
+// grid, and the keyboard grammar. The leaves render a table of buttons or a
+// grid of Pressables and nothing else — the same division `select.props.ts`
+// makes, and for the same reason: a date grid that stepped differently on one
+// platform would be two calendars claiming to be one.
 //
-// `daysInMonth` and `isRealDate` come from DateInput rather than being
-// restated. The two components are the typed and the pointed way to say the
-// same thing, and they must agree about what a date IS.
+// `daysInMonth`, `isoFor`, `parseIso`, `isOutOfRange` and the month names come
+// from `../lib/date`, which every date surface in this package shares. This
+// module owned copies of them until 0.12.0; the grid and the typed field and
+// the wheels must agree about what a date IS, and one module is how.
 import * as React from 'react';
 
-import { daysInMonth, isRealDate } from '../date-input/date-input.props';
 import { useControllableState } from '../lib/controllable';
+import { daysInMonth, isOutOfRange, isoFor, MONTH_NAMES, parseIso } from '../lib/date';
 
 /** An ISO `YYYY-MM-DD` date, or `null` for "nothing chosen". */
 export type CalendarValue = string | null;
-
-/** Zero-padded ISO for a year/month/day triple. `month` is 1-based. */
-export function isoFor(year: number, month: number, day: number): string {
-  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-}
 
 export interface CalendarDay {
   iso: string;
@@ -41,21 +37,6 @@ export interface CalendarDay {
  * locale prop bolted on.
  */
 export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
-
-export const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-] as const;
 
 /** Monday = 0 … Sunday = 6, from JS's Sunday-first `getUTCDay`. */
 function mondayIndex(year: number, month: number, day: number): number {
@@ -96,34 +77,6 @@ export function monthGrid(year: number, month: number): CalendarDay[][] {
   const weeks: CalendarDay[][] = [];
   for (let i = 0; i < 42; i += 7) weeks.push(cells.slice(i, i + 7));
   return weeks;
-}
-
-/** Parses an ISO date into its parts, or `null` if it is not a real date. */
-export function parseIso(iso: string): { year: number; month: number; day: number } | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  if (!match) return null;
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  return isRealDate(year, month, day) ? { year, month, day } : null;
-}
-
-/**
- * Outside `[min, max]`?
- *
- * String comparison, not Date arithmetic: zero-padded ISO dates sort
- * lexicographically in calendar order, which is the same trick
- * `date-input.props` uses for its range check — and it has no timezone to get
- * wrong.
- */
-export function isOutOfRange(
-  iso: string,
-  min: string | undefined,
-  max: string | undefined,
-): boolean {
-  if (min !== undefined && iso < min) return true;
-  if (max !== undefined && iso > max) return true;
-  return false;
 }
 
 /** Adds `days` to an ISO date, crossing months and years. */

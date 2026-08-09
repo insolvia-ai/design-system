@@ -52,8 +52,8 @@ const preview: Preview = {
     // page, what takes input, and dates — because that is the order someone
     // browsing for "the thing that shows a message" actually looks in.
     // Alphabetically it would read Data display, Dates, Forms, Layout,
-    // Overlays, which puts Calendar second and separates Dialog from Drawer
-    // for no reason a reader benefits from.
+    // Overlays, which puts the date pickers second and separates Dialog from
+    // Drawer for no reason a reader benefits from.
     //
     // `Layout` is this package's own fifth shelf: Footer, NavBar and Separator
     // are page furniture with nowhere sensible to sit among the other four.

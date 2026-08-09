@@ -6,10 +6,10 @@ import * as React from 'react';
 
 import { cn } from '../lib/cn';
 import { disabledStyles, focusRing } from '../lib/styles';
+import { isOutOfRange } from '../lib/date';
 import {
   calendarKeyIntent,
   dayLabel,
-  isOutOfRange,
   monthLabel,
   shiftMonths,
   useCalendarState,

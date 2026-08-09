@@ -25,8 +25,17 @@ export { CheckboxGroup } from './checkbox-group';
 export { Collapsible } from './collapsible';
 export { Combobox } from './combobox';
 export type { ComboboxOption, ComboboxValue } from './combobox';
+// Dates. `DateInput` is the FIELD, and is what most callers want: a masked text
+// input with a button that opens a picker. Which picker is ITS choice, and the
+// two are alternatives — `picker="wheels"` (the default) opens `DatePicker`'s
+// drum, `picker="calendar"` opens `Calendar`'s month grid. Both are exported on
+// their own for a surface that is already a picker, and `Wheel` is the
+// scrolling column underneath. See date-input.props.ts for why the typed field
+// and the picker are both needed and neither replaces the other.
 export { DateInput } from './date-input';
-export type { DateStatus } from './date-input';
+export type { DateInputMode, DateInputPicker, DateStatus } from './date-input';
+export { DatePicker } from './date-picker';
+export type { DatePickerMode } from './date-picker';
 export { Dialog } from './dialog';
 export { Drawer } from './drawer';
 export type { DrawerSide } from './drawer';
@@ -63,6 +72,8 @@ export type { ToastApi, ToastIntent, ToastOptions } from './toast';
 export { Toggle } from './toggle';
 export { ToggleGroup } from './toggle-group';
 export { Tooltip } from './tooltip';
+export { Wheel } from './wheel';
+export type { WheelItem } from './wheel';
 
 // Theming. `ThemeProvider` is renderer-free and exported from the shared side
 // on purpose, so a cross-platform consumer writes one provider rather than

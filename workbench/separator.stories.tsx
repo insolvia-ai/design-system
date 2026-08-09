@@ -16,7 +16,7 @@ const ORIENTATIONS = ['horizontal', 'vertical'] as const satisfies readonly Sepa
  * typed straight off the shared `SeparatorOwnProps` union (`separator.props.ts`)
  * rather than a story-local shape; both leaves take it under the identical
  * name, so no bridging arg is needed. Separator has no interactive state and
- * nothing to click or type into — unlike date-input/field/radio-group, this
+ * nothing to click or type into — unlike date-picker/field/radio-group, this
  * file has no play functions, only args and docs.
  */
 type SeparatorArgs = {

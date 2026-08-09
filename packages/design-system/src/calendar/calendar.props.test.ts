@@ -1,19 +1,12 @@
 // Direct unit tests for the shared month maths and keyboard grammar — the part
-// BOTH leaves execute. Calendar arithmetic is where hand-rolled date pickers go
+// BOTH leaves execute. The range check, the ISO parse and the zero-padding
+// moved to `src/lib/date.ts` in 0.12.0 and are tested there; what is left here
+// is what only a GRID needs. Calendar arithmetic is where hand-rolled date pickers go
 // wrong, and none of it is visible in a rendering test: a grid that silently
 // skips February still renders 42 cells.
 import { describe, expect, it } from 'vitest';
 
-import {
-  calendarKeyIntent,
-  isOutOfRange,
-  isoFor,
-  monthGrid,
-  monthLabel,
-  parseIso,
-  shiftDays,
-  shiftMonths,
-} from './calendar.props';
+import { calendarKeyIntent, monthGrid, monthLabel, shiftDays, shiftMonths } from './calendar.props';
 
 describe('monthGrid', () => {
   it('always returns six full weeks', () => {
@@ -85,30 +78,6 @@ describe('shiftMonths', () => {
   });
 });
 
-describe('isOutOfRange', () => {
-  it('compares ISO dates lexicographically', () => {
-    expect(isOutOfRange('2026-03-01', '2026-03-02', undefined)).toBe(true);
-    expect(isOutOfRange('2026-03-03', undefined, '2026-03-02')).toBe(true);
-    expect(isOutOfRange('2026-03-02', '2026-03-01', '2026-03-03')).toBe(false);
-  });
-
-  it('treats the bounds as inclusive', () => {
-    expect(isOutOfRange('2026-03-01', '2026-03-01', '2026-03-01')).toBe(false);
-  });
-});
-
-describe('parseIso', () => {
-  it('rejects a date that does not exist', () => {
-    expect(parseIso('2026-02-30')).toBeNull();
-    expect(parseIso('2026-13-01')).toBeNull();
-    expect(parseIso('not-a-date')).toBeNull();
-  });
-
-  it('accepts a real one', () => {
-    expect(parseIso('2024-02-29')).toEqual({ year: 2024, month: 2, day: 29 });
-  });
-});
-
 describe('calendarKeyIntent', () => {
   it('moves by a day, a week and a month', () => {
     expect(calendarKeyIntent('ArrowRight', '2026-03-10')).toEqual({
@@ -146,10 +115,6 @@ describe('calendarKeyIntent', () => {
 });
 
 describe('formatting helpers', () => {
-  it('zero-pads an ISO date', () => {
-    expect(isoFor(2026, 3, 1)).toBe('2026-03-01');
-  });
-
   it('names the month on screen', () => {
     expect(monthLabel('2026-03-01')).toBe('March 2026');
   });

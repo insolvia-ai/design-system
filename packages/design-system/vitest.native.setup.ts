@@ -9,6 +9,10 @@
 import '@testing-library/jest-dom/vitest';
 import { beforeEach } from 'vitest';
 
+// See the identical note in vitest.setup.ts: jsdom has no layout, so the
+// scroller a Wheel keeps in step with its value has no `scrollTo` to call.
+Element.prototype.scrollTo = () => undefined;
+
 type SchemeListener = (event: { matches: boolean }) => void;
 
 let prefersDark = false;

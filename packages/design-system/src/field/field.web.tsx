@@ -103,7 +103,7 @@ export interface FieldControlProps extends Omit<
    * bare `<input>`, which made it a second implementation of `Input` living in
    * the Field folder: same box, same height, and nothing to tell a reader
    * which to reach for. Every control this package ships — `Input`,
-   * `Textarea`, `Select`, `DateInput`, `Combobox` — already reads the field's
+   * `Textarea`, `Select`, `DatePicker`, `Combobox` — already reads the field's
    * context directly, so the composition to reach for is:
    *
    *     <Field.Root name="callsign">
