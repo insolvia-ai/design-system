@@ -31,6 +31,8 @@ the PR is why, what was rejected, and how it was verified.
 - Each published version now also gets a git tag and a GitHub Release, so two
   versions can be diffed for the first time.
 
+[#13](https://github.com/insolvia-ai/design-system/pull/13)
+
 ## 0.13.0 — minor
 
 **Widen your range to take this:** `^0.12.x` will not resolve it.
