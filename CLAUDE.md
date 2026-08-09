@@ -43,6 +43,7 @@ claims about who consumes what.
 | When you're… | Open |
 |---|---|
 | adding or changing a component | `design-system-component` skill |
+| changing the skills consumers install | [`plugins/design-system/README.md`](plugins/design-system/README.md) — bump the plugin, all three manifests |
 | releasing — version bumps, publishing | `design-system-release` skill |
 | opening a PR | `design-system-pr` skill |
 | running or setting anything up | [`scripts/README.md`](scripts/README.md) |
@@ -83,6 +84,10 @@ class.
   PR.** CI fails it otherwise. Both packages publish on merge to `main`, and
   the publish is idempotent by version: an unbumped change merges green,
   publishes nothing, and silently rots the registry.
+- **Any change under `plugins/` needs the plugin's `version` bumped** in all
+  three manifests (Claude, Codex, Cursor). Same failure, different channel: an
+  installed plugin updates only when that string moves, so an unbumped skill
+  edit reaches nobody. CI enforces both the bump and that the three agree.
 - **Both packages publish SOURCE, and neither has a build step.** That is
   load-bearing for the components: leaf resolution happens in the *consumer's*
   bundler, so the `.web.tsx`/`.native.tsx` pairs must survive into the tarball

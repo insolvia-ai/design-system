@@ -1,0 +1,23 @@
+{
+  "//": [
+    "The FIFTH typecheck program: the repo's own tooling under scripts/.",
+    "",
+    "It exists for the same reason tsconfig.workbench.json does. A .ts file that",
+    "no program covers is a file nobody checks, and this repo has already paid",
+    "for one of those — the Button story rendered a prop that did not exist for",
+    "several releases because stories sat outside every program. A gate script",
+    "that silently stops gating is the same failure with a longer fuse.",
+    "",
+    "It cannot ride along in the workbench program: that one sets `types: []`",
+    "and pulls in the DOM lib for the stories, while a script needs @types/node",
+    "and nothing else. The base config already provides exactly that, so this",
+    "file adds only an `include`.",
+    "",
+    "Scripts run under plain `node` with native type-stripping, like the token",
+    "generator, so `erasableSyntaxOnly` from the base is load-bearing here: it",
+    "rejects the constructs Node cannot execute (enum, namespace, parameter",
+    "properties) at typecheck time rather than at 3am in CI."
+  ],
+  "extends": "./tsconfig.base.json",
+  "include": ["scripts/**/*.ts"]
+}

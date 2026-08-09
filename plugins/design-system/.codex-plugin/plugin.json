@@ -1,0 +1,33 @@
+{
+  "name": "design-system",
+  "version": "0.1.0",
+  "description": "Install, theme, and correctly call the components in @insolvia-ai/design-system, on web and on React Native",
+  "author": {
+    "name": "insolvia-ai"
+  },
+  "homepage": "https://github.com/insolvia-ai/design-system",
+  "repository": "https://github.com/insolvia-ai/design-system/tree/main/plugins/design-system",
+  "keywords": [
+    "design-system",
+    "react",
+    "react-native",
+    "tailwind",
+    "theming",
+    "components",
+    "design-tokens"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Insolvia Design System",
+    "shortDescription": "Consume @insolvia-ai/design-system on web and React Native",
+    "longDescription": "Consumer-facing skills for @insolvia-ai/design-system and @insolvia-ai/tokens: installing them from GitHub Packages, wiring theme.css into a Tailwind v4 entrypoint, re-branding through the two override seams, choosing the right component, and debugging how one component name resolves to a web leaf under Vite and a native leaf under Metro.",
+    "developerName": "insolvia-ai",
+    "category": "Developer Tools",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": [
+      "Add @insolvia-ai/design-system to this app and render a form with it",
+      "Re-brand these components to our primary colour",
+      "Why is this component rendering unstyled?"
+    ]
+  }
+}

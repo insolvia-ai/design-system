@@ -1,0 +1,16 @@
+{
+  "name": "insolvia-ai",
+  "owner": {
+    "name": "insolvia-ai"
+  },
+  "metadata": {
+    "description": "Agent skills for consuming @insolvia-ai/design-system and @insolvia-ai/tokens."
+  },
+  "plugins": [
+    {
+      "name": "design-system",
+      "source": "./plugins/design-system",
+      "description": "Install, theme, and correctly call the components in @insolvia-ai/design-system, on web and on React Native."
+    }
+  ]
+}

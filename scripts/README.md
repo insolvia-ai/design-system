@@ -1,11 +1,20 @@
 # scripts
 
-Two scripts, and a deliberate refusal to add more.
+Two entry points a human runs, one gate CI runs, and a deliberate refusal to add
+more.
 
 | Script | What it does |
 |---|---|
 | [`dev-setup.sh`](dev-setup.sh) | Checks Node against `engines.node`, then `npm ci`. `--check` reports without changing anything. |
 | [`dev-up.sh`](dev-up.sh) | Starts the component workbench (Storybook) on `http://localhost:6006`. |
+| [`check-skills.ts`](check-skills.ts) | Gates every `SKILL.md` in the repo. Run as `npm run skills:check`, part of `npm run ci`. |
+
+`check-skills.ts` is not a shortcut for anything a human types — it is a check,
+reached through `npm run skills:check` like every other one. It lives here
+rather than beside the skills because it walks the whole repository, including
+`.claude/skills`, which belongs to no package. It runs under plain `node` with
+native type-stripping, like the token generator, and is typechecked by
+[`tsconfig.scripts.json`](../tsconfig.scripts.json).
 
 ```bash
 ./scripts/dev-setup.sh

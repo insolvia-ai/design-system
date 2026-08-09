@@ -1,17 +1,17 @@
 ---
 name: design-system-component
 description: >-
-  How to add or change a component in this package — the three-file split
-  (props / .web / .native), which file a given piece of code belongs in, what
-  to NAME a prop, the render-time colour rule the native leaves must follow,
-  and the story and tests a component owes. Use this BEFORE creating or editing
-  anything under packages/design-system/src/, when deciding whether something
-  can be one shared file or must be a leaf pair, and when picking a prop name
-  or adding a value to a variant axis — `intent`, `tone`, `variant` and `size`
-  each already mean a specific thing here. Also read it when a leaf will not
-  resolve, when a component renders unstyled, or when a change looks right on
-  web and wrong on native (or the reverse) — those symptoms all trace back to
-  rules here.
+  Contributor. How to add or change a component in this package — the
+  three-file split (props / .web / .native), which file a given piece of code
+  belongs in, what to NAME a prop, the render-time colour rule the native
+  leaves must follow, and the story and tests a component owes. Use this BEFORE
+  creating or editing anything under packages/design-system/src/, when deciding
+  whether something can be one shared file or must be a leaf pair, and when
+  picking a prop name or adding a value to a variant axis — `intent`, `tone`,
+  `variant` and `size` each already mean a specific thing here. Also read it
+  when a leaf will not resolve, when a component renders unstyled, or when a
+  change looks right on web and wrong on native (or the reverse) — those
+  symptoms all trace back to rules here.
 ---
 
 # Working on a component

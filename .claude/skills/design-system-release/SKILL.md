@@ -1,7 +1,7 @@
 ---
 name: design-system-release
 description: >-
-  How a change here reaches a consumer — version bump,
+  Contributor. How a change here reaches a consumer — version bump,
   publish on merge, then a dependency bump in the consuming repo. Use this
   BEFORE editing anything under packages/, including a README or CLAUDE.md,
   because CI fails any PR that changes a package without bumping its version.
