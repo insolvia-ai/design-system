@@ -173,6 +173,26 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
             'flex h-11 w-full items-center justify-between gap-sm rounded-md border border-line bg-card px-sm',
             'font-body text-sm text-ink',
             focusRing,
+            // Ringed while the list is OPEN, not only while focus-visible.
+            //
+            // `focusRing` is `:focus-visible` only, which is right for a
+            // button — a mouse click should not ring one. But this button is
+            // not just pressed and done with: opening keeps focus here while
+            // the highlight moves through the listbox via
+            // `aria-activedescendant`, so the trigger is the widget the user
+            // is driving and has to read as active. A native <select> shows
+            // the same thing while its popup is down.
+            //
+            // It is also what closed a leaf divergence. The native leaf rings
+            // from its own `onFocus` (react-native-web cannot ask for
+            // `:focus-visible`), so opening either leaf by MOUSE — the way
+            // anyone opens it in the workbench — ringed native in brass and
+            // left web bare, one design showing two things side by side.
+            //
+            // `ring-offset-bg` matches the gap `focusRing` paints, and the
+            // classes are identical to its focus-visible ones, so the two
+            // never fight when both apply.
+            open && 'ring-2 ring-accent ring-offset-2 ring-offset-bg',
             'disabled:cursor-not-allowed disabled:bg-surface-alt disabled:text-muted',
             invalid && 'border-danger',
             className,
