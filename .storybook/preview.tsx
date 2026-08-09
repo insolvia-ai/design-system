@@ -10,6 +10,14 @@ import { applyScheme, type Scheme } from '../workbench/scheme.ts';
 import { workbenchTheme } from './theme.ts';
 
 /**
+ * The scheme every story starts in, compiled in by `main.ts`'s `viteFinal`
+ * from `WORKBENCH_SCHEME` in the environment. `main.ts` owns the reasoning;
+ * the short version is that the a11y gate has no toolbar to click, so this is
+ * the only way it audits anything but light.
+ */
+declare const __WORKBENCH_SCHEME__: Scheme;
+
+/**
  * Colour scheme is a first-class control here, not a nicety.
  *
  * The `.native` leaves resolve colours at RENDER time via `useNativeColors()`.
@@ -93,10 +101,15 @@ const preview: Preview = {
     },
   },
 
+  // NOT `globalTypes[].defaultValue`, which only applies when nothing else has
+  // set the global — and which cannot be driven from the build. This is what
+  // the a11y run overrides to audit the dark scheme; the toolbar still moves it
+  // freely once a story is on screen.
+  initialGlobals: { scheme: __WORKBENCH_SCHEME__ },
+
   globalTypes: {
     scheme: {
       description: 'Colour scheme — drives BOTH leaves (see workbench/scheme.ts)',
-      defaultValue: 'light',
       toolbar: {
         title: 'Scheme',
         icon: 'mirror',
@@ -111,7 +124,7 @@ const preview: Preview = {
 
   decorators: [
     (Story, context) => {
-      const scheme = (context.globals['scheme'] as Scheme | undefined) ?? 'light';
+      const scheme = (context.globals['scheme'] as Scheme | undefined) ?? __WORKBENCH_SCHEME__;
 
       // In a layout effect so the attribute and the media-query listeners are
       // updated before the browser paints — otherwise every scheme change

@@ -7,6 +7,42 @@ import type { StorybookConfig } from '@storybook/react-native-web-vite';
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '..');
 
+const SCHEMES = ['light', 'dark'] as const;
+
+/**
+ * The scheme every story STARTS in, from `WORKBENCH_SCHEME` in the environment.
+ *
+ * The Scheme toolbar can move a story either way once it is on screen, but the
+ * a11y gate has no toolbar and no human: it renders each story once, at
+ * whatever `initialGlobals` says, and audits that. So until this existed the
+ * gate only ever saw light, and every dark-scheme contrast failure was
+ * invisible to CI — `--color-danger` sat at 2.9:1 on the dark canvas, under the
+ * 4.5:1 floor, in the colour `Field.Error` paints its message.
+ *
+ * Declared HERE rather than in `vitest.config.ts` so one definition serves
+ * `storybook dev`, `storybook build` and the Vitest run alike — the story tests
+ * build their Vite config from this file's `viteFinal`, so a define added here
+ * reaches all three. It also keeps the a11y project singular: two Vitest
+ * projects both running `storybookTest` against this `configDir` would be given
+ * the SAME name by the addon's own workspace-name-override plugin, and
+ * Storybook's in-app "Run tests" widget filters by exactly that name. Two
+ * sequential runs of one project cost a second browser start and break nothing.
+ *
+ * Validated rather than defaulted: `WORKBENCH_SCHEME=drak` silently auditing
+ * light twice is precisely the failure this whole change exists to remove.
+ */
+function initialScheme(): (typeof SCHEMES)[number] {
+  const requested = process.env['WORKBENCH_SCHEME'];
+  if (requested === undefined) return 'light';
+  const match = SCHEMES.find((scheme) => scheme === requested);
+  if (!match) {
+    throw new Error(
+      `WORKBENCH_SCHEME="${requested}" is not a scheme. Expected one of: ${SCHEMES.join(', ')}.`,
+    );
+  }
+  return match;
+}
+
 /**
  * The workbench: the only place in this repo where a component is LOOKED AT
  * rather than asserted about.
@@ -90,6 +126,13 @@ const config: StorybookConfig = {
   ],
 
   viteFinal: async (viteConfig) => {
+    // The starting scheme, compiled into the preview as a literal. See
+    // `initialScheme()` above for why it lives here and not in vitest.config.ts.
+    viteConfig.define = {
+      ...viteConfig.define,
+      __WORKBENCH_SCHEME__: JSON.stringify(initialScheme()),
+    };
+
     // The `react-native` → workbench shim substitution — done by REWRITING THE
     // RESOLVED ALIAS TABLE, because every politer mechanism loses:
     //

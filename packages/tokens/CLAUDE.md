@@ -46,6 +46,16 @@ The single source of truth for every design token, published as
   `muted`, `line`, `card`, `danger`, …), never raw palette names
   (`ink`/`brass`/`paper`) — a re-brand is then a one-file change. No output
   emits the palette at all; keep it that way.
+- **Measure a new dark alias against the dark canvas; never assume it.** A
+  mid-lightness hue that clears WCAG AA on `paper` will not clear it on
+  `inkDeep` — `danger` was the same `#B3352E` in both schemes and scored 5.8:1
+  on light, 2.9:1 on dark, in the colour `Field.Error` paints its message.
+  That is what the `*Bright` palette siblings are for. The floor for text is
+  4.5:1 against `bg`, `card` and `surfaceAlt` alike, since a semantic colour
+  does not know which surface it lands on. `npm run test:a11y` now runs axe
+  over every story in BOTH schemes, so a regression here is red rather than
+  invisible — but the gate only sees colours a story actually renders, and the
+  measurement is what tells you the value is right before you commit it.
 - **A missing dark-mode color must stay a compile error.** `src/tokens.ts`
   declares every semantic role as required on `ColorScheme` and asserts scheme
   exhaustiveness with a `never` type. Don't relax either into an optional

@@ -76,9 +76,9 @@
   --color-accent: #d2a857;
   --color-muted: #c9d0d8;
   --color-line: rgb(255 255 255 / 0.2);
-  --color-success: #2e7d5b;
+  --color-success: #39b17e;
   --color-warning: #d2a857;
-  --color-danger: #b3352e;
+  --color-danger: #e27f79;
 
   --color-primary-hover: color-mix(in srgb, var(--color-primary) 88%, white 12%);
   --color-primary-active: color-mix(in srgb, var(--color-primary) 84%, black 16%);

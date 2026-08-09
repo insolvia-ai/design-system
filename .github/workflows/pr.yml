@@ -161,6 +161,13 @@ jobs:
       # jsdom, where the rest of the suite lives — so it catches a class of
       # defect the 348 unit tests structurally cannot.
       #
+      # ONCE PER COLOUR SCHEME, light then dark (the script chains the two
+      # halves; .storybook/main.ts owns how the scheme reaches the preview). A
+      # story renders in one scheme per run, so a light-only gate is blind to
+      # every dark value — which is how `--color-danger` shipped at 2.9:1
+      # against the dark canvas, in the colour Field.Error paints its message,
+      # green here the whole time.
+      #
       # Playwright's browser download is the slowest step here by far, hence
       # `--only-shell`: the story tests need Chromium's headless shell and none
       # of the rest.

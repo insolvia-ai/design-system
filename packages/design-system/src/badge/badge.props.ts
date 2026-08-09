@@ -7,12 +7,19 @@ export type BadgeSize = 'sm' | 'md';
  *
  * The obvious design — fill the pill with the intent colour, or tint the
  * background and colour the label — cannot be made accessible from this token
- * set in BOTH schemes. Measured against `theme.css`'s own values:
- * `warning` on `card` is 3.2:1 in light, and `success` on `card` is 3.5:1 in
- * dark; a solid fill fares no better, because the only foreground/background
- * pair the tokens guarantee across schemes is `primary`/`primary-text` — there
- * is no `success-text` or `warning-text`. That is the same gap `button.props`
- * records as the reason there is no `danger` Button intent.
+ * set in BOTH schemes. Measured against `theme.css`'s own values: `warning` on
+ * `card` is 3.2:1 in light. A solid fill fares no better, because the only
+ * foreground/background pair the tokens guarantee across schemes is
+ * `primary`/`primary-text` — there is no `success-text` or `warning-text`. That
+ * is the same gap `button.props` records as the reason there is no `danger`
+ * Button intent.
+ *
+ * This note also read "`success` on `card` is 3.5:1 in dark" until tokens
+ * 0.3.0, which is now 6.5:1 — that half was a token bug (the dark scheme reused
+ * the light hue) rather than a constraint, and it has been fixed. `warning` in
+ * light is the one that remains, and one failing intent is enough to keep the
+ * pill neutral: an intent axis whose members are not interchangeable is worse
+ * than one that is uniformly plain.
  *
  * So the label stays `ink` on `surface-alt`, which is legible in both schemes
  * at every size, and the intent shows as a small dot beside it. The dot is

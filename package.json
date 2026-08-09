@@ -93,10 +93,33 @@
       "missing story is cheap to detect and should fail before the expensive",
       "browser suite runs, same ordering logic as pr.yml's version-bump gate."
     ],
+    "test:a11y": [
+      "Every story as a test in a real Chromium, axe over each one, ONCE PER",
+      "COLOUR SCHEME. `test:a11y:light` and `test:a11y:dark` are the same suite",
+      "under different `WORKBENCH_SCHEME` values; .storybook/main.ts turns that",
+      "into the preview's `initialGlobals.scheme` and owns the reasoning.",
+      "",
+      "Both halves are needed because a story renders in exactly one scheme per",
+      "run and axe scores contrast on the pixels in front of it. Light-only, the",
+      "gate declared `--color-danger` accessible while its DARK value sat at",
+      "2.9:1 against the canvas — under the 4.5:1 floor, in the colour",
+      "`Field.Error` paints an error message. The dark scheme had no check but a",
+      "human clicking the Scheme toolbar, which is the same non-check the 0.2.1",
+      "native-colour bug and the 0.7.1 Select stacking bug both slipped through.",
+      "",
+      "Two sequential runs rather than two Vitest projects: both projects would",
+      "load `storybookTest` against the same configDir and the addon's own",
+      "workspace-name-override would give them the same project name, which is",
+      "what Storybook's in-app \"Run tests\" widget filters by.",
+      "",
+      "Cost is one extra browser start; run one half alone while iterating."
+    ],
     "test:coverage": [
       "The story suite with V8 coverage over packages/*/src (config in",
-      "vitest.config.ts, which also says why this is not part of `ci`). The",
-      "same report backs the Coverage toggle in Storybook's testing widget."
+      "vitest.config.ts, which also says why this is not part of `ci`). Light",
+      "scheme only — coverage is about which LINES ran, and the dark pass runs",
+      "the same ones. The same report backs the Coverage toggle in Storybook's",
+      "testing widget."
     ],
     "storybook": [
       "The component workbench: the only place a component is LOOKED AT rather",
@@ -121,7 +144,9 @@
     "storybook": "storybook dev -p 6006 --no-open",
     "storybook:build": "storybook build -o storybook-static",
     "test:workbench": "vitest --project=workbench --run",
-    "test:a11y": "vitest --project=storybook --run",
+    "test:a11y": "npm run test:a11y:light && npm run test:a11y:dark",
+    "test:a11y:light": "vitest --project=storybook --run",
+    "test:a11y:dark": "WORKBENCH_SCHEME=dark vitest --project=storybook --run",
     "test:coverage": "vitest --project=storybook --run --coverage"
   },
   "//devDependencies": [

@@ -58,13 +58,13 @@ export interface ColorScheme {
   /** Thin divider/border color. */
   readonly line: string;
 
-  /** Success/confirmed state. */
+  /** Success/confirmed state. The dark scheme lifts to a brighter green: the light value scored 3.5:1 on the dark canvas, below the 4.5:1 WCAG AA floor for body text. */
   readonly success: string;
 
   /** Warning/attention state. */
   readonly warning: string;
 
-  /** Error/destructive state. */
+  /** Error/destructive state. The dark scheme lifts to a brighter red: the light value scored 2.9:1 on the dark canvas, below the 4.5:1 WCAG AA floor for body text — and Field.Error renders in it. */
   readonly danger: string;
 
   /** Hovered [primary]. */
@@ -118,13 +118,13 @@ export const colors = {
     accent: '#D2A857',
     muted: '#C9D0D8',
     line: '#FFFFFF33',
-    success: '#2E7D5B',
+    success: '#39B17E',
     warning: '#D2A857',
-    danger: '#B3352E',
+    danger: '#E27F79',
     primaryHover: '#D7B26B',
     primaryActive: '#B08D49',
     accentHover: '#D7B26B',
-    dangerHover: '#BC4D47',
+    dangerHover: '#E58E89',
   },
 } as const satisfies Record<ColorSchemeName, ColorScheme>;
 
