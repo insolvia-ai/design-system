@@ -93,15 +93,31 @@ const PopoverContent = ({ label, style, children, ...props }: PopoverContentProp
   } as object;
 
   return (
-    <View
-      nativeID={contentId}
-      role="dialog"
-      accessibilityLabel={hasTitle ? undefined : label}
-      {...webAria}
-      style={[styles.content, { borderColor: c.line, backgroundColor: c.card }, style]}
-      {...props}
-    >
-      {children}
+    // TWO VIEWS, and the outer one is the fix. The panel used to be the
+    // absolutely positioned box itself, carrying `maxWidth: 320` and no width
+    // — and a cap cannot size an absolutely positioned box. Its width fell
+    // back to shrink-to-fit against the CONTAINING BLOCK, which is the root,
+    // and the root hugs the trigger (`alignSelf: 'flex-start'`, mirroring the
+    // web root's `inline-flex`). So the panel came out trigger-wide, the prose
+    // wrapped a word or two per line, and `maxWidth: 320` never once applied.
+    //
+    // The web leaf says `w-max max-w-[20rem]`: size from the CONTENT, cap at
+    // 320. React Native has no `max-content`, so the same rule is spelled with
+    // a positioning layer that states the cap as a real width, and a panel
+    // that hugs inside it — `alignItems: 'flex-start'` is what makes it hug.
+    // Same outcome, and short content stays snug rather than being padded out
+    // to 320, which a fixed width on the panel would have done.
+    <View style={styles.anchor}>
+      <View
+        nativeID={contentId}
+        role="dialog"
+        accessibilityLabel={hasTitle ? undefined : label}
+        {...webAria}
+        style={[styles.content, { borderColor: c.line, backgroundColor: c.card }, style]}
+        {...props}
+      >
+        {children}
+      </View>
     </View>
   );
 };
@@ -139,17 +155,36 @@ const styles = StyleSheet.create({
   rootOpen: { zIndex: 20 },
   trigger: { alignSelf: 'flex-start' },
   triggerLabel: { ...textScale.base, fontWeight: '500' },
-  content: {
+  // THE POSITIONING LAYER — `max-w-[20rem]` half of the web leaf's rule,
+  // stated as a real `width` because that is the only way an absolutely
+  // positioned box gets one. `alignItems: 'flex-start'` is the `w-max` half:
+  // it lets the panel inside hug its own content instead of filling this.
+  anchor: {
     position: 'absolute',
     top: '100%',
     left: 0,
     marginTop: spacing.xs,
     zIndex: 20,
-    maxWidth: 320,
+    width: 320,
+    alignItems: 'flex-start',
+  },
+  content: {
+    // Of the anchor, so the panel wraps at 320 and never exceeds it.
+    maxWidth: '100%',
     gap: spacing.sm,
     borderWidth: 1,
     borderRadius: radii.lg,
     padding: spacing.md,
+    // The web leaf's `shadow-lg`, in the shape React Native takes — the same
+    // numbers card.native.tsx already uses for its `raised` elevation, so the
+    // two floating surfaces in this package lift the same way. Without it the
+    // panel read as a bordered block rather than something above the page,
+    // which was the other half of the side-by-side mismatch.
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   title: { fontFamily: headingFamily, ...textScale.sm, fontWeight: '600' },
   close: { alignSelf: 'flex-start', paddingVertical: spacing.xs },
