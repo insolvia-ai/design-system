@@ -14,8 +14,10 @@ name: PR
 #
 # Most of them are MERGE gates: diff-relative, addressed to the author, and
 # meaningful only before a merge — the version-bump gates literally compare
-# against a PR base and are `if: pull_request` for that reason. Failing one
-# costs a commit.
+# against a PR base. Failing one costs a commit. They keep their
+# `if: github.event_name == 'pull_request'` guards even though this workflow
+# now has no other trigger: the guards are what make re-adding one safe, since
+# without them a push event would hand those steps an empty base SHA.
 #
 # `Artifacts are publishable` is a RELEASE gate: it asks whether the packed
 # tarball is well-formed, with no reference to what changed. Its authoritative
@@ -24,14 +26,29 @@ name: PR
 # The copy here is the early warning. A new check that would still make sense
 # with nothing changed belongs in that group, not this one — which in practice
 # means adding it to scripts/check-artifacts.ts, where both copies come from.
+#
+# PULL REQUESTS ONLY. There is deliberately no `push: branches: [main]`.
+#
+# There was one until this commit, and its stated job was to make a merge that
+# somehow lands red visible on the branch. That is a real failure — a PR is
+# checked against `refs/pull/N/merge`, its head merged into base AS OF THE
+# CHECK, so a base that moves between the last run and the merge button can
+# produce a green PR and a red `main`.
+#
+# But running the suite again afterwards only REPORTS that; the bad merge has
+# already happened, and the publish does not wait for it (publish.yml triggers
+# on the same push and runs concurrently — which is why anything that must
+# block a release lives there, not here). The window is better closed at the
+# source, by the `protect-main` ruleset: `required_status_checks` names this
+# workflow's `Checks` job, and its "require branches to be up to date before
+# merging" policy forces a re-run against current `main` before the merge is
+# allowed at all. Prevention where there was a post-mortem.
+#
+# So: if that ruleset is ever weakened — the strict policy switched off, the
+# `Checks` context dropped — this trigger is the fallback that was removed on
+# the assumption it holds. Restore it, or restore the ruleset.
 on:
   pull_request:
-  # `main` too, so a merge that somehow lands red is visible on the branch
-  # rather than only in the publish job's fallout. Note what this does NOT do:
-  # it does not gate the publish, which starts on the same push and runs
-  # concurrently. Anything that must block a release goes in publish.yml.
-  push:
-    branches: [main]
 
 permissions:
   contents: read
