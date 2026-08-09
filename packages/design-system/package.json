@@ -1,6 +1,6 @@
 {
   "name": "@insolvia-ai/design-system",
-  "version": "0.13.1",
+  "version": "0.14.0",
   "description": "An owned, platform-split design system: one props module per component, a React DOM + Tailwind web leaf, and a React Native leaf over @insolvia-ai/tokens.",
   "type": "module",
   "license": "UNLICENSED",
@@ -109,7 +109,14 @@
     "jsdom is on 30 rather than the 25 this package arrived with, purely to",
     "drop a deprecated transitive (whatwg-encoding). It is test-only, so the",
     "published artifact is byte-identical — the version bump exists only",
-    "because the PR gate diffs the package DIRECTORY, not the tarball."
+    "because the PR gate diffs the package DIRECTORY, not the tarball.",
+    "tailwindcss is here for src/styles/theme.test.ts, which compiles theme.css",
+    "with the real Tailwind to prove the @theme block does not redefine a",
+    "built-in utility. It is DECLARED rather than left to resolve from the root",
+    "workspace on purpose: Node resolution walks up, so a hoisted copy would",
+    "satisfy the import and hide the fact that this package's tests depend on",
+    "it. Test-only either way — no consumer installs it from here, and the",
+    "web leaves still expect the CONSUMER to supply Tailwind."
   ],
   "devDependencies": {
     "@insolvia-ai/tokens": "*",
@@ -122,7 +129,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.0",
-    "react-native-web": "0.21.2"
+    "react-native-web": "0.21.2",
+    "tailwindcss": "^4.3.3"
   },
   "engines": {
     "node": ">=24"

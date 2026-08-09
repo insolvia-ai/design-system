@@ -18,6 +18,32 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.14.0 — minor
+
+**Widen your range to take this:** `^0.13.x` will not resolve it.
+
+- **`w-*`, `min-w-*`, `max-w-*` and `basis-*` mean what Tailwind says again.**
+  `theme.css` names its spacing steps `xs`/`sm`/`md`/`lg`/`xl`/`xxl`, and
+  Tailwind v4 resolves those four utilities from `--spacing-*` *before* its own
+  `--container-*` scale — so importing this stylesheet silently redefined them.
+  `max-w-md` was `1rem`, not the `28rem` it reads as; `max-w-xl` was `2rem` and
+  `max-w-sm` `0.5rem`. Anything capped that way collapsed to a few pixels wide
+  and wrapped one word per line. The five keys Tailwind also has — `xs`, `sm`,
+  `md`, `lg`, `xl` — now resolve to its container widths.
+- **Check your markup for those four prefixes with a t-shirt key.** If you wrote
+  one wanting the small value — a `w-md` you expected to be 16px — it changes
+  size on this version. Write the length you meant (`w-[1rem]`).
+- Everything else is untouched. `p-*`, `m-*`, `gap-*`, `size-*` and
+  `h-*`/`min-h-*`/`max-h-*` still read the spacing steps; heights never
+  consulted Tailwind's container scale, so there was nothing there to shadow.
+  `max-w-xxl`, and any other key Tailwind has no container width for, keeps its
+  spacing value too.
+- No component changes size. Dialog and AlertDialog still cap at 28rem, Drawer
+  at 20rem. They had been writing those lengths out longhand to dodge the bug
+  and now say `max-w-md` and `max-w-xs`.
+
+[#14](https://github.com/insolvia-ai/design-system/pull/14)
+
 ## 0.13.1 — patch
 
 - **This file, and it now ships inside the package.** `CHANGELOG.md` is listed

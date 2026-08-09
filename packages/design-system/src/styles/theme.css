@@ -53,6 +53,39 @@
   --spacing-xl: 2rem;
   --spacing-xxl: 3rem;
 
+  /* Width utilities, held on Tailwind's container scale.
+   *
+   * `w-*`, `min-w-*`, `max-w-*` and `basis-*` resolve a named key from
+   * `--spacing-*` before Tailwind's own `--container-*`, so the t-shirt
+   * spacing steps above would otherwise redefine them — `max-w-md` would mean
+   * 1rem rather than the 28rem it reads as. Each key below takes the container
+   * width, and keeps its spacing step only where Tailwind has no container key
+   * of that name. */
+  --width-xs: var(--container-xs, var(--spacing-xs));
+  --width-sm: var(--container-sm, var(--spacing-sm));
+  --width-md: var(--container-md, var(--spacing-md));
+  --width-lg: var(--container-lg, var(--spacing-lg));
+  --width-xl: var(--container-xl, var(--spacing-xl));
+  --width-xxl: var(--container-xxl, var(--spacing-xxl));
+  --min-width-xs: var(--container-xs, var(--spacing-xs));
+  --min-width-sm: var(--container-sm, var(--spacing-sm));
+  --min-width-md: var(--container-md, var(--spacing-md));
+  --min-width-lg: var(--container-lg, var(--spacing-lg));
+  --min-width-xl: var(--container-xl, var(--spacing-xl));
+  --min-width-xxl: var(--container-xxl, var(--spacing-xxl));
+  --max-width-xs: var(--container-xs, var(--spacing-xs));
+  --max-width-sm: var(--container-sm, var(--spacing-sm));
+  --max-width-md: var(--container-md, var(--spacing-md));
+  --max-width-lg: var(--container-lg, var(--spacing-lg));
+  --max-width-xl: var(--container-xl, var(--spacing-xl));
+  --max-width-xxl: var(--container-xxl, var(--spacing-xxl));
+  --flex-basis-xs: var(--container-xs, var(--spacing-xs));
+  --flex-basis-sm: var(--container-sm, var(--spacing-sm));
+  --flex-basis-md: var(--container-md, var(--spacing-md));
+  --flex-basis-lg: var(--container-lg, var(--spacing-lg));
+  --flex-basis-xl: var(--container-xl, var(--spacing-xl));
+  --flex-basis-xxl: var(--container-xxl, var(--spacing-xxl));
+
   /* Corner radii. */
   --radius-sm: 0.375rem;
   --radius-md: 0.625rem;

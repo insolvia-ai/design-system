@@ -1,6 +1,6 @@
 {
   "name": "@insolvia-ai/tokens",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Design tokens: one JSON source of truth rendered into typed TypeScript for React Native, CSS custom properties for the web, and plain JSON for tools with no compiler.",
   "type": "module",
   "license": "UNLICENSED",

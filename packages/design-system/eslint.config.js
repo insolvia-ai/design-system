@@ -48,39 +48,43 @@ export default [
     },
   },
   {
-    // Named WIDTH/HEIGHT utilities are banned, because in this theme they do
-    // not mean what they say.
+    // Named HEIGHT and SIZE utilities are banned, because in this theme they do
+    // not mean what a Tailwind reader expects.
     //
     // theme.css names its spacing scale with t-shirt sizes (`--spacing-md:
-    // 1rem`), and Tailwind v4 resolves a named `max-w-*`/`w-*`/`h-*` from the
-    // spacing namespace AHEAD of its own `--container-*` scale. So `max-w-md`
-    // compiles to `max-width: var(--spacing-md)` — 16px, not the 28rem every
-    // reader assumes. 0.8.4 fixed exactly that in the Dialog and AlertDialog
-    // cards, where the popup collapsed below its own padding.
+    // 1rem`), and every utility that resolves through the spacing namespace
+    // picks those up. For heights that namespace is the LAST one Tailwind
+    // consults and there is no other — stock Tailwind has no `h-md` at all — so
+    // `h-md`/`max-h-lg`/`size-xl` are additions rather than redefinitions, and
+    // they are worth a few px each rather than the sizes they read as.
+    // `max-h-md` is 16px. Write an explicit length instead: `max-h-[80vh]`.
     //
-    // Nothing else can catch this: the class is valid Tailwind, tsc never reads
-    // CSS, jsdom computes no layout, and axe passes an overflowing dialog whose
-    // contrast and accessible name are both fine. The failure is only visible
-    // to a human looking at the workbench, which is how it shipped.
+    // WIDTHS used to be here too, and were the more dangerous half: `w-*`,
+    // `min-w-*`, `max-w-*` and `basis-*` resolve spacing AHEAD of Tailwind's own
+    // `--container-*` scale, so `max-w-md` did not merely mean something new —
+    // it overwrote a built-in, compiling to 16px where every reader saw 28rem.
+    // Dialog and AlertDialog collapsed below their own padding on exactly that.
+    // 0.14.0 fixed it at the source: theme.css re-points those four keys at the
+    // container scale, `src/styles/theme.test.ts` holds them there, and the
+    // width family is legal again. Do not put it back in this selector without
+    // reading that test first.
     //
-    // Spacing utilities (`p-lg`, `gap-md`, `py-xs`) are NOT banned — resolving
-    // those against the spacing scale is the whole point. Only the sizing
-    // family lies. Write an explicit length instead: `max-w-[28rem]`.
+    // Spacing utilities (`p-lg`, `gap-md`, `py-xs`) were never banned —
+    // resolving those against the spacing scale is the whole point.
     files: ['**/*.web.tsx', '**/*.props.ts', 'src/lib/**/*.ts'],
     rules: {
       'no-restricted-syntax': [
         'error',
         {
-          selector:
-            'Literal[value=/\\b(?:max-w|min-w|w|max-h|min-h|h|size|basis)-(?:xs|sm|md|lg|xl|xxl)\\b/]',
+          selector: 'Literal[value=/\\b(?:max-h|min-h|h|size)-(?:xs|sm|md|lg|xl|xxl)\\b/]',
           message:
-            "Named width/height utilities resolve against this theme's t-shirt SPACING scale, not Tailwind's container scale — `max-w-md` is 16px, not 28rem. Use an explicit length: `max-w-[28rem]`. (Spacing utilities like `p-lg` and `gap-md` are fine.)",
+            "Named height/size utilities resolve against this theme's t-shirt SPACING scale — `max-h-md` is 16px, not a medium height. Use an explicit length: `max-h-[80vh]`. (Spacing utilities like `p-lg` and `gap-md` are fine, and so are widths: `max-w-md` is 28rem.)",
         },
         {
           selector:
-            'TemplateElement[value.raw=/\\b(?:max-w|min-w|w|max-h|min-h|h|size|basis)-(?:xs|sm|md|lg|xl|xxl)\\b/]',
+            'TemplateElement[value.raw=/\\b(?:max-h|min-h|h|size)-(?:xs|sm|md|lg|xl|xxl)\\b/]',
           message:
-            "Named width/height utilities resolve against this theme's t-shirt SPACING scale, not Tailwind's container scale — `max-w-md` is 16px, not 28rem. Use an explicit length: `max-w-[28rem]`. (Spacing utilities like `p-lg` and `gap-md` are fine.)",
+            "Named height/size utilities resolve against this theme's t-shirt SPACING scale — `max-h-md` is 16px, not a medium height. Use an explicit length: `max-h-[80vh]`. (Spacing utilities like `p-lg` and `gap-md` are fine, and so are widths: `max-w-md` is 28rem.)",
         },
       ],
     },

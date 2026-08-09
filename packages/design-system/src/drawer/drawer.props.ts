@@ -38,10 +38,18 @@ export function useDrawerRootContext(part: string): DrawerContextValue & { side:
 /** The dialog's machine, verbatim — one state convention, three anatomies. */
 export const useDrawerState = useDialogState;
 
-/** Panel geometry per edge. Web class names. */
+/**
+ * Panel geometry per edge. Web class names.
+ *
+ * `max-w-xs` is the 20rem container width. It read `max-w-[20rem]` while the
+ * t-shirt spacing steps shadowed Tailwind's container scale — dialog.web.tsx
+ * carries that account. `max-h-[80vh]` stays an explicit length for an
+ * unrelated reason: heights never consult the container scale, so no named key
+ * means a fraction of the viewport.
+ */
 export const sideStyles: Record<DrawerSide, string> = {
-  left: 'inset-y-0 left-0 h-full w-full max-w-[20rem] border-r',
-  right: 'inset-y-0 right-0 h-full w-full max-w-[20rem] border-l',
+  left: 'inset-y-0 left-0 h-full w-full max-w-xs border-r',
+  right: 'inset-y-0 right-0 h-full w-full max-w-xs border-l',
   top: 'inset-x-0 top-0 w-full max-h-[80vh] border-b',
   bottom: 'inset-x-0 bottom-0 w-full max-h-[80vh] border-t',
 };
