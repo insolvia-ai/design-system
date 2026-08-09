@@ -4,6 +4,7 @@
 // in this package passed while it was shipping.
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { View } from 'react-native';
 import { describe, expect, it, vi } from 'vitest';
 
 import { colors } from '@insolvia-ai/tokens';
@@ -46,11 +47,34 @@ describe('DateInput (native leaf)', () => {
     expect(screen.getByRole('textbox')).toHaveValue('2026-03-19');
   });
 
+  it('portals the open picker out of every consumer stacking context', async () => {
+    // react-native-web makes every wrapper View a stacking context, so no
+    // elevation set inside this component — or the enclosing Field — could
+    // lift the picker past a sibling of whatever wrapper a consumer added.
+    // In a browser the surface therefore renders as a child of document.body;
+    // src/lib/overlay-portal.native.ts owns the mechanism. Select's native
+    // suite pins the inline (real native) route for both components.
+    const user = userEvent.setup();
+    render(
+      <View testID="consumer-wrapper">
+        <DateInput aria-label="Date" today="2026-03-11" />
+      </View>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Choose a date' }));
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.parentElement).toBe(document.body);
+    expect(screen.getByTestId('consumer-wrapper')).not.toContainElement(dialog);
+  });
+
   it('tells an enclosing Field its picker is open, so the Field can elevate itself', async () => {
     // React Native gives every View its own stacking context, so this leaf's
     // own zIndex can only order it against ITS siblings — never past the Field
     // wrapping it. Without this handshake the open picker paints underneath
-    // whatever follows the Field, which is exactly 0.7.1.
+    // whatever follows the Field, which is exactly 0.7.1 — on a real native
+    // device, where the surface renders inline. In a browser the surface
+    // portals out (test above) and this handshake is merely harmless; it is
+    // still signalled, so this asserts it keeps working.
     const user = userEvent.setup();
     render(
       <Field.Root>

@@ -5,7 +5,8 @@
 // unreachable in the product if it lived only there.
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { Platform, View } from 'react-native';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { colors } from '@insolvia-ai/tokens';
 
@@ -196,38 +197,90 @@ describe('Select (native leaf)', () => {
   describe('stacking', () => {
     // Reported from a real browser, not found by this suite: the open list
     // rendered BEHIND the description text, the file button and the submit
-    // button that followed the Select in the form. react-native-web gives every
-    // View `position: relative`, so a form is a run of positioned siblings
-    // painting in DOM order — and a z-index on the popup alone cannot lift it
-    // past a sibling that comes after the whole Select.
-    it('lifts the whole control above what follows it while open', async () => {
+    // button that followed the Select in the form. react-native-web gives
+    // every View `position: relative; z-index: 0`, so EVERY wrapper View is
+    // its own stacking context — elevation set in here (or in the enclosing
+    // Field) reaches exactly one level and dies at the first wrapper a
+    // consumer adds. In a browser the fix is a portal: the open list renders
+    // as a child of document.body, where no consumer wrapper can paint over
+    // it. These tests pin the portal, since paint order itself is invisible
+    // to jsdom.
+    it('portals the open list out of every consumer stacking context', async () => {
       const user = userEvent.setup();
-      // `testID` rides the spread onto the root View, which is the element
-      // whose stacking matters — the popup's own z-index cannot help it.
-      render(<Select options={DISTRICTS} aria-label="District" testID="select-root" />);
-
-      // Asserted on the CLASS, not `style.zIndex`: react-native-web compiles a
-      // StyleSheet rule into an atomic class (`r-zIndex-…`) and sets no inline
-      // style, so reading `.style` here reports nothing whether or not the fix
-      // is present — which is exactly how a test can pass against the bug.
-      const root = screen.getByTestId('select-root');
-      expect(root.className).not.toMatch(/r-zIndex-/);
+      // The wrapper stands in for a consumer's screen section: a plain View,
+      // which react-native-web makes a stacking context. Before the portal,
+      // nothing the package did could lift the list past this wrapper's
+      // siblings.
+      render(
+        <View testID="consumer-wrapper">
+          <Select options={DISTRICTS} aria-label="District" testID="select-root" />
+        </View>,
+      );
 
       await user.click(screen.getByRole('combobox'));
-      expect(root.className).toMatch(/r-zIndex-/);
+      const list = screen.getByRole('listbox');
+      expect(list.parentElement).toBe(document.body);
+      expect(screen.getByTestId('consumer-wrapper')).not.toContainElement(list);
+
+      // The root must NOT elevate: with the list portaled out there is
+      // nothing to lift, and an open Select creating a stacking context of
+      // its own would shadow siblings for no reason. Asserted on the CLASS,
+      // not `style.zIndex` — react-native-web compiles StyleSheet rules to
+      // atomic classes (`r-zIndex-…`) and sets no inline style.
+      expect(screen.getByTestId('select-root').className).not.toMatch(/r-zIndex-/);
     });
 
-    it('creates no stacking context once closed', async () => {
-      // A closed Select must not shadow anything of its own accord.
+    it('removes the portaled list when closed', async () => {
       const user = userEvent.setup();
-      render(<Select options={DISTRICTS} aria-label="District" testID="select-root" />);
-      const root = screen.getByTestId('select-root');
+      render(<Select options={DISTRICTS} aria-label="District" />);
 
       await user.click(screen.getByRole('combobox'));
-      expect(root.className).toMatch(/r-zIndex-/);
+      expect(screen.getByRole('listbox')).toBeTruthy();
 
       await user.keyboard('{Escape}');
-      expect(root.className).not.toMatch(/r-zIndex-/);
+      expect(screen.queryByRole('listbox')).toBeNull();
+    });
+
+    // The INLINE route — what a real native device renders, where there is no
+    // document to portal into. Forced by pointing Platform.OS away from
+    // 'web': `overlayPortalEnabled()` reads it at render time, which is what
+    // makes this switchable per-test at all.
+    describe('inline (real native)', () => {
+      const platformOS = Object.getOwnPropertyDescriptor(Platform, 'OS')!;
+      beforeEach(() => {
+        Object.defineProperty(Platform, 'OS', { ...platformOS, value: 'ios' });
+      });
+      afterEach(() => {
+        Object.defineProperty(Platform, 'OS', platformOS);
+      });
+
+      it('renders the list inside the root and lifts the root while open', async () => {
+        const user = userEvent.setup();
+        render(<Select options={DISTRICTS} aria-label="District" testID="select-root" />);
+
+        const root = screen.getByTestId('select-root');
+        expect(root.className).not.toMatch(/r-zIndex-/);
+
+        await user.click(screen.getByRole('combobox'));
+        expect(root).toContainElement(screen.getByRole('listbox'));
+        // The root carries the elevation, not just the popup: z-index only
+        // orders siblings, so the popup's own could never lift it past a
+        // sibling following the whole Select.
+        expect(root.className).toMatch(/r-zIndex-/);
+      });
+
+      it('creates no stacking context once closed', async () => {
+        // A closed Select must not shadow anything of its own accord.
+        const user = userEvent.setup();
+        render(<Select options={DISTRICTS} aria-label="District" testID="select-root" />);
+        const root = screen.getByTestId('select-root');
+
+        await user.click(screen.getByRole('combobox'));
+        expect(root.className).toMatch(/r-zIndex-/);
+
+        await user.keyboard('{Escape}');
+        expect(root.className).not.toMatch(/r-zIndex-/);
+      });
     });
   });
 

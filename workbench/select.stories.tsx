@@ -1,6 +1,10 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, userEvent, waitFor } from 'storybook/test';
+// `screen` is for the NATIVE pane's open list only: in a browser the native
+// leaf portals it to document.body — out of every stacking context, and
+// therefore out of `pair()`'s reach. The web leaf's list stays inline in its
+// pane and keeps the scoped queries.
+import { expect, fn, screen, userEvent, waitFor } from 'storybook/test';
 import { Text, View } from 'react-native';
 
 import { Select as SelectWeb } from '@design-system/select/select.web.tsx';
@@ -104,7 +108,10 @@ export const Basic: Story = {
     await step('native leaf: arrows move the highlight, a press commits', async () => {
       const trigger = native.getByRole('combobox');
       await userEvent.click(trigger);
-      await expect(native.getByRole('listbox')).toBeVisible();
+      // The native list is portaled to document.body — `screen`, not `native`.
+      // The web pane's list closed in the previous step, so the role is
+      // unambiguous.
+      await expect(screen.getByRole('listbox')).toBeVisible();
       // Focused explicitly: react-native-web's Pressable opens on the click
       // without taking focus from it, and `userEvent.keyboard` types into
       // whatever is focused.
@@ -118,10 +125,10 @@ export const Basic: Story = {
       // immediately toggled back open by the trigger's own onPress. That fix is
       // a packages/ change with its own release; when it lands, this step
       // should go back to committing with {Enter} to pin it.
-      await userEvent.click(native.getByRole('option', { name: 'YT-1300 — light freighter' }));
+      await userEvent.click(screen.getByRole('option', { name: 'YT-1300 — light freighter' }));
       await expect(args.onValueChange).toHaveBeenCalledTimes(2);
       await expect(args.onValueChange).toHaveBeenLastCalledWith('freighter');
-      await waitFor(() => expect(native.queryByRole('listbox')).not.toBeInTheDocument());
+      await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
       await expect(native.getByRole('combobox')).toHaveTextContent('YT-1300 — light freighter');
     });
   },
@@ -135,23 +142,30 @@ export const Basic: Story = {
  * to click through. It was a `.native` leaf bug, and the report opens: "reported
  * from a real browser, and invisible to every test in this package."
  *
+ * The elevation that fixed it reached exactly one level, so the bug returned
+ * the moment a CONSUMER wrapped the Field in a wrapper of its own — under
+ * react-native-web every wrapper View is a stacking context, and z-index only
+ * orders siblings. That is why the native pane here nests the Field inside a
+ * plain wrapper View: the wrapper is the regression's trigger, and the portal
+ * (`src/lib/overlay-portal.native.ts` — the open list renders as a child of
+ * document.body) is what makes it survivable. If the wrapper ever hides the
+ * list again, this story is the thing that shows it.
+ *
  * It is invisible to tests because nothing about the DOM is wrong. The elements
  * are present, labelled, and in the right order; only the paint order is wrong,
- * and paint order is not something jsdom has. The native test added alongside
- * the fix asserts the elevation prop is set, which pins the mechanism — but it
- * cannot tell you the list is *visible*.
+ * and paint order is not something jsdom has. The native tests assert the
+ * portal's mechanism — the listbox's parent — but they cannot tell you the
+ * list is *visible*.
  *
  * So: open each list and look. The list must cover the description, the
- * button, and the second field. If it ever slides behind them again, this story
- * is the thing that shows it, in the leaf where it actually happened.
- *
- * The play exercises the web list, closes it, then leaves the NATIVE list open
- * — deliberately in that order, and deliberately not both. Both cannot be open
- * at once even by hand: the web leaf closes on any outside mousedown and the
- * native leaf closes on trigger blur, so opening the second always closes the
- * first. Ending open on the native side puts the leaf where the bug lived in
- * front of both the human eye and the axe pass, which runs AFTER the play and
- * so audits the open-listbox state on every CI run.
+ * button, and the second field. The play exercises the web list, closes it,
+ * then leaves the NATIVE list open — deliberately in that order, and
+ * deliberately not both. Both cannot be open at once even by hand: the web
+ * leaf closes on any outside mousedown and the native leaf closes on trigger
+ * blur, so opening the second always closes the first. Ending open on the
+ * native side puts the leaf where the bug lived in front of both the human eye
+ * and the axe pass, which runs AFTER the play and so audits the open-listbox
+ * state on every CI run.
  */
 /**
  * Assert the open list actually PAINTS over what is under it — not merely that
@@ -182,8 +196,10 @@ function expectPaintsOnTop(list: HTMLElement): void {
   if (covered.length > 0) {
     throw new Error(
       `The open listbox is painted OVER at ${covered.join(', ')} of its height. ` +
-        'Something after the Field is on top of it — the 0.7.1 stacking bug. ' +
-        "Check that Field.Root still elevates while its control is open (field.props.ts's `controlOpen`).",
+        'Something is on top of it — the 0.7.1 stacking bug. ' +
+        'Check that the open list still portals to document.body ' +
+        '(src/lib/overlay-portal.native.ts) — inline, no elevation can carry ' +
+        'it past a consumer wrapper.',
     );
   }
 }
@@ -192,7 +208,7 @@ export const OpenInsideAForm: Story = {
   name: 'Open, inside a form (0.7.1 regression)',
   render: () => (
     <LeafPair
-      note="Open each list. It must paint OVER the text and the button below it — in BOTH panes. This is the 0.7.1 stacking bug; the native leaf is where it happened."
+      note="Open each list. It must paint OVER the text and the button below it — in BOTH panes, and in the native pane through the consumer wrapper around its Field. This is the 0.7.1 stacking bug; the native leaf is where it happened."
       web={
         <div style={{ display: 'grid', gap: 12 }}>
           <LabelledWeb />
@@ -204,7 +220,12 @@ export const OpenInsideAForm: Story = {
       }
       native={
         <View style={{ gap: 12 }}>
-          <LabelledNative />
+          {/* The wrapper is the point: a plain consumer View is a stacking
+              context under react-native-web, and it is exactly what the
+              one-level Field elevation could never carry the list past. */}
+          <View>
+            <LabelledNative />
+          </View>
           <NativeNote />
           <ButtonNative size="lg">Continue</ButtonNative>
         </View>
@@ -223,8 +244,10 @@ export const OpenInsideAForm: Story = {
 
     await step('native list opens and STAYS open for axe and the eye', async () => {
       await userEvent.click(native.getByRole('combobox'));
-      await expect(native.getByRole('listbox')).toBeVisible();
-      expectPaintsOnTop(native.getByRole('listbox'));
+      // Portaled to document.body — `screen`, not the pane; the web list is
+      // closed, so the role is unambiguous.
+      await expect(screen.getByRole('listbox')).toBeVisible();
+      expectPaintsOnTop(screen.getByRole('listbox'));
     });
   },
 };

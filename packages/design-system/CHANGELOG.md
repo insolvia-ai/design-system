@@ -18,6 +18,21 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.14.1 — patch
+
+- **In a browser, an open `Select` list and an open `DateInput` picker now
+  portal to `document.body`**, positioned from the measured control, instead of
+  rendering inline where a wrapper `View` of your own could paint later
+  siblings over them. Wrapping the `Field` in any number of your own wrappers
+  no longer buries the open overlay, so a `zIndex: 'auto'` spread onto
+  wrappers as a workaround can be removed. Focus stays on the trigger, and
+  ids, `aria-controls` and `aria-activedescendant` are unchanged — but the
+  open list is a child of `document.body` now, so tests that query it INSIDE
+  the field's own subtree must query the document instead. On a real native
+  device both overlays still render inline, unchanged.
+
+[#17](https://github.com/insolvia-ai/design-system/pull/17)
+
 ## 0.14.0 — minor
 
 **Widen your range to take this:** `^0.13.x` will not resolve it.

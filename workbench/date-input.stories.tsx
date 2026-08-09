@@ -1,6 +1,10 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+// `screen` is for the NATIVE pane's open picker only: in a browser the native
+// leaf portals its surface to document.body — out of every stacking context,
+// and therefore out of `pair()`'s reach. The web leaf's dialog stays inline in
+// its pane and keeps the scoped queries.
+import { expect, fn, screen, userEvent, within } from 'storybook/test';
 
 import { DateInput as DateInputWeb } from '@design-system/date-input/date-input.web.tsx';
 import { DateInput as DateInputNative } from '@design-system/date-input/date-input.native.tsx';
@@ -253,7 +257,9 @@ export const CalendarPicker: Story = {
 
     await step('the native leaf opens the same grid', async () => {
       await userEvent.click(native.getByRole('button', { name: 'Choose a date' }));
-      const picker = within(native.getByRole('dialog'));
+      // Portaled to document.body, so queried from `screen`; the web pane's
+      // dialog closed when its day was picked, so the role is unambiguous.
+      const picker = within(screen.getByRole('dialog'));
       await expect(picker.getByRole('grid')).toBeInTheDocument();
     });
   },
@@ -290,7 +296,9 @@ export const MonthFirstFormat: Story = {
 
     await step('and a picked date comes back in the same order', async () => {
       await userEvent.click(native.getByRole('button', { name: 'Choose a date' }));
-      const picker = within(native.getByRole('dialog'));
+      // Portaled to document.body, so queried from `screen` — the only open
+      // dialog in this story.
+      const picker = within(screen.getByRole('dialog'));
       await userEvent.click(
         within(picker.getByRole('listbox', { name: 'Day' })).getByRole('option', { name: '19' }),
       );

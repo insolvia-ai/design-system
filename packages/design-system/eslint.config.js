@@ -13,7 +13,7 @@ import base from '../../eslint.base.js';
 export default [
   ...base,
   {
-    files: ['**/*.props.ts', 'src/lib/**/*.ts'],
+    files: ['**/*.props.ts', 'src/lib/**/*.ts', 'src/lib/**/*.tsx'],
     // `.native.*` files under src/lib are platform LEAVES, not shared modules:
     // the same `.native.` infix that routes them to Metro (and to
     // tsconfig.native.json's moduleSuffixes) is what exempts them here,
@@ -21,7 +21,7 @@ export default [
     // and a web consumer's Vite cannot resolve a `.native.` file at all, so the
     // exemption cannot leak react-native into a web bundle. Every props file
     // and every extensionless (shared) lib module stays fenced.
-    ignores: ['src/lib/**/*.native.ts'],
+    ignores: ['src/lib/**/*.native.ts', 'src/lib/**/*.native.tsx'],
     rules: {
       'no-restricted-imports': [
         'error',
