@@ -10,6 +10,7 @@ import { Input as InputWeb } from '@design-system/input/input.web.tsx';
 import { Input as InputNative } from '@design-system/input/input.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+import { MutedText } from './ink-text.tsx';
 
 const STARSHIPS = [
   {
@@ -283,7 +284,12 @@ function StarshipsAccordionNative({
           <AccordionNative.Header>
             <AccordionNative.Trigger>{c.trigger}</AccordionNative.Trigger>
           </AccordionNative.Header>
-          <AccordionNative.Panel>{c.panel}</AccordionNative.Panel>
+          {/* Native `Panel` is a bare `View` and styles nothing inside it; the
+              web `Panel` mutes its prose by cascade. `MutedText` is what keeps
+              the two panes the same colour. */}
+          <AccordionNative.Panel>
+            <MutedText>{c.panel}</MutedText>
+          </AccordionNative.Panel>
         </AccordionNative.Item>
       ))}
     </AccordionNative.Root>

@@ -26,3 +26,20 @@ export function InkText({ style, ...props }: TextProps) {
   const c = useNativeColors();
   return <Text style={[{ color: c.ink }, style]} {...props} />;
 }
+
+/**
+ * The same thing in the MUTED role, for prose whose web counterpart is muted by
+ * cascade.
+ *
+ * Accordion's and Collapsible's web panels carry `text-sm text-muted` on the
+ * container, so their prose comes out muted without the caller asking. React
+ * Native has no cascade and those panels deliberately style nothing inside
+ * themselves, so a story pairing the two leaves has to say `muted` on the
+ * native side — otherwise the two panes disagree on colour, which is precisely
+ * the class of difference the workbench exists to reveal and therefore the one
+ * a story must never introduce by accident.
+ */
+export function MutedText({ style, ...props }: TextProps) {
+  const c = useNativeColors();
+  return <Text style={[{ color: c.muted }, style]} {...props} />;
+}

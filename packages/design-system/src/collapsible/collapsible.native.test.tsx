@@ -24,7 +24,11 @@ function Notes() {
   return (
     <Collapsible.Root>
       <Collapsible.Trigger>Show case notes</Collapsible.Trigger>
-      <Collapsible.Panel>Flying solo, no prior runs.</Collapsible.Panel>
+      {/* The prose carries its own `Text` — the panel is a container and
+          styles nothing inside it. */}
+      <Collapsible.Panel>
+        <Text>Flying solo, no prior runs.</Text>
+      </Collapsible.Panel>
     </Collapsible.Root>
   );
 }
@@ -65,7 +69,9 @@ describe('Collapsible (native leaf)', () => {
     render(
       <Collapsible.Root disabled>
         <Collapsible.Trigger>Show case notes</Collapsible.Trigger>
-        <Collapsible.Panel>Flying solo, no prior runs.</Collapsible.Panel>
+        <Collapsible.Panel>
+          <Text>Flying solo, no prior runs.</Text>
+        </Collapsible.Panel>
       </Collapsible.Root>,
     );
 
@@ -81,25 +87,13 @@ describe('Collapsible (native leaf)', () => {
     expect(screen.queryByText('Flying solo, no prior runs.')).not.toBeInTheDocument();
   });
 
-  it('wraps a bare string child so prose still carries the panel colour', async () => {
-    const user = userEvent.setup();
-    render(<Notes />);
-
-    await user.click(screen.getByRole('button', { name: 'Show case notes' }));
-
-    // A bare string emitted loose into a View is invalid on a device, so the
-    // wrapper still has to exist for prose — this is the half of the contract
-    // that survives 0.15.0 unchanged.
-    expect(screen.getByText('Flying solo, no prior runs.').tagName).toBe('DIV');
-  });
-
-  it('passes a non-string child through instead of wrapping it in a Text', async () => {
+  it('passes children through without wrapping them in a Text', async () => {
     // The same regression accordion.native.test.tsx pins, and for the same
-    // reason: until 0.15.0 the panel wrapped EVERY child in a `Text`, whose
+    // reason: the panel wrapped every child in a `Text`, whose
     // react-native-web output carries `display: inline` and sets the
     // text-ancestor context — so a nested `Text` came out as a `<span>`
     // inheriting its colour and a flex layout inside collapsed into inline
-    // flow. A `SPAN` here means the wrapper is back.
+    // flow. A `SPAN` here means a wrapper is back.
     const user = userEvent.setup();
     render(
       <Collapsible.Root>
