@@ -12,6 +12,7 @@
 // (WCAG 4.1.2), and the mount/unmount assertion below could not see it.
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Text, View } from 'react-native';
 import { describe, expect, it } from 'vitest';
 
 import { colors } from '@insolvia-ai/tokens';
@@ -78,6 +79,42 @@ describe('Collapsible (native leaf)', () => {
     fireEvent.click(trigger);
 
     expect(screen.queryByText('Flying solo, no prior runs.')).not.toBeInTheDocument();
+  });
+
+  it('wraps a bare string child so prose still carries the panel colour', async () => {
+    const user = userEvent.setup();
+    render(<Notes />);
+
+    await user.click(screen.getByRole('button', { name: 'Show case notes' }));
+
+    // A bare string emitted loose into a View is invalid on a device, so the
+    // wrapper still has to exist for prose — this is the half of the contract
+    // that survives 0.15.0 unchanged.
+    expect(screen.getByText('Flying solo, no prior runs.').tagName).toBe('DIV');
+  });
+
+  it('passes a non-string child through instead of wrapping it in a Text', async () => {
+    // The same regression accordion.native.test.tsx pins, and for the same
+    // reason: until 0.15.0 the panel wrapped EVERY child in a `Text`, whose
+    // react-native-web output carries `display: inline` and sets the
+    // text-ancestor context — so a nested `Text` came out as a `<span>`
+    // inheriting its colour and a flex layout inside collapsed into inline
+    // flow. A `SPAN` here means the wrapper is back.
+    const user = userEvent.setup();
+    render(
+      <Collapsible.Root>
+        <Collapsible.Trigger>Show case notes</Collapsible.Trigger>
+        <Collapsible.Panel>
+          <View>
+            <Text>Nested in a View</Text>
+          </View>
+        </Collapsible.Panel>
+      </Collapsible.Root>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Show case notes' }));
+
+    expect(screen.getByText('Nested in a View').tagName).toBe('DIV');
   });
 
   // The 0.2.1 regression: every native leaf baked in `colors.light` at module

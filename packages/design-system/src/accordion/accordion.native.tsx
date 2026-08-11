@@ -91,7 +91,24 @@ const AccordionPanel = ({ children }: { children?: React.ReactNode }) => {
   if (!open) return null;
   return (
     <View style={styles.panel}>
-      <Text style={[styles.panelText, { color: c.muted }]}>{children}</Text>
+      {/* A string child is wrapped so prose inherits the muted colour; anything
+          else is passed through — the same rule Table's cell follows, and for
+          the same reason. A panel is a container: it may hold a form, a table,
+          a nested layout, and the web leaf has always rendered a `<div>` that
+          accepts one.
+          Force-wrapping every child in a `Text` made this the one container in
+          the package a React Native consumer could not put a `View` inside.
+          On a device that nesting is invalid outright; through
+          react-native-web it fails quietly instead, which is worse — the
+          wrapper carries `display: inline` and sets the text-ancestor context,
+          so a flex layout inside it collapses into inline flow and every
+          nested `Text` re-renders as a `<span>` with `color: inherit`,
+          silently losing its own colour. */}
+      {typeof children === 'string' || typeof children === 'number' ? (
+        <Text style={[styles.panelText, { color: c.muted }]}>{children}</Text>
+      ) : (
+        children
+      )}
     </View>
   );
 };

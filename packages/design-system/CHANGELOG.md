@@ -18,6 +18,28 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.15.0 — minor
+
+**Widen your range to take this:** `^0.14.x` will not resolve it.
+
+- **`Accordion.Panel` and `Collapsible.Panel` hold arbitrary children on React
+  Native now, not only prose.** Both wrapped every child in a `Text`, so a
+  panel could not contain a `View` — no form, no table, no nested layout. A
+  bare string (or number) is still wrapped and still renders in the panel's
+  muted colour, so prose panels are unchanged and need no edit; anything else
+  is passed straight through, as `Tabs.Panel` and both web leaves have always
+  done.
+- **If you worked around this, the workaround can go** — content flattened into
+  one `Text`, or lifted out of the panel entirely, can move back in.
+- On react-native-web the old wrapper failed quietly rather than loudly: it
+  carries `display: inline` and sets the text-ancestor context, so a flex
+  layout inside a panel collapsed into inline flow and a nested `Text` rendered
+  as a `<span>` inheriting the panel's colour instead of its own. If a panel of
+  yours looked subtly wrong, that was why.
+- No prop, type or export moved, and the web leaves are untouched.
+
+[#18](https://github.com/insolvia-ai/design-system/pull/18)
+
 ## 0.14.1 — patch
 
 - **In a browser, an open `Select` list and an open `DateInput` picker now
