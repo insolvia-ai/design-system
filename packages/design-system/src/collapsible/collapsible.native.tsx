@@ -4,7 +4,8 @@
 // no <button>/region, so the trigger maps onto Pressable +
 // accessibilityState/accessibilityRole, and the collapsed panel is unmounted
 // rather than height-animated (no CSS grid trick in RN) — the same idiom
-// accordion.native.tsx uses for its panel.
+// accordion.native.tsx uses for its panel, which the panel below also matches
+// in taking arbitrary children rather than prose alone.
 import * as React from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native';
 
@@ -68,7 +69,15 @@ const CollapsiblePanel = ({ children }: { children?: React.ReactNode }) => {
   if (!open) return null; // unmount rather than height-animate — no CSS grid trick in RN
   return (
     <View style={styles.panel}>
-      <Text style={[styles.panelText, { color: c.muted }]}>{children}</Text>
+      {/* String children are wrapped, anything else is passed through — see
+          accordion.native.tsx's panel, which carries the reasoning. A
+          disclosure hides a section of a page, and a section is not always
+          prose. */}
+      {typeof children === 'string' || typeof children === 'number' ? (
+        <Text style={[styles.panelText, { color: c.muted }]}>{children}</Text>
+      ) : (
+        children
+      )}
     </View>
   );
 };

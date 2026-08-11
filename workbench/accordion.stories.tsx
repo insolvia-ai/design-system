@@ -4,6 +4,10 @@ import { expect, userEvent } from 'storybook/test';
 
 import { Accordion as AccordionWeb } from '@design-system/accordion/accordion.web.tsx';
 import { Accordion as AccordionNative } from '@design-system/accordion/accordion.native.tsx';
+import { Field as FieldWeb } from '@design-system/field/field.web.tsx';
+import { Field as FieldNative } from '@design-system/field/field.native.tsx';
+import { Input as InputWeb } from '@design-system/input/input.web.tsx';
+import { Input as InputNative } from '@design-system/input/input.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
 
@@ -168,6 +172,78 @@ export const SingleOpen: Story = {
         'aria-expanded',
         'false',
       );
+    });
+  },
+};
+
+/**
+ * PERMANENT REGRESSION STORY (0.15.0). A panel holding a form control rather
+ * than prose.
+ *
+ * The native panel used to force-wrap every child in a `Text`. On a device
+ * that nesting is invalid outright; through react-native-web it failed
+ * quietly, which is why it survived so long — the wrapper carries
+ * `display: inline` and sets the text-ancestor context, so the field's layout
+ * collapsed into inline flow and its label came out as a `<span>` inheriting
+ * the panel's muted colour instead of keeping its own.
+ *
+ * Both panes must show the same thing: a label above a full-width box, ink on
+ * the label, not muted. That is a difference no jsdom assertion can see, which
+ * is exactly what this story is for — keep it after the bug feels ancient.
+ */
+export const PanelHoldsAControl: Story = {
+  name: 'Panel holds a control',
+  render: () => (
+    <LeafPair
+      note="A panel is a container, not a paragraph. Both panes should lay the field out identically, with the label in ink rather than the panel's muted colour."
+      web={
+        <AccordionWeb.Root defaultValue={['berth']}>
+          <AccordionWeb.Item value="berth">
+            <AccordionWeb.Header>
+              <AccordionWeb.Trigger>Berth assignment</AccordionWeb.Trigger>
+            </AccordionWeb.Header>
+            <AccordionWeb.Panel>
+              <FieldWeb.Root name="berth-web">
+                <FieldWeb.Label>Docking bay</FieldWeb.Label>
+                <InputWeb placeholder="94" />
+              </FieldWeb.Root>
+            </AccordionWeb.Panel>
+          </AccordionWeb.Item>
+        </AccordionWeb.Root>
+      }
+      native={
+        <AccordionNative.Root defaultValue={['berth']}>
+          <AccordionNative.Item value="berth">
+            <AccordionNative.Header>
+              <AccordionNative.Trigger>Berth assignment</AccordionNative.Trigger>
+            </AccordionNative.Header>
+            <AccordionNative.Panel>
+              <FieldNative.Root name="berth-native">
+                <FieldNative.Label>Docking bay</FieldNative.Label>
+                <InputNative placeholder="94" />
+              </FieldNative.Root>
+            </AccordionNative.Panel>
+          </AccordionNative.Item>
+        </AccordionNative.Root>
+      }
+    />
+  ),
+  play: async ({ canvasElement, step }) => {
+    const { web, native } = pair(canvasElement);
+
+    // Typing is the proof that matters: a control the panel had turned into
+    // inline text would still be FOUND by role, but it would not accept input
+    // as its own labelled field. Ends expanded, so axe audits the open state.
+    await step('web leaf: the field inside the panel takes input', async () => {
+      const box = web.getByRole('textbox', { name: 'Docking bay' });
+      await userEvent.type(box, '327');
+      await expect(box).toHaveValue('327');
+    });
+
+    await step('native leaf: same field, same input', async () => {
+      const box = native.getByRole('textbox', { name: 'Docking bay' });
+      await userEvent.type(box, '327');
+      await expect(box).toHaveValue('327');
     });
   },
 };

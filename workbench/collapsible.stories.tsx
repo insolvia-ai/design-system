@@ -4,6 +4,10 @@ import { expect, fn, userEvent, waitFor } from 'storybook/test';
 
 import { Collapsible as CollapsibleWeb } from '@design-system/collapsible/collapsible.web.tsx';
 import { Collapsible as CollapsibleNative } from '@design-system/collapsible/collapsible.native.tsx';
+import { Field as FieldWeb } from '@design-system/field/field.web.tsx';
+import { Field as FieldNative } from '@design-system/field/field.native.tsx';
+import { Input as InputWeb } from '@design-system/input/input.web.tsx';
+import { Input as InputNative } from '@design-system/input/input.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
 
@@ -16,11 +20,12 @@ import { LeafPair, pair } from './leaf-pair.tsx';
  * `component` either — `Collapsible` is a parts object (Root/Trigger/Panel),
  * same reason `dialog.stories.tsx` has none.
  *
- * Web `Collapsible.Panel` accepts arbitrary children, the same as any other
- * `<div>`. Native `Collapsible.Panel` wraps its own children in a `<Text>`
- * internally (see `collapsible.native.tsx`), so it takes a plain string, not
- * elements — every story's `panel` arg is a string for that reason, not for
- * brevity.
+ * Both panels accept arbitrary children as of 0.15.0 — the native leaf wraps a
+ * bare string so prose keeps the panel's muted colour, and passes anything
+ * else straight through. The `panel` arg stays a string because these stories
+ * are about the disclosure's WIRING and a string is the least distracting
+ * payload for that; `PanelHoldsAControl` below is where the container half of
+ * the contract is shown.
  */
 type CollapsibleArgs = {
   trigger: string;
@@ -45,7 +50,7 @@ const meta = {
   },
   render: (args) => (
     <LeafPair
-      note="Native `Collapsible.Panel` wraps its children in `<Text>` internally — pass a string, not elements. Every panel here is a plain string for that reason."
+      note="A string payload keeps these stories about the disclosure's wiring. Both panels take elements too — see “Panel holds a control”."
       web={
         <CollapsibleWeb.Root
           defaultOpen={args.defaultOpen}
@@ -109,6 +114,68 @@ export const Open: Story = {
     defaultOpen: true,
     trigger: 'Show comments',
     panel: '2 open comments from collaborators.',
+  },
+};
+
+/**
+ * PERMANENT REGRESSION STORY (0.15.0). A panel holding a form control rather
+ * than prose — the same one `accordion.stories.tsx` carries, and for the same
+ * reason: until 0.15.0 the native panel force-wrapped every child in a `Text`,
+ * whose react-native-web output carries `display: inline` and sets the
+ * text-ancestor context. The field's layout collapsed into inline flow and its
+ * label came out as a `<span>` inheriting the panel's muted colour.
+ *
+ * Both panes must lay the field out identically, with the label in ink. That
+ * is a difference no jsdom assertion can see — keep this story after the bug
+ * feels ancient.
+ */
+export const PanelHoldsAControl: Story = {
+  name: 'Panel holds a control',
+  args: { defaultOpen: true, trigger: 'Show berth assignment' },
+  render: (args) => (
+    <LeafPair
+      note="A panel is a container, not a paragraph. Both panes should lay the field out identically, with the label in ink rather than the panel's muted colour."
+      web={
+        <CollapsibleWeb.Root defaultOpen={args.defaultOpen} onOpenChange={args.onOpenChange}>
+          <CollapsibleWeb.Trigger>{args.trigger}</CollapsibleWeb.Trigger>
+          <CollapsibleWeb.Panel>
+            <FieldWeb.Root name="berth-web">
+              <FieldWeb.Label>Docking bay</FieldWeb.Label>
+              <InputWeb placeholder="94" />
+            </FieldWeb.Root>
+          </CollapsibleWeb.Panel>
+        </CollapsibleWeb.Root>
+      }
+      native={
+        <CollapsibleNative.Root defaultOpen={args.defaultOpen} onOpenChange={args.onOpenChange}>
+          <CollapsibleNative.Trigger>{args.trigger}</CollapsibleNative.Trigger>
+          <CollapsibleNative.Panel>
+            <FieldNative.Root name="berth-native">
+              <FieldNative.Label>Docking bay</FieldNative.Label>
+              <InputNative placeholder="94" />
+            </FieldNative.Root>
+          </CollapsibleNative.Panel>
+        </CollapsibleNative.Root>
+      }
+    />
+  ),
+  play: async ({ canvasElement, step }) => {
+    const { web, native } = pair(canvasElement);
+
+    // Typing is the proof that matters: a control the panel had turned into
+    // inline text would still be FOUND by role, but it would not accept input
+    // as its own labelled field. Ends open, so axe audits the disclosed state.
+    await step('web leaf: the field inside the panel takes input', async () => {
+      const box = web.getByRole('textbox', { name: 'Docking bay' });
+      await userEvent.type(box, '327');
+      await expect(box).toHaveValue('327');
+    });
+
+    await step('native leaf: same field, same input', async () => {
+      const box = native.getByRole('textbox', { name: 'Docking bay' });
+      await userEvent.type(box, '327');
+      await expect(box).toHaveValue('327');
+    });
   },
 };
 
