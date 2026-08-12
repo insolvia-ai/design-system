@@ -10,6 +10,7 @@ import { Input as InputWeb } from '@design-system/input/input.web.tsx';
 import { Input as InputNative } from '@design-system/input/input.native.tsx';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+import { MutedText } from './ink-text.tsx';
 
 /**
  * Args are typed against the shared surface (`collapsible.props.ts`): both
@@ -20,12 +21,12 @@ import { LeafPair, pair } from './leaf-pair.tsx';
  * `component` either — `Collapsible` is a parts object (Root/Trigger/Panel),
  * same reason `dialog.stories.tsx` has none.
  *
- * Both panels accept arbitrary children as of 0.15.0 — the native leaf wraps a
- * bare string so prose keeps the panel's muted colour, and passes anything
- * else straight through. The `panel` arg stays a string because these stories
- * are about the disclosure's WIRING and a string is the least distracting
- * payload for that; `PanelHoldsAControl` below is where the container half of
- * the contract is shown.
+ * The two leaves diverge on the panel, the same way Tabs' do: web
+ * `Collapsible.Panel` accepts arbitrary nodes AND styles prose inside it by
+ * cascade (`text-sm text-muted`), while native `Collapsible.Panel` is a plain
+ * `View` that styles nothing — so the `panel` arg is wrapped in `<MutedText>`
+ * by hand on the native side below. Without that the panes would disagree on
+ * colour, which is the one difference this workbench exists to catch.
  */
 type CollapsibleArgs = {
   trigger: string;
@@ -50,7 +51,7 @@ const meta = {
   },
   render: (args) => (
     <LeafPair
-      note="A string payload keeps these stories about the disclosure's wiring. Both panels take elements too — see “Panel holds a control”."
+      note="Native `Collapsible.Panel` is a bare `View` — its text is wrapped in `<MutedText>` here by hand, unlike the web `Panel`, which takes any node directly and mutes prose by cascade. Both panels hold arbitrary content — see “Panel holds a control”."
       web={
         <CollapsibleWeb.Root
           defaultOpen={args.defaultOpen}
@@ -68,7 +69,9 @@ const meta = {
           onOpenChange={args.onOpenChange}
         >
           <CollapsibleNative.Trigger>{args.trigger}</CollapsibleNative.Trigger>
-          <CollapsibleNative.Panel>{args.panel}</CollapsibleNative.Panel>
+          <CollapsibleNative.Panel>
+            <MutedText>{args.panel}</MutedText>
+          </CollapsibleNative.Panel>
         </CollapsibleNative.Root>
       }
     />

@@ -18,6 +18,31 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.16.0 — minor
+
+**Widen your range to take this:** `^0.15.x` will not resolve it.
+
+**Supersedes 0.15.0 — skip it.** 0.15.0 made these two panels accept elements
+but kept wrapping a bare string in a `Text`, which left them the only
+containers in the package with a conditional in them. This finishes the job.
+
+- **On React Native, `Accordion.Panel` and `Collapsible.Panel` no longer wrap
+  ANY child.** They are plain `View`s now, exactly like `Tabs.Panel`, and hold
+  whatever you put in them.
+- **You must wrap bare text in your own `<Text>`** — the ordinary React Native
+  rule, which these two panels used to hide. A panel whose child is a plain
+  string throws *"Text strings must be rendered within a `<Text>` component"* on
+  a device. This is the migration, and it is mechanical:
+  `<Accordion.Panel>Some prose</Accordion.Panel>` becomes
+  `<Accordion.Panel><Text>Some prose</Text></Accordion.Panel>`.
+- **Style that `Text` yourself if you want the old look.** The panel no longer
+  contributes a text colour or size. The web leaves are unchanged and still mute
+  panel prose by CSS cascade; React Native has no cascade, so the muted colour
+  is now the caller's to apply. Nothing about this affects a web consumer.
+- No prop, type or export moved, and both web leaves are untouched.
+
+[#19](https://github.com/insolvia-ai/design-system/pull/19)
+
 ## 0.15.0 — minor
 
 **Widen your range to take this:** `^0.14.x` will not resolve it.
