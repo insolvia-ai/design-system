@@ -49,6 +49,7 @@ claims about who consumes what.
 | opening a PR | `design-system-pr` skill |
 | running or setting anything up | [`scripts/README.md`](scripts/README.md) |
 | **needing to SEE a component** | `./scripts/dev-up.sh` — both leaves, side by side |
+| needing a PICTURE of one (PR evidence, a dark-mode check) | `design-system-screenshots` skill — `npm run screenshots` |
 | changing token values | [`packages/tokens/CLAUDE.md`](packages/tokens/CLAUDE.md) — edit `tokens.json`, never a generated file |
 | changing how the workbench resolves anything | [`.storybook/main.ts`](.storybook/main.ts) and [`workbench/react-native.ts`](workbench/react-native.ts) |
 
