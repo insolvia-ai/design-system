@@ -134,6 +134,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    // Shrink-wrap, as the web leaf's `inline-flex` already does. A React Native
+    // parent defaults to `alignItems: 'stretch'`, so without this a Button in an
+    // ordinary column View runs the full width while the same markup on web hugs
+    // its label — and a size the two leaves disagree about is the one thing this
+    // package claims never happens. Badge, Chip and Calendar declare the same
+    // thing; IconButton reaches it through a definite width instead.
+    alignSelf: 'flex-start',
     borderRadius: radii.md,
   },
   label: {

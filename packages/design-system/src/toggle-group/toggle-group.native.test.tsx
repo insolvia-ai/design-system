@@ -96,4 +96,15 @@ describe('ToggleGroup (native leaf)', () => {
     const left = screen.getByRole('button', { name: 'Left' });
     expect(rgb(left.style.backgroundColor)).toEqual(rgb(colors.dark.primary));
   });
+
+  // A React Native parent defaults to `alignItems: 'stretch'`, so a group in an
+  // ordinary column View stretched edge to edge while the web leaf — which
+  // carries `inline-flex` — ended at its last toggle. Same family as the 0.12.2
+  // Popover/Tooltip collapse: a native leaf declaring nothing on an axis and
+  // inheriting the parent's answer.
+  it('shrink-wraps rather than filling its parent', () => {
+    render(<AlignGroup />);
+
+    expect(screen.getByRole('group')).toHaveStyle({ alignSelf: 'flex-start' });
+  });
 });

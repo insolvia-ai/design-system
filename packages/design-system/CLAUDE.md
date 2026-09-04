@@ -18,6 +18,27 @@ Repo-level rules and the publishing flow: [`../../CLAUDE.md`](../../CLAUDE.md).
 - **Litmus test for new code**: pure data (variant maps, class strings) may
   collapse into one shared file later; events, state, or a11y wiring means a
   leaf pair — the platforms' models do not unify.
+- **A native leaf must match its web leaf's intrinsic SIZE.** If the web leaf is
+  `inline-*` — it hugs its content — the native leaf has to say so, with
+  `alignSelf: 'flex-start'` or a definite `width`. If the web leaf is
+  block/flex-level, the native leaf stretches and declares nothing, because
+  stretching is already React Native's answer.
+  That asymmetry is the whole trap: a React Native parent defaults to
+  `alignItems: 'stretch'`, so a leaf that declares NOTHING does not get "the
+  natural size", it gets the parent's. An `inline-flex` web button hugging its
+  label beside a native button running the full width of the screen is two
+  implementations of one design disagreeing about the most basic property it
+  has, and it is invisible to every test here — jsdom asserts roles and labels,
+  and axe does not measure boxes. Chip shipped that way and was caught by
+  looking at a screenshot.
+  `workbench/leaf-pair.tsx` sets the native stage to `alignItems: 'stretch'`
+  ON PURPOSE so this is visible: the stage matches what a consumer's root
+  `View` gives its children. Do not "fix" a stretched leaf by changing the
+  story.
+  The second route is as good as the first — `IconButton` and `Switch` reach the
+  same place with a definite width, and adding `alignSelf` on top of one would
+  be noise. So would adding it to an absolutely-positioned leaf like `Ribbon`,
+  whose cross size its parent never decides.
 - **Native leaves resolve the color scheme at RENDER time — never
   `colors.light` statically.** 0.2.1 shipped all six native leaves reading
   `colors.light` at module load; a React Native consumer follows the OS scheme

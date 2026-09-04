@@ -112,4 +112,17 @@ describe('Toggle (native leaf)', () => {
     expect(style.outlineOffset).toBe('2px');
     expect(rgb(style.outlineColor)).toEqual(rgb(colors.light.accent));
   });
+
+  // A React Native parent defaults to `alignItems: 'stretch'`, so a text toggle
+  // in an ordinary column View stretched edge to edge while the web leaf —
+  // which carries `inline-flex` — hugged its label. `iconOnly` was already
+  // immune, sizing itself from a definite width, which is how the two halves of
+  // one component came to disagree.
+  it('shrink-wraps rather than filling its parent', () => {
+    render(<Toggle>Bold</Toggle>);
+
+    expect(screen.getByRole('button', { name: 'Bold' })).toHaveStyle({
+      alignSelf: 'flex-start',
+    });
+  });
 });
