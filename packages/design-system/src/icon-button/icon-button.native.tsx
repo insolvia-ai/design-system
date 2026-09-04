@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 
 import { radii } from '@insolvia-ai/tokens';
 
+import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
 import type { IconButtonIntent, IconButtonOwnProps, IconButtonSize } from './icon-button.props';
 
@@ -50,11 +51,21 @@ export function IconButton({
   children,
   disabled,
   style,
+  // PULLED OUT OF `props` ON PURPOSE. `props` is spread LAST below, so a
+  // caller's own handler left in there would replace the ring wiring outright
+  // rather than run alongside it.
+  onFocus,
+  onBlur,
   ...props
 }: IconButtonProps) {
   // Colors resolve per render so the leaf follows the OS scheme; only the
   // scheme-independent maps and layout live at module level.
   const c = useNativeColors();
+  // This package's ring rather than the browser's default blue one, which is
+  // what react-native-web paints on an unringed Pressable — see
+  // lib/native-focus.native.ts. An icon button is the control most likely to be
+  // reached by keyboard alone, and it was showing Chrome's ring.
+  const focus = useNativeFocusRing();
   const intentBg: Record<IconButtonIntent, string> = {
     primary: c.primary,
     secondary: c.surfaceAlt,
@@ -101,6 +112,14 @@ export function IconButton({
       hitSlop={sizeHitSlop[size]}
       {...toggleProps}
       disabled={disabled ?? undefined}
+      onFocus={(event) => {
+        focus.focus();
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        focus.blur();
+        onBlur?.(event);
+      }}
       style={(state) => [
         styles.base,
         {
@@ -109,6 +128,7 @@ export function IconButton({
           backgroundColor: pressed === true ? pressedBg[intent] : intentBg[intent],
           opacity: disabled ? 0.5 : state.pressed ? 0.9 : 1,
         },
+        focus.ringStyle,
         typeof style === 'function' ? style(state) : style,
       ]}
       {...props}

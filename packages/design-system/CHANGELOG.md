@@ -18,6 +18,33 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.18.1 — patch
+
+**On React Native, the focus ring is this package's again — everywhere, and for
+everyone.** Two separate holes, same symptom: a focused control ringed in
+Chromium's default blue instead of the ring `lib/native-focus.native.ts` exists
+to draw. Nothing to change on your side; controls that were already correct are
+untouched.
+
+- **`Button`, `Toggle`, `IconButton` and `Chip` never adopted the ring at all.**
+  It shipped with the text inputs and the migration stopped there, so every
+  pressable in the package fell through to the browser's outline — hard against
+  the control, no offset, and not a colour this design system owns. All four now
+  draw it, following the OS colour scheme like every other native colour.
+- **A caller's own `onFocus` silently turned the ring OFF** on `Input`,
+  `Textarea` and `DateInput`. Those leaves wired the ring and then spread
+  `{...props}` after it, so React took the caller's handler and dropped the
+  package's — meaning the ring worked in the workbench, where no story passes
+  one, and stopped the moment a consumer did. The handlers are pulled out of the
+  spread now and both run, caller's first-class rather than dead code. **If you
+  passed `onFocus` to one of these and lost the ring, that was this.**
+  `Select`, `Combobox` and `Field` were checked and were already correct —
+  their spreads land on a different element — so they are unchanged.
+
+Every one of the seven is pinned by a test that fails without the fix.
+
+[#24](https://github.com/insolvia-ai/design-system/pull/24)
+
 ## 0.18.0 — minor
 
 **Widen your range to take this:** `^0.17.x` will not resolve it.

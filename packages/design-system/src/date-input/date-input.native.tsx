@@ -81,6 +81,11 @@ export const DateInput = ({
   icon,
   placeholder,
   style,
+  // PULLED OUT OF `props` ON PURPOSE. `props` is spread LAST onto the TextInput
+  // below, so a caller's own handler left in there would replace the ring
+  // wiring outright rather than run alongside it.
+  onFocus,
+  onBlur,
   ...props
 }: DateInputProps) => {
   const field = React.useContext(FieldContext);
@@ -226,11 +231,11 @@ export const DateInput = ({
         keyboardType="number-pad"
         onFocus={(event) => {
           focus.focus();
-          props.onFocus?.(event);
+          onFocus?.(event);
         }}
         onBlur={(event) => {
           focus.blur();
-          props.onBlur?.(event);
+          onBlur?.(event);
         }}
         // Escape closes, for the browser case. Bound here rather than on the
         // surface because opening does not move focus — it stays in the field.

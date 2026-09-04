@@ -42,6 +42,11 @@ export const Input = ({
   name: _name,
   placeholder,
   style,
+  // PULLED OUT OF `props` ON PURPOSE. `props` is spread LAST below, so a
+  // caller's own handler left in there would replace the ring wiring outright
+  // rather than run alongside it.
+  onFocus,
+  onBlur,
   ...props
 }: InputProps) => {
   const field = React.useContext(FieldContext);
@@ -82,11 +87,11 @@ export const Input = ({
       autoCorrect={type === 'text'}
       onFocus={(event) => {
         focus.focus();
-        props.onFocus?.(event);
+        onFocus?.(event);
       }}
       onBlur={(event) => {
         focus.blur();
-        props.onBlur?.(event);
+        onBlur?.(event);
       }}
       style={[
         styles.base,

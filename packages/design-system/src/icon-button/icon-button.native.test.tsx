@@ -8,7 +8,7 @@
 // the reason toggle.native.tsx measured against this repo's pinned
 // react-native-web: it does not flatten `accessibilityState` into any `aria-*`
 // attribute, so the state exists only if the leaf also forwards the ARIA prop.
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent, { PointerEventsCheckLevel } from '@testing-library/user-event';
 import { Text } from 'react-native';
 import { describe, expect, it, vi } from 'vitest';
@@ -111,5 +111,28 @@ describe('IconButton (native leaf)', () => {
 
     const button = screen.getByRole('button', { name: 'Delete' });
     expect(rgb(button.style.backgroundColor)).toEqual(rgb(colors.dark.danger));
+  });
+
+  // lib/native-focus.native.ts exists because an unringed native control falls
+  // through to Chrome's blue outline under react-native-web. The migration that
+  // introduced it reached the text inputs only, so every Pressable — this one
+  // included — kept the browser's ring while its web leaf drew the package's.
+  it('draws the design system’s OWN focus ring, not the browser default', () => {
+    setPrefersColorScheme('light');
+    render(
+      <IconButton label="Dismiss">
+        <Glyph />
+      </IconButton>,
+    );
+
+    const button = screen.getByRole('button', { name: 'Dismiss' });
+    expect(getComputedStyle(button).outlineWidth).not.toBe('2px');
+
+    act(() => button.focus());
+
+    const style = getComputedStyle(button);
+    expect(style.outlineWidth).toBe('2px');
+    expect(style.outlineOffset).toBe('2px');
+    expect(rgb(style.outlineColor)).toEqual(rgb(colors.light.accent));
   });
 });
