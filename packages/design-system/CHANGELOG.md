@@ -18,6 +18,21 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.19.1 — patch
+
+- **No code changed. This file did.** 0.17.0's entry claimed a release you cannot
+  install: it was merged, but never reached the registry, and `^0.17.0` therefore
+  resolves nothing. It now says so at the top of the entry, and points at 0.18.0,
+  which contains all of it. Nothing else moved — the entry itself is still the
+  record of what that work was, because 0.18.0's entry does not describe it.
+  `@insolvia-ai/tokens` 0.4.0 has the same marker, pointing at 0.5.0.
+
+A gap in the version numbers is not itself a problem — npm has never required
+them to be contiguous, and no consumer was ever on 0.17.0. A changelog that
+advertises an unresolvable version is, which is the only thing fixed here.
+
+[#27](https://github.com/insolvia-ai/design-system/pull/27)
+
 ## 0.19.0 — minor
 
 **Widen your range to take this:** `^0.18.x` will not resolve it.
@@ -122,12 +137,17 @@ neutralise navy-and-brass is now the default.
 
 ## 0.17.0 — minor
 
-**Widen your range to take this:** `^0.16.x` will not resolve it.
+> **NEVER PUBLISHED — take 0.18.0 instead, which contains all of it.** This was a
+> real merged release, but three pull requests reached `main` in one push and the
+> publish job runs once per push, publishing whatever version the manifest holds
+> at the end of it. It saw 0.18.0. `^0.17.0` resolves nothing; there is no 0.17.x
+> in the registry and never will be. The entry stays because the work is real and
+> 0.18.0's entry does not describe it — this is what you also get when you take
+> that version. `@insolvia-ai/tokens` 0.4.0 was lost in the same push; take 0.5.0.
 
 **Needs `@insolvia-ai/tokens` 0.4.0** for the neutral ramps, `--font-mono`, the
-motion tokens, `danger-text` and the `overlay-*` roles. Bump both, or a `danger`
-Button renders an unstyled foreground and `intent="overlay"` renders nothing at
-all.
+motion tokens, `danger-text` and the `overlay-*` roles — all of which are inside
+0.5.0.
 
 Two things at once: everything a consumer needs to build a themed video player
 and a dense, metadata-heavy chrome, plus nine gaps a consumer had been papering
