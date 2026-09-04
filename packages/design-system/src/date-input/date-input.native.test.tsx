@@ -2,7 +2,7 @@
 // Field association AND the `controlOpen` handshake that keeps an open picker
 // from painting underneath the form below it — the 0.7.1 bug, which every test
 // in this package passed while it was shipping.
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { View } from 'react-native';
 import { describe, expect, it, vi } from 'vitest';
@@ -113,5 +113,22 @@ describe('DateInput (native leaf)', () => {
     expect(rgb(getComputedStyle(screen.getByRole('textbox')).borderTopColor)).toEqual(
       rgb(colors.dark.line),
     );
+  });
+
+  // `props` is spread LAST onto the TextInput, so a caller's `onFocus` left in
+  // there replaced the ring wiring outright: their handler ran and the ring
+  // never turned on. Pulled out of the rest object, both happen.
+  it('runs a caller’s own onFocus AND still draws the ring', () => {
+    setPrefersColorScheme('light');
+    const onFocus = vi.fn();
+    render(<DateInput aria-label="Date" onFocus={onFocus} />);
+
+    const field = screen.getByRole('textbox', { name: 'Date' });
+    act(() => field.focus());
+
+    expect(onFocus).toHaveBeenCalledTimes(1);
+    const style = getComputedStyle(field);
+    expect(style.outlineWidth).toBe('2px');
+    expect(rgb(style.outlineColor)).toEqual(rgb(colors.light.accent));
   });
 });

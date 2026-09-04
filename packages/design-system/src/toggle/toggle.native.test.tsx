@@ -12,7 +12,7 @@
 // `aria-*` attribute at all. These tests pin the working behavior so a
 // regression back to `"togglebutton"`/`accessibilityState` is caught here,
 // not discovered on the shipped (web-only) app.
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent, { PointerEventsCheckLevel } from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -92,5 +92,24 @@ describe('Toggle (native leaf)', () => {
     await user.click(toggle);
 
     expect(rgb(toggle.style.backgroundColor)).toEqual(rgb(colors.dark.primary));
+  });
+
+  // lib/native-focus.native.ts exists because an unringed native control falls
+  // through to Chrome's blue outline under react-native-web. The migration that
+  // introduced it reached the text inputs only, so every Pressable — this one
+  // included — kept the browser's ring while its web leaf drew the package's.
+  it('draws the design system’s OWN focus ring, not the browser default', () => {
+    setPrefersColorScheme('light');
+    render(<Toggle>Bold</Toggle>);
+
+    const toggle = screen.getByRole('button', { name: 'Bold' });
+    expect(getComputedStyle(toggle).outlineWidth).not.toBe('2px');
+
+    act(() => toggle.focus());
+
+    const style = getComputedStyle(toggle);
+    expect(style.outlineWidth).toBe('2px');
+    expect(style.outlineOffset).toBe('2px');
+    expect(rgb(style.outlineColor)).toEqual(rgb(colors.light.accent));
   });
 });

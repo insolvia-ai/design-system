@@ -81,6 +81,23 @@ describe('Input (native leaf)', () => {
     expect(rgb(style.outlineColor)).toEqual(rgb(colors.light.accent));
   });
 
+  // `props` is spread LAST onto the TextInput, so a caller's `onFocus` left in
+  // there replaced the ring wiring outright: their handler ran and the ring
+  // never turned on. Pulled out of the rest object, both happen.
+  it('runs a caller’s own onFocus AND still draws the ring', () => {
+    setPrefersColorScheme('light');
+    const onFocus = vi.fn();
+    render(<Input aria-label="Callsign" onFocus={onFocus} />);
+
+    const input = screen.getByRole('textbox', { name: 'Callsign' });
+    act(() => input.focus());
+
+    expect(onFocus).toHaveBeenCalledTimes(1);
+    const style = getComputedStyle(input);
+    expect(style.outlineWidth).toBe('2px');
+    expect(rgb(style.outlineColor)).toEqual(rgb(colors.light.accent));
+  });
+
   it('resolves the ring colour from the dark scheme too', () => {
     setPrefersColorScheme('dark');
     render(<Input aria-label="Callsign" />);

@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 
 import { radii, spacing } from '@insolvia-ai/tokens';
 
+import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import type { ButtonIntent, ButtonSize } from './button.props';
@@ -45,11 +46,23 @@ export function Button({
   children,
   disabled,
   style,
+  // PULLED OUT OF `props` ON PURPOSE. `props` is spread LAST below, so a
+  // caller's own handler left in there would replace the ring wiring outright
+  // rather than run alongside it — the ring would work until the first caller
+  // who wanted a focus callback, and then silently stop.
+  onFocus,
+  onBlur,
   ...props
 }: ButtonProps) {
   // Colors resolve per render so the leaf follows the OS scheme; only the
   // scheme-independent maps and layout live at module level.
   const c = useNativeColors();
+  // Without this a focused Button falls through to the BROWSER's default focus
+  // ring under react-native-web — blue, hard against the control — while the
+  // web leaf draws this package's own. The migration that introduced
+  // lib/native-focus.native.ts reached the text inputs and stopped there,
+  // leaving every Pressable in the package showing Chrome's ring.
+  const focus = useNativeFocusRing();
   const intentBg: Record<ButtonIntent, string> = {
     primary: c.primary,
     secondary: c.surfaceAlt,
@@ -70,6 +83,14 @@ export function Button({
     <Pressable
       accessibilityRole="button"
       disabled={disabled ?? undefined}
+      onFocus={(event) => {
+        focus.focus();
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        focus.blur();
+        onBlur?.(event);
+      }}
       style={(state) => [
         styles.base,
         {
@@ -83,6 +104,7 @@ export function Button({
           backgroundColor: intentBg[intent],
           opacity: disabled ? 0.5 : state.pressed ? 0.9 : 1,
         },
+        focus.ringStyle,
         typeof style === 'function' ? style(state) : style,
       ]}
       {...props}

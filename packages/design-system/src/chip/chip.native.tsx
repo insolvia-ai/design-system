@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 
 import { radii, spacing } from '@insolvia-ai/tokens';
 
+import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import type { ChipSize } from './chip.props';
@@ -36,10 +37,27 @@ const sizeHitSlop: Record<ChipSize, { top: number; bottom: number }> = {
   md: { top: 0, bottom: 0 },
 };
 
-export function Chip({ pressed, size = 'md', children, disabled, style, ...props }: ChipProps) {
+export function Chip({
+  pressed,
+  size = 'md',
+  children,
+  disabled,
+  style,
+  // PULLED OUT OF `props` ON PURPOSE. `props` is spread LAST below, so a
+  // caller's own handler left in there would replace the ring wiring outright
+  // rather than run alongside it.
+  onFocus,
+  onBlur,
+  ...props
+}: ChipProps) {
   // Colors resolve per render so the leaf follows the OS scheme; only the
   // scheme-independent layout lives at module level in StyleSheet.create.
   const c = useNativeColors();
+  // This package's ring rather than the browser's default blue one, which is
+  // what react-native-web paints on an unringed Pressable — see
+  // lib/native-focus.native.ts. A chip ROW is tabbed through end to end, so the
+  // wrong ring showed up here more often than anywhere else.
+  const focus = useNativeFocusRing();
 
   // Reported BOTH ways, the split toggle.native.tsx and icon-button.native.tsx
   // document: `accessibilityState` for the real native platforms, and
@@ -59,6 +77,14 @@ export function Chip({ pressed, size = 'md', children, disabled, style, ...props
       {...toggleProps}
       disabled={disabled ?? undefined}
       hitSlop={sizeHitSlop[size]}
+      onFocus={(event) => {
+        focus.focus();
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        focus.blur();
+        onBlur?.(event);
+      }}
       style={(state) => [
         styles.base,
         {
@@ -70,6 +96,7 @@ export function Chip({ pressed, size = 'md', children, disabled, style, ...props
           backgroundColor: pressed === true ? c.primary : 'transparent',
           opacity: disabled ? 0.5 : state.pressed ? 0.9 : 1,
         },
+        focus.ringStyle,
         typeof style === 'function' ? style(state) : style,
       ]}
       {...props}
