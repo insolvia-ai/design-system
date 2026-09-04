@@ -68,7 +68,7 @@ exactly as it did on 0.19.1.
 - **An unknown key is still ignored rather than rejected**, as with colours —
   `ThemeOverrides` stays a loose record. Check your spelling; a typo is silent.
 
-PR_LINK_PLACEHOLDER
+[#28](https://github.com/insolvia-ai/design-system/pull/28)
 
 ## 0.19.1 — patch
 
