@@ -57,8 +57,10 @@ component.
   PR, and `publish.yml` puts it in the GitHub Release.
 - **Verification with evidence**, never "tested locally". Test counts before
   and after, which typecheck programs ran, what the workbench showed.
-- **A screenshot of BOTH leaves for any visual change**, from
-  `./scripts/dev-up.sh`. This is the evidence that matters here and the tests
+- **A screenshot of BOTH leaves for any visual change.** `npm run screenshots`
+  produces it — `design-system-screenshots` owns how, including the `--sheet`
+  flag that composites light beside dark into the single image this body wants.
+  This is the evidence that matters here and the tests
   structurally cannot provide it: they assert roles and labels in jsdom, and
   cannot see wrong colour, wrong position, or one thing painted under another.
   If the change touches colour, screenshot light **and** dark — the 0.2.1
@@ -96,9 +98,10 @@ gh-upload-image() {                 # gh-upload-image FILE [owner/repo]
 }
 ```
 
-It prints a markdown line. Capture the workbench pane, run it, drop the line
-into the body file, `gh pr create --body-file`. Both leaves in one frame, and
-both schemes when colour moved.
+It prints a markdown line. Capture with `npm run screenshots -- <component>
+--sheet <name>`, run this on the resulting sheet, drop the line into the body
+file, `gh pr create --body-file`. Both leaves in one frame, and both schemes
+when colour moved.
 
 Three things that cost time to rediscover:
 
@@ -129,7 +132,8 @@ than to a ref, so nothing to clean up can take them out.
 - `git diff main...HEAD` — self-review. It is the only review there is.
 - `npm run ci` green locally.
 - `./scripts/dev-up.sh` and actually look at the component, in both panes and
-  both schemes.
+  both schemes — `npm run screenshots` gets you the image, but reading it is
+  the part that catches anything.
 - **One PR, one responsibility.** A component fix and a CI change are two PRs;
   bundling them couples a publish to unrelated work.
 

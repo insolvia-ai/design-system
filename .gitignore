@@ -24,3 +24,8 @@ storybook-static/
 
 # Vitest coverage report (npm run test:coverage) — generated, never committed.
 coverage/
+
+# Story captures (npm run screenshots). They belong in a PR body, uploaded as a
+# repository attachment — see the design-system-pr skill for why a screenshot
+# committed to a branch is exactly the thing that later 404s.
+.screenshots/

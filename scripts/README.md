@@ -1,12 +1,13 @@
 # scripts
 
-Two entry points a human runs, three gates CI runs, and a deliberate refusal to
-add more.
+Three entry points a human runs, three gates CI runs, and a deliberate refusal
+to add more.
 
 | Script | What it does |
 |---|---|
 | [`dev-setup.sh`](dev-setup.sh) | Checks Node against `engines.node`, then `npm ci`. `--check` reports without changing anything. |
 | [`dev-up.sh`](dev-up.sh) | Starts the component workbench (Storybook) on `http://localhost:6006`. |
+| [`capture-stories.ts`](capture-stories.ts) | Screenshots stories from the running workbench — both leaves, both schemes. Run as `npm run screenshots`. |
 | [`check-skills.ts`](check-skills.ts) | Gates every `SKILL.md` in the repo. Run as `npm run skills:check`, part of `npm run ci`. |
 | [`check-changelog.ts`](check-changelog.ts) | Gates each package's `CHANGELOG.md`, and prints a version's entry for the release notes. Run as `npm run changelog:check`, part of `npm run ci`. |
 | [`check-artifacts.ts`](check-artifacts.ts) | Gates the packed tarballs. Run as `npm run artifacts:check`, by both CI workflows. |
@@ -68,6 +69,42 @@ local gate is the fast inner loop.
 ```bash
 ./scripts/dev-up.sh
 ```
+
+## Capturing a story, and why that earns a script
+
+`capture-stories.ts` is the third human entry point, and it is here rather than
+in a contributor's shell history because the evidence it produces is *required*:
+`design-system-pr` makes every visual change owe a screenshot of both leaves,
+in both schemes when colour moved. That is the one check no test performs, so
+the cost of producing it by hand is paid on exactly the PRs that most need it.
+
+```bash
+./scripts/dev-up.sh                                  # in one terminal
+npm run screenshots -- slider IconButton --sheet wave # in another
+```
+
+A target is a story id, a component, or a title, and a component target takes
+all of its stories. `--sheet <name>` writes one composite image with light
+beside dark, which is what belongs in a PR body — one attachment rather than a
+dozen. Output lands in `.screenshots/`, which is gitignored on purpose: a
+screenshot committed to a branch dies when the branch does, and
+[`design-system-pr`](../.claude/skills/design-system-pr/SKILL.md) records the
+merged PR whose seven images that already destroyed. Upload them as repository
+attachments instead; that skill owns the how.
+
+Three details it exists to get right, all of which were got wrong by hand
+first: Storybook ids do **not** split camelCase (`Forms/IconButton` is
+`forms-iconbutton`), so targets are resolved against the workbench's own
+`index.json` and a miss lists the candidates; `#storybook-root` fills the
+viewport, so the capture is clipped to the union of what actually painted
+rather than being a strip on a tall empty canvas; and a story renders in ONE
+scheme per load, so each is loaded once per scheme through the same `scheme`
+global the Scheme toolbar drives.
+
+It needs the workbench running and says so when it is not. It drives the dev
+server rather than building a static Storybook, which would add a minute to
+every run, and it adds no dependency — Playwright is already here because the
+a11y gate runs stories in a real browser.
 
 ## No `dev-test.sh`, deliberately
 
