@@ -18,6 +18,43 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.18.0 — minor
+
+**Widen your range to take this:** `^0.17.x` will not resolve it.
+
+**Needs `@insolvia-ai/tokens` 0.5.0.** Bump both — this release is almost
+entirely that one, reaching you through the generated `theme.css` this package
+ships.
+
+**This is a visual overhaul with no API change.** No prop, type or export moved;
+nothing stops compiling. Every component looks different, because the default
+theme is now monochrome and square.
+
+- **The chrome is grey.** Navy and brass are gone; surfaces, borders, text and
+  the primary fill are all steps on the neutral ramp. `tokens` 0.5.0 has the
+  role-by-role table and the measured contrast.
+- **Corners are square.** Every radius except `pill` is 0, so Buttons, Cards,
+  Inputs, Chips, Dialogs and the rest render as rectangles. Set `--radius-md`
+  (or `ThemeProvider`'s `radii`) to bring rounding back everywhere at once.
+- **Headings are set in the body sans, not a serif.** `Text variant="display"`,
+  `"heading"` and `"title"` all change face. The native leaf's per-platform
+  mapping moved with the token — iOS `System`, Android `sans-serif` — so both
+  leaves still agree, which is the whole reason that indirection exists. It is
+  KEPT rather than deleted: point `fonts.heading` at a serif and it is still the
+  one place the native leaves have to follow.
+- **A `danger` Button's label is legible again.** Its foreground was the old
+  brand's navy on a red fill; it is now measured at 6.06:1 light and 6.78:1
+  dark.
+- **Nothing about the override seams changed.** CSS custom properties on web and
+  `ThemeProvider` on native work exactly as before — and are now the whole
+  story, since the default theme states no brand for them to fight.
+
+**If you were overriding tokens to escape the old brand, delete those
+overrides first and see what you get.** A good deal of what consumers wrote to
+neutralise navy-and-brass is now the default.
+
+[#23](https://github.com/insolvia-ai/design-system/pull/23)
+
 ## 0.17.0 — minor
 
 **Widen your range to take this:** `^0.16.x` will not resolve it.

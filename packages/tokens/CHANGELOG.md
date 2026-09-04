@@ -16,6 +16,52 @@ the PR is why, what was rejected, and how it was verified.
 > `0.1.x` is absent because it was never published — the package was
 > `private: true` while every consumer resolved it from the same workspace.
 
+## 0.5.0 — minor
+
+**Widen your range to take this:** `^0.4.x` will not resolve it.
+
+**Every colour in the default theme changed.** No token was added or removed and
+no name moved, so nothing you have written stops compiling — but if you took the
+default theme as-is, your app now looks different. If you already override the
+semantic layer, only the roles you did not override move.
+
+The base theme is now **monochrome**. Navy and brass are gone from the chrome
+entirely; every surface, border, text colour and the primary fill are steps on
+the 12-step neutral ramp 0.4.0 introduced.
+
+- **The chrome roles now alias ramp steps, per scheme.** `bg`→1, `card`→2,
+  `surfaceAlt`→3, `line`→7, `muted`→11, `ink`→12, and `primary`, `accent` and
+  `brand` all →12 with `primaryText`→1. The ramp is Radix's gray scale and its
+  steps carry Radix's meanings, so `line` at 7 is "UI element border" and
+  `muted` at 11 is "low-contrast text" — measured here at 5.77:1 light and
+  9.11:1 dark against `bg`, against a 4.5:1 floor.
+- **The accent is now a VALUE, not a hue.** `primary`, `accent` and `brand` are
+  all neutral-12 — near-black on light, near-white on dark. This is the change
+  to argue with if you are going to argue with one: it means the default theme
+  states no brand at all, which is the point. A re-brand pointing `accent` at a
+  hue is a one-line override and the seam is deliberately left empty.
+- **`dangerText` no longer inherits the retired navy.** It was `#071B31`, the
+  last trace of the old brand, sitting on a red fill nothing had measured it
+  against. It is now white on light and neutral-1 on dark: 6.06:1 and 6.78:1.
+- **Status colours are unchanged** — `success`, `warning` and `danger` keep
+  their values in both schemes. They are signals, not chrome, and a monochrome
+  system needs them to stay the one thing that is not grey. `warning` remains
+  unusable as body text on the light canvas (3.14:1) exactly as before.
+- **Every radius is 0** except `pill`. `xs`, `sm`, `md` and `lg` all render
+  square; `pill` is untouched because a pill is a shape, not a corner. A corner
+  radius is a brand decision, so the base makes none — set `--radius-md` and it
+  comes back everywhere at once.
+- **`fonts.heading` is now the same sans stack as `fonts.body`.** The base ships
+  no display face; a distinct heading family is a brand decision too. The
+  React Native mapping in the design system moved with it, so the two leaves
+  still agree.
+
+The ramp itself did not change value. What changed is that the semantic layer
+now points at it instead of at a separate brand palette, which is what makes a
+re-theme one override rather than fourteen.
+
+[#23](https://github.com/insolvia-ai/design-system/pull/23)
+
 ## 0.4.0 — minor
 
 **Widen your range to take this:** `^0.3.x` will not resolve it.

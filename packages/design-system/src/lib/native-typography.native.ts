@@ -1,11 +1,18 @@
 // NATIVE LEAF (src/lib) — the heading family, resolved per platform.
 //
-// WHY THIS FILE EXISTS. The web leaves say `font-heading`, which resolves to
-// the stack in theme.css: `ui-serif, Georgia, Cambria, serif`. React Native
-// cannot take a stack — it resolves exactly ONE registered family name — so the
-// native leaves set no `fontFamily` at all and rendered the platform UI sans
-// while every web surface rendered a serif. Both leaves claimed to implement
-// one design and disagreed about its most visible property.
+// WHY THIS FILE EXISTS. The web leaves say `font-heading`, which resolves to a
+// stack in theme.css. React Native cannot take a stack — it resolves exactly
+// ONE registered family name — so the native leaves set no `fontFamily` at all
+// and rendered the platform UI family while the web surfaces rendered whatever
+// the stack asked for. Both leaves claimed to implement one design and
+// disagreed about its most visible property.
+//
+// The base theme no longer ships a display face: `heading` and `body` are the
+// same sans stack, because a distinct heading family is a brand decision and
+// this package's default theme deliberately makes none. The indirection stays
+// anyway. It is what a re-brand needs — point `fonts.heading` at a serif and
+// this map is the one place the native leaves have to follow — and collapsing
+// it now would mean rediscovering the original bug the next time someone does.
 //
 // It was invisible to everything: the jsdom tests assert roles and labels, tsc
 // reads no CSS, and axe has no opinion about which family a heading uses. Only
@@ -33,9 +40,11 @@ import { typography } from '@insolvia-ai/tokens';
  * workbench's two panes comparable at all: any remaining difference in a
  * heading is a real difference, not this indirection.
  *
- * iOS ships Georgia; Android has no Georgia and maps the `serif` generic to
- * Noto Serif. Both are the same call the web stack makes — take the platform's
- * serif — rather than a second opinion about typography.
+ * iOS resolves `System` and Android `sans-serif` to that platform's own UI
+ * family, which is the same call the `ui-sans-serif, system-ui, sans-serif`
+ * stack makes on web — take the platform's sans — rather than a second opinion
+ * about typography. Point `fonts.heading` at a serif and both arms move with
+ * it; that is the whole reason this indirection is still here.
  *
  * The map is exported separately because `Platform.select` collapses it to one
  * arm at module load, and the arms this platform did NOT take are exactly the
@@ -68,8 +77,8 @@ export const textScale = {
 } as const;
 
 export const headingFamilyByPlatform = {
-  ios: 'Georgia',
-  android: 'serif',
+  ios: 'System',
+  android: 'sans-serif',
   default: typography.heading,
 } as const;
 
