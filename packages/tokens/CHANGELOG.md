@@ -16,6 +16,16 @@ the PR is why, what was rejected, and how it was verified.
 > `0.1.x` is absent because it was never published — the package was
 > `private: true` while every consumer resolved it from the same workspace.
 
+## 0.5.1 — patch
+
+- **No token value changed, and nothing this package exports changed.** 0.4.0's
+  entry claimed a release you cannot install: it was merged, but never reached
+  the registry, so `^0.4.0` resolves nothing. It now says so at the top of the
+  entry and points at 0.5.0, which contains all of it. `tokens.json`,
+  `src/tokens.ts` and `src/colors.json` are byte-identical.
+
+[#27](https://github.com/insolvia-ai/design-system/pull/27)
+
 ## 0.5.0 — minor
 
 **Widen your range to take this:** `^0.4.x` will not resolve it.
@@ -64,7 +74,13 @@ re-theme one override rather than fourteen.
 
 ## 0.4.0 — minor
 
-**Widen your range to take this:** `^0.3.x` will not resolve it.
+> **NEVER PUBLISHED — take 0.5.0 instead, which contains all of it.** This was a
+> real merged release, but three pull requests reached `main` in one push and the
+> publish job runs once per push, publishing whatever version the manifest holds
+> at the end of it. It saw 0.5.0. `^0.4.0` resolves nothing; there is no 0.4.x in
+> the registry and never will be. The entry stays because these tokens are real
+> and 0.5.0's entry does not list them — this is what you also get when you take
+> that version.
 
 All additive — no existing token changed value.
 

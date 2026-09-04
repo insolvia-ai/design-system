@@ -160,10 +160,34 @@ takes `.native`. A tsup/tsc emit collapses the pair and breaks resolution for
 everyone. The PR gate packs the tarball and asserts both leaves are still in
 it, so this fails loudly rather than in someone else's bundler.
 
+## Merge a stack ONE PR AT A TIME
+
+The publish job runs once per **push** to `main` and publishes whatever version
+the manifest holds at the end of it. Land three version-bumping PRs in one push
+— which `gh stack merge` does by default — and it sees only the last one. The
+intermediate versions are never published, and nothing fails: the merge is
+green, the job is green, and the registry silently skips a version that has a
+changelog entry saying it exists.
+
+That is how 0.17.0 and `tokens` 0.4.0 were lost, and it was found by reading the
+registry afterwards rather than by any gate.
+
+So when a stack bumps a version in more than one PR: merge the bottom one, wait
+for its publish run to finish, confirm the version is in the registry, then
+merge the next. `gh stack merge <pr-number> --yes` merges up to and including
+that PR, which is how you take them one at a time.
+
+A gap in the numbers afterwards is not worth repairing — npm never required them
+to be contiguous, and republishing to fill one moves the `latest` tag backwards.
+Mark the entry as never-published, point it at the version that carries its
+content, and move on.
+
 ## If a publish does not happen
 
 - **Skipped, "already in the registry"** — the version was not bumped, or was
   bumped to one already published. Bump again and merge.
+- **Nothing ran for a version you merged** — check whether it shared a push with
+  a later bump; see above.
 - **403 / permission denied** — a package first published from a different
   repository stays linked to it, and it may be private. This repo then needs
   Write on it, and each consuming repo needs Read: package → *Package
