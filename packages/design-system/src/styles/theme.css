@@ -23,6 +23,7 @@
   /* Typography. Apps can override these to apply their own brand. */
   --font-heading: ui-serif, Georgia, Cambria, serif;
   --font-body: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   /* Semantic colors — the light-mode default mapping. */
   --color-bg: #faf9f6;
@@ -38,12 +39,51 @@
   --color-success: #2e7d5b;
   --color-warning: #b8863b;
   --color-danger: #b3352e;
+  --color-danger-text: #ffffff;
+  --color-overlay-ink: #ffffff;
+  --color-overlay-muted: rgb(255 255 255 / 0.702);
+  --color-overlay-scrim: #000000;
+  --color-overlay-hover: rgb(255 255 255 / 0.2);
+  --color-overlay-active: rgb(255 255 255 / 0.302);
 
   /* Derived states. Overriding the base semantic moves these too. */
   --color-primary-hover: color-mix(in srgb, var(--color-primary) 88%, black 12%);
   --color-primary-active: color-mix(in srgb, var(--color-primary) 80%, black 20%);
   --color-accent-hover: color-mix(in srgb, var(--color-accent) 88%, black 12%);
   --color-danger-hover: color-mix(in srgb, var(--color-danger) 88%, black 12%);
+
+  /* Neutral ramp — light-mode values.
+   *
+   * A 12-step scale and its alpha twin, ADDED alongside the semantic roles
+   * rather than under them: no role above resolves to a ramp step, so a
+   * consumer's default appearance is exactly what it was before these existed.
+   * Steps 1-2 are backgrounds, 3-5 component fills, 6-8 borders, 9-10 solids,
+   * 11-12 text. The `a` steps are the same rungs with alpha instead of a baked
+   * background, for anything that lands on a surface it cannot know. */
+  --color-neutral-1: #fcfcfc;
+  --color-neutral-2: #f9f9f9;
+  --color-neutral-3: #f0f0f0;
+  --color-neutral-4: #e8e8e8;
+  --color-neutral-5: #e0e0e0;
+  --color-neutral-6: #d9d9d9;
+  --color-neutral-7: #cecece;
+  --color-neutral-8: #bbbbbb;
+  --color-neutral-9: #8d8d8d;
+  --color-neutral-10: #838383;
+  --color-neutral-11: #646464;
+  --color-neutral-12: #202020;
+  --color-neutral-a1: rgb(0 0 0 / 0.0118);
+  --color-neutral-a2: rgb(0 0 0 / 0.0235);
+  --color-neutral-a3: rgb(0 0 0 / 0.0588);
+  --color-neutral-a4: rgb(0 0 0 / 0.0902);
+  --color-neutral-a5: rgb(0 0 0 / 0.1216);
+  --color-neutral-a6: rgb(0 0 0 / 0.149);
+  --color-neutral-a7: rgb(0 0 0 / 0.1922);
+  --color-neutral-a8: rgb(0 0 0 / 0.2667);
+  --color-neutral-a9: rgb(0 0 0 / 0.4471);
+  --color-neutral-a10: rgb(0 0 0 / 0.4863);
+  --color-neutral-a11: rgb(0 0 0 / 0.6078);
+  --color-neutral-a12: rgb(0 0 0 / 0.8745);
 
   /* Spacing — a 4pt base grid. */
   --spacing-xs: 0.25rem;
@@ -87,6 +127,8 @@
   --flex-basis-xxl: var(--container-xxl, var(--spacing-xxl));
 
   /* Corner radii. */
+  --radius-none: 0px;
+  --radius-xs: 0.125rem;
   --radius-sm: 0.375rem;
   --radius-md: 0.625rem;
   --radius-lg: 1rem;
@@ -96,6 +138,17 @@
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Motion. Each key names its own custom property, because the namespace
+   * that turns it into a real utility is not derivable from the token name:
+   * `duration-*` resolves theme keys under `--transition-duration-*` (there is
+   * no `--duration-*` namespace to write into), while `ease-*` resolves
+   * `--ease-*`. So these generate `duration-fast`, `duration-base` and
+   * `ease-standard`, and redefine nothing: Tailwind's own theme carries no key
+   * of any of those names. */
+  --transition-duration-fast: 120ms;
+  --transition-duration-base: 200ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
 [data-theme='dark'] {
@@ -112,9 +165,48 @@
   --color-success: #39b17e;
   --color-warning: #d2a857;
   --color-danger: #e27f79;
+  --color-danger-text: #071b31;
+  --color-overlay-ink: #ffffff;
+  --color-overlay-muted: rgb(255 255 255 / 0.702);
+  --color-overlay-scrim: #000000;
+  --color-overlay-hover: rgb(255 255 255 / 0.2);
+  --color-overlay-active: rgb(255 255 255 / 0.302);
 
   --color-primary-hover: color-mix(in srgb, var(--color-primary) 88%, white 12%);
   --color-primary-active: color-mix(in srgb, var(--color-primary) 84%, black 16%);
   --color-accent-hover: color-mix(in srgb, var(--color-accent) 88%, white 12%);
   --color-danger-hover: color-mix(in srgb, var(--color-danger) 88%, white 12%);
+
+  --color-neutral-1: #111111;
+  --color-neutral-2: #191919;
+  --color-neutral-3: #222222;
+  --color-neutral-4: #2a2a2a;
+  --color-neutral-5: #313131;
+  --color-neutral-6: #3a3a3a;
+  --color-neutral-7: #484848;
+  --color-neutral-8: #606060;
+  --color-neutral-9: #6e6e6e;
+  --color-neutral-10: #7b7b7b;
+  --color-neutral-11: #b4b4b4;
+  --color-neutral-12: #eeeeee;
+  --color-neutral-a1: rgb(0 0 0 / 0);
+  --color-neutral-a2: rgb(255 255 255 / 0.0353);
+  --color-neutral-a3: rgb(255 255 255 / 0.0706);
+  --color-neutral-a4: rgb(255 255 255 / 0.1059);
+  --color-neutral-a5: rgb(255 255 255 / 0.1333);
+  --color-neutral-a6: rgb(255 255 255 / 0.1725);
+  --color-neutral-a7: rgb(255 255 255 / 0.2314);
+  --color-neutral-a8: rgb(255 255 255 / 0.3333);
+  --color-neutral-a9: rgb(255 255 255 / 0.3922);
+  --color-neutral-a10: rgb(255 255 255 / 0.4471);
+  --color-neutral-a11: rgb(255 255 255 / 0.6863);
+  --color-neutral-a12: rgb(255 255 255 / 0.9294);
+}
+
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
 }

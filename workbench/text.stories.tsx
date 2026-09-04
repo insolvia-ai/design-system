@@ -25,6 +25,7 @@ type TextArgs = {
   variant: TextVariant;
   tone: TextTone;
   weight: TextWeight;
+  truncate: boolean;
   content: string;
 };
 
@@ -45,23 +46,35 @@ const meta = {
     variant: 'body',
     tone: 'ink',
     weight: 'regular',
+    truncate: false,
     content: 'Nav computer, star charts, and jump solutions, from one console.',
   },
   argTypes: {
     variant: { control: 'select', options: [...VARIANTS] },
     tone: { control: 'select', options: [...TONES] },
     weight: { control: 'inline-radio', options: [...WEIGHTS] },
+    truncate: { control: 'boolean' },
     content: { control: 'text' },
   },
   render: (args) => (
     <LeafPair
       web={
-        <TextWeb variant={args.variant} tone={args.tone} weight={args.weight}>
+        <TextWeb
+          variant={args.variant}
+          tone={args.tone}
+          weight={args.weight}
+          truncate={args.truncate}
+        >
           {args.content}
         </TextWeb>
       }
       native={
-        <TextNative variant={args.variant} tone={args.tone} weight={args.weight}>
+        <TextNative
+          variant={args.variant}
+          tone={args.tone}
+          weight={args.weight}
+          truncate={args.truncate}
+        >
           {args.content}
         </TextNative>
       }
@@ -139,6 +152,109 @@ export const Tones: Story = {
               {tone}
             </TextNative>
           ))}
+        </View>
+      }
+    />
+  ),
+};
+
+/**
+ * `truncate`, and the bug it exists for.
+ *
+ * Heading variants carry `text-balance`. `text-wrap: balance` is a SHORTHAND
+ * that also resets `text-wrap-mode: wrap`, so it ran over `truncate`'s
+ * `white-space: nowrap` — and the two utilities sat in different
+ * tailwind-merge groups, so both survived the merge and the stylesheet
+ * decided. A consumer's only escape was an inline `style={{ textWrap:
+ * 'nowrap' }}`, whose sole merit was that nothing could merge it away.
+ *
+ * Both panes are capped at 220px, which is the only way to see this at all.
+ * Look for: the top line wrapping onto three, the bottom one eliding. On the
+ * native leaf `truncate` is `numberOfLines={1}` rather than a class — a
+ * `className="truncate"` would have done nothing there, which is the other
+ * half of why this became a prop.
+ */
+export const Truncating: Story = {
+  render: () => (
+    <LeafPair
+      note='Capped at 220px. The prop emits the same utility a caller would write, so `truncate` and `className="truncate"` now behave identically.'
+      web={
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: 220 }}>
+          <TextWeb variant="display">Ships in the Corellian registry</TextWeb>
+          <TextWeb variant="display" truncate>
+            Ships in the Corellian registry
+          </TextWeb>
+        </div>
+      }
+      native={
+        <View style={{ flexDirection: 'column', gap: 12, width: 220 }}>
+          <TextNative variant="display">Ships in the Corellian registry</TextNative>
+          <TextNative variant="display" truncate>
+            Ships in the Corellian registry
+          </TextNative>
+        </View>
+      }
+    />
+  ),
+};
+
+/**
+ * `caption` lays out as a block now, and `inline` is how to ask for the old
+ * behaviour.
+ *
+ * It used to be inline by default, so two captions — or a caption under a body
+ * line — ran onto ONE line with nothing between them, and a card read
+ * `Name0 references · 54 files`. `truncate` did nothing on one either, because
+ * an inline box has no width to elide against. A consumer that swept its own
+ * captions found nine of eighty-eight were genuinely inline: the default was
+ * the exception.
+ *
+ * The element is still a `<span>` — a caption often sits inside running text,
+ * and `<p>` cannot nest inside `<p>`. Only the display moved.
+ */
+export const Captions: Story = {
+  render: () => (
+    <LeafPair
+      note="Top: two captions, each on its own line, which is the default now. Bottom: `inline`, running together — the case that used to be the default."
+      web={
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <TextWeb variant="title">Corellian YT-1300</TextWeb>
+            <TextWeb variant="caption" tone="muted">
+              0 references
+            </TextWeb>
+            <TextWeb variant="caption" tone="muted">
+              54 files
+            </TextWeb>
+          </div>
+          <div>
+            <TextWeb variant="caption" tone="muted" inline>
+              0 references
+            </TextWeb>{' '}
+            <TextWeb variant="caption" tone="muted" inline>
+              · 54 files
+            </TextWeb>
+          </div>
+        </div>
+      }
+      native={
+        <View style={{ flexDirection: 'column', gap: 16 }}>
+          <View>
+            <TextNative variant="title">Corellian YT-1300</TextNative>
+            <TextNative variant="caption" tone="muted">
+              0 references
+            </TextNative>
+            <TextNative variant="caption" tone="muted">
+              54 files
+            </TextNative>
+          </View>
+          {/* `inline` is web-only: an RN <Text> inside a <View> is already a
+              block-level flex item and one nested inside another <Text> is
+              already inline, so the caller says it by where the element goes.
+              This pane shows that nesting, which is the native spelling. */}
+          <TextNative variant="caption" tone="muted">
+            0 references · 54 files
+          </TextNative>
         </View>
       }
     />

@@ -7,6 +7,7 @@
 export type TextVariant = 'display' | 'heading' | 'title' | 'body' | 'caption';
 export type TextTone = 'ink' | 'muted' | 'primary';
 export type TextWeight = 'regular' | 'medium' | 'semibold';
+export type TextFamily = 'body' | 'heading' | 'mono';
 
 /**
  * The five sizes this package actually renders, named for their job rather
@@ -16,11 +17,59 @@ export type TextWeight = 'regular' | 'medium' | 'semibold';
  * variant costs a matching block in the native leaf forever.
  */
 export const variantStyles: Record<TextVariant, string> = {
-  display: 'font-heading text-3xl',
-  heading: 'font-heading text-2xl',
-  title: 'font-heading text-lg',
-  body: 'font-body text-sm',
-  caption: 'font-body text-xs',
+  display: 'text-3xl',
+  heading: 'text-2xl',
+  title: 'text-lg',
+  body: 'text-sm',
+  caption: 'text-xs',
+};
+
+/**
+ * The family each variant implies, and the family a caller can override it
+ * with.
+ *
+ * WHY THE FAMILY LEFT `variantStyles`. It used to be baked in there
+ * (`display: 'font-heading text-3xl'`), which made the variant's family
+ * unoverridable in the only way that would have worked: appending
+ * `font-mono` after `font-heading` leaves BOTH classes in the string —
+ * `tailwind-merge` does not treat this package's family utilities as one
+ * conflict group — and which one wins is then decided by stylesheet order,
+ * not by the caller. So the family is resolved BEFORE the class list is
+ * built, exactly as `weight` already was: `variantWeight` + `weightStyles` is
+ * the pattern this mirrors, and `variantStyles` is now the size step alone.
+ * Rendered output for every existing caller is unchanged.
+ *
+ * WHY `mono` DOES NOT BRING `tabular-nums`. The obvious convenience — a mono
+ * family that also lines up its digits — would be a no-op dressed as a
+ * feature: a monospaced family advances EVERY glyph by the same width,
+ * digits included, and `--font-mono` resolves to a stack that ends in the
+ * `monospace` generic, so there is no arm of it where the digits are
+ * proportional. Bundling it would teach callers that `family="mono"` does two
+ * things when it does one, and would hide the case that actually needs it —
+ * tabular figures on a PROPORTIONAL family, a price column set in `body` —
+ * which `family="mono"` cannot deliver anyway because it changes the face.
+ * That caller reaches for `className="tabular-nums"` (web) or
+ * `style={{ fontVariant: ['tabular-nums'] }}` (native), one utility, at the
+ * one site that wants it.
+ */
+export const variantFamily: Record<TextVariant, TextFamily> = {
+  display: 'heading',
+  heading: 'heading',
+  title: 'heading',
+  body: 'body',
+  caption: 'body',
+};
+
+/**
+ * Web utilities per family. The native leaf cannot use these — React Native
+ * resolves ONE registered family name rather than a CSS stack — so it maps the
+ * same three names onto `src/lib/native-typography.native.ts` instead. That
+ * split is the whole reason this map holds names and not stacks.
+ */
+export const familyStyles: Record<TextFamily, string> = {
+  body: 'font-body',
+  heading: 'font-heading',
+  mono: 'font-mono',
 };
 
 /**

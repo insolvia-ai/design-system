@@ -149,9 +149,54 @@ const SPACING_UTILITIES = [
   ['max-h', 'max-height'],
 ] as const;
 
+// The additive half of the same question. Everything above asks what this theme
+// must NOT change; these ask that the keys it adds are in namespaces Tailwind
+// actually reads, which is the failure mode a `@theme` key has all to itself: an
+// unknown namespace still emits a perfectly valid custom property, and the
+// utility that was supposed to come with it simply never exists. Nothing else
+// here would notice — the property resolves, the diff looks right, and the class
+// silently drops out of the consumer's build.
+//
+// One per namespace introduced, not one per key: 24 ramp steps and 3 motion
+// tokens share three lookups between them, and asserting all 27 would restate
+// the token file rather than test it.
+const ADDED_UTILITIES = [
+  // The neutral ramp — an opaque step and an alpha step, since the alpha keys
+  // are the ones whose `a1`-style suffix is easiest to get wrong.
+  ['bg-neutral-1', 'background-color'],
+  ['bg-neutral-a12', 'background-color'],
+  ['text-neutral-12', 'color'],
+  // Motion. `--transition-duration-*` is the namespace `duration-*` reads —
+  // there is no `--duration-*` — and this is what pins that down.
+  ['duration-fast', 'transition-duration'],
+  ['duration-base', 'transition-duration'],
+  ['ease-standard', 'transition-timing-function'],
+  // Radii. `none` and `xs` are new keys on a scale this theme already owns.
+  ['rounded-none', 'border-radius'],
+  ['rounded-xs', 'border-radius'],
+] as const;
+
 describe('theme.css namespaces', () => {
   it('names spacing steps that could collide, or this file is asserting nothing', () => {
     expect(SPACING_KEYS.length).toBeGreaterThan(0);
+  });
+
+  it.each(ADDED_UTILITIES)('%s is a real utility with this theme', async (className, property) => {
+    const css = await build([className], true);
+    const value = resolved(css, className, property);
+    expect(value).not.toBeNull();
+    expect(value).not.toBe('');
+  });
+
+  it('font-mono keeps meaning a monospace stack', async () => {
+    // This theme declares `--font-mono`, which Tailwind's own default theme
+    // also declares — so unlike every other key here, it REDEFINES a built-in
+    // utility. That is deliberate (the role has to exist in the token package
+    // for the React Native output too) and safe only because the value is the
+    // same system stack. Assert the property this rests on rather than the
+    // exact string, which is Tailwind's to change and this repo's to match.
+    const css = await build(['font-mono'], true);
+    expect(resolved(css, 'font-mono', 'font-family')).toMatch(/monospace$/);
   });
 
   describe.each(WIDTH_UTILITIES)('%s-*', (utility, property) => {

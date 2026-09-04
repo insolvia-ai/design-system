@@ -96,6 +96,42 @@ type Mode = (typeof MODES)[number];
 // value instead of resolving to nothing.
 const WIDTH_NAMESPACES = ['--width', '--min-width', '--max-width', '--flex-basis'] as const;
 
+// The one rule in `theme.css` that is not a token.
+//
+// iOS Safari ZOOMS THE PAGE when a text control smaller than 16px takes focus,
+// and this package's controls are `text-sm` — 14px. The zoom is not restored on
+// blur, so the whole layout is left scaled and horizontally scrollable after a
+// single tap into an input. A token cannot express that: the fix is a rule with
+// a media query, and it belongs to the same stylesheet the controls' sizes come
+// from, so it is emitted here rather than left for every consumer to rediscover.
+//
+// Keyed on `pointer: coarse`, NOT a width breakpoint. The condition is touch —
+// a narrow window on a desktop has the same width and no zoom behaviour, while
+// a large tablet has the behaviour at any width. Breakpoint-keyed versions of
+// this fix are common and wrong in both directions.
+//
+// `max(16px, 1em)` rather than a flat `16px` so a control that is already
+// larger than the threshold is not SHRUNK by the fix.
+//
+// NEVER "fix" this with `maximum-scale=1` or `user-scalable=no` on the viewport
+// meta tag. It stops the zoom by disabling pinch-zoom for the whole document,
+// which is a WCAG 2.1 SC 1.4.4 (Resize Text) failure and takes magnification
+// away from the users who most need it. This rule leaves zoom available and
+// removes only the reason it fires.
+//
+// Deliberately UNLAYERED. `@import "tailwindcss"` puts utilities in a cascade
+// layer, and unlayered rules beat every layered one — which is what lets this
+// override the `text-sm` on a control. Wrapping it in `@layer base` would lose
+// to that utility and the rule would silently do nothing.
+const MOBILE_ZOOM_GUARD = `@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+}
+`;
+
 function main(args: string[]): void {
   const check = args.includes('--check');
   const root = repoRoot();
@@ -276,11 +312,25 @@ function mix(baseHex: string, mixName: string, amount: number): string {
   return `#${hex.slice(0, 6).toUpperCase()}${out[3] === 255 ? '' : hex.slice(6).toUpperCase()}`;
 }
 
-/** Resolves every semantic + derived token for one brightness. */
+/** Resolves every semantic + ramp + derived token for one brightness. */
 function valuesFor(tokens: JsonObject, mode: Mode): Map<string, string> {
   const resolved = new Map<string, string>();
+
+  // One flat namespace across the three colour groups, so `set` must never
+  // silently overwrite: two groups claiming one name would emit one CSS
+  // property and one TypeScript member, and which value won would depend on
+  // the order of the loops below rather than on anything a reader could see.
+  const define = (name: string, value: string): void => {
+    if (resolved.has(name)) throw new Error(`Two colour tokens are both named "${name}"`);
+    resolved.set(name, value);
+  };
+
   for (const [name, body] of group(tokens, 'semantic')) {
-    resolved.set(name, resolveAlias(tokens, asString(body[mode], `semantic.${name}.${mode}`)));
+    define(name, resolveAlias(tokens, asString(body[mode], `semantic.${name}.${mode}`)));
+  }
+  // Before the derived pass, so a derived state may be built from a ramp step.
+  for (const [name, body] of group(tokens, 'ramps')) {
+    define(name, resolveAlias(tokens, asString(body[mode], `ramps.${name}.${mode}`)));
   }
   for (const [name, body] of group(tokens, 'semanticDerived')) {
     const from = asString(body['from'], `semanticDerived.${name}.from`);
@@ -289,7 +339,7 @@ function valuesFor(tokens: JsonObject, mode: Mode): Map<string, string> {
       throw new Error(`semanticDerived.${name} derives from unknown semantic "${from}"`);
     }
     const spec = asObject(body[mode], `semanticDerived.${name}.${mode}`);
-    resolved.set(
+    define(
       name,
       mix(
         base,
@@ -345,9 +395,28 @@ function cssColor(hex: string): string {
   return `rgb(${r} ${g} ${b} / ${trim(a / 255)})`;
 }
 
+/**
+ * The custom property a ramp step is emitted as, read off the token rather than
+ * derived from its key: `kebab` turns `neutralA1` into `neutral-a-1`, and the
+ * name the ramp needs is `--color-neutral-a1`.
+ *
+ * The `--color-` prefix is checked rather than assumed. It is what puts the
+ * step in Tailwind's colour namespace — the whole reason `bg-neutral-3` exists
+ * as a utility — and a `cssVar` typo'd into another namespace would emit a
+ * property that resolves, generates no utility, and looks fine in the diff.
+ */
+function rampVar(name: string, body: JsonObject): string {
+  const variable = asString(body['cssVar'], `ramps.${name}.cssVar`);
+  if (!variable.startsWith('--color-')) {
+    throw new Error(`ramps.${name}.cssVar must start with "--color-", got "${variable}"`);
+  }
+  return variable;
+}
+
 function renderCss(tokens: JsonObject): string {
   const semantic = group(tokens, 'semantic');
   const derived = group(tokens, 'semanticDerived');
+  const ramps = group(tokens, 'ramps');
   const out = new Out();
   out.write(CSS_BANNER);
   out.writeln(`/*
@@ -392,6 +461,20 @@ function renderCss(tokens: JsonObject): string {
     out.writeln(`  --color-${kebab(name)}: ${colorMix(from, spec, name)};`);
   }
 
+  out.writeln();
+  out.writeln(`  /* Neutral ramp — light-mode values.
+   *
+   * A 12-step scale and its alpha twin, ADDED alongside the semantic roles
+   * rather than under them: no role above resolves to a ramp step, so a
+   * consumer's default appearance is exactly what it was before these existed.
+   * Steps 1-2 are backgrounds, 3-5 component fills, 6-8 borders, 9-10 solids,
+   * 11-12 text. The \`a\` steps are the same rungs with alpha instead of a baked
+   * background, for anything that lands on a surface it cannot know. */`);
+  for (const [name, body] of ramps) {
+    const value = resolveAlias(tokens, asString(body['light'], `ramps.${name}.light`));
+    out.writeln(`  ${rampVar(name, body)}: ${cssColor(value)};`);
+  }
+
   section('Spacing — a 4pt base grid.');
   for (const [name, body] of group(tokens, 'spacing')) {
     const rem = asNumber(body['value'], `spacing.${name}.value`) / 16;
@@ -424,6 +507,19 @@ function renderCss(tokens: JsonObject): string {
     out.writeln(`  --shadow-${kebab(name)}: ${asString(body['value'], `shadows.${name}.value`)};`);
   }
 
+  out.writeln();
+  out.writeln(`  /* Motion. Each key names its own custom property, because the namespace
+   * that turns it into a real utility is not derivable from the token name:
+   * \`duration-*\` resolves theme keys under \`--transition-duration-*\` (there is
+   * no \`--duration-*\` namespace to write into), while \`ease-*\` resolves
+   * \`--ease-*\`. So these generate \`duration-fast\`, \`duration-base\` and
+   * \`ease-standard\`, and redefine nothing: Tailwind's own theme carries no key
+   * of any of those names. */`);
+  for (const [name, body] of group(tokens, 'motion')) {
+    const variable = asString(body['cssVar'], `motion.${name}.cssVar`);
+    out.writeln(`  ${variable}: ${asString(body['css'], `motion.${name}.css`)};`);
+  }
+
   out.writeln('}');
   out.writeln();
   out.writeln("[data-theme='dark'] {");
@@ -438,8 +534,15 @@ function renderCss(tokens: JsonObject): string {
     const from = asString(body['from'], `semanticDerived.${name}.from`);
     out.writeln(`  --color-${kebab(name)}: ${colorMix(from, spec, name)};`);
   }
+  out.writeln();
+  for (const [name, body] of ramps) {
+    const value = resolveAlias(tokens, asString(body['dark'], `ramps.${name}.dark`));
+    out.writeln(`  ${rampVar(name, body)}: ${cssColor(value)};`);
+  }
 
   out.writeln('}');
+  out.writeln();
+  out.write(MOBILE_ZOOM_GUARD);
   return out.toString();
 }
 
@@ -507,7 +610,11 @@ function rnColor(hex: string): string {
  * reimplementation in another repo.
  */
 function renderColorsJson(tokens: JsonObject): string {
-  const entries = [...group(tokens, 'semantic'), ...group(tokens, 'semanticDerived')];
+  const entries = [
+    ...group(tokens, 'semantic'),
+    ...group(tokens, 'semanticDerived'),
+    ...group(tokens, 'ramps'),
+  ];
 
   const document: Record<string, Record<string, string>> = {};
   for (const mode of MODES) {
@@ -525,7 +632,8 @@ function renderColorsJson(tokens: JsonObject): string {
 function renderTypeScript(tokens: JsonObject): string {
   const semantic = group(tokens, 'semantic');
   const derived = group(tokens, 'semanticDerived');
-  const entries = [...semantic, ...derived];
+  const ramps = group(tokens, 'ramps');
+  const entries = [...semantic, ...derived, ...ramps];
 
   const out = new Out();
   out.write(TS_BANNER);
@@ -553,10 +661,18 @@ function renderTypeScript(tokens: JsonObject): string {
   out.writeln();
 
   out.writeln('/**');
-  out.writeln(' * One complete mapping of semantic role onto an sRGB value.');
+  out.writeln(' * One complete mapping of colour name onto an sRGB value: the semantic');
+  out.writeln(' * roles, their derived states, and the neutral ramp steps.');
   out.writeln(' *');
   out.writeln(' * Every member is required, so a scheme that omits one — a missing');
   out.writeln(' * dark-mode value — is a compile error, never a silent fallback.');
+  out.writeln(' *');
+  out.writeln(' * The ramp steps sit here, rather than in an export of their own, so that');
+  out.writeln(' * one lookup answers every colour question a leaf has and a consumer');
+  out.writeln(' * overrides a ramp step through exactly the seam it already overrides a');
+  out.writeln(' * role through. They are still a scale rather than roles: prefer `bg` or');
+  out.writeln(' * `line` where one says what you mean, and reach for a step when nothing');
+  out.writeln(' * does.');
   out.writeln(' */');
   out.writeln('export interface ColorScheme {');
   let first = true;
@@ -569,7 +685,7 @@ function renderTypeScript(tokens: JsonObject): string {
   out.writeln('}');
   out.writeln();
 
-  out.writeln('/** The semantic color vocabulary — the only color names UI code speaks. */');
+  out.writeln('/** Every color name UI code may speak — semantic roles and ramp steps. */');
   out.writeln('export type SemanticColorName = keyof ColorScheme;');
   out.writeln();
 
@@ -578,7 +694,7 @@ function renderTypeScript(tokens: JsonObject): string {
   for (const mode of MODES) {
     const values = valuesFor(tokens, mode);
     if (mode !== MODES[0]) out.writeln();
-    out.write(tsDoc(`The ${mode}-mode mapping of palette onto semantics.`));
+    out.write(tsDoc(`The ${mode}-mode mapping of palette onto semantics and ramp steps.`));
     out.writeln(`  ${mode}: {`);
     for (const [name] of entries) {
       out.writeln(`    ${name}: ${jsString(rnColor(lookup(values, name)))},`);
@@ -652,11 +768,42 @@ function renderTypeScript(tokens: JsonObject): string {
       'design-system/src/lib/native-typography.native.ts, which owns that',
       'mapping and the reason no font file ships with either package.',
       '',
+      '`mono` needs the same treatment for the same reason — iOS ships Menlo,',
+      'and Android maps the `monospace` generic — so a native leaf takes the',
+      "platform's monospace rather than this stack verbatim.",
+      '',
       '`body` needs no such mapping: this stack already resolves to the',
       'platform UI family on every target.',
     ],
     keyDoc: 'A type role.',
     value: (body, where) => jsString(asString(body['value'], where)),
+  });
+  out.writeln();
+
+  renderTsRecord(out, tokens, {
+    group: 'motion',
+    interfaceName: 'Motion',
+    keyType: 'MotionToken',
+    constName: 'motion',
+    valueType: (body) => (typeof body['value'] === 'number' ? 'number' : 'string'),
+    interfaceDoc: [
+      'Motion primitives, so a duration or a curve is a token rather than a',
+      'number typed into a component and never matched anywhere else.',
+      '',
+      'Durations are plain milliseconds — the unit `Animated.timing`, `withTiming`',
+      'and CSS all take — given to each stack in the form it wants: a number',
+      'here, `120ms` in `theme.css`.',
+      '',
+      'The easing is authored in the CSS `cubic-bezier()` form, which is what the',
+      'web side needs literally. A native consumer reads the same four control',
+      'points out of it — `Easing.bezier(0.2, 0, 0, 1)` — so both stacks describe',
+      'one curve rather than two that happen to look similar.',
+    ],
+    keyDoc: 'A motion primitive — a duration or an easing curve.',
+    value: (body, where) =>
+      typeof body['value'] === 'number'
+        ? String(asNumber(body['value'], where))
+        : jsString(asString(body['value'], where)),
   });
 
   return out.toString();
@@ -671,7 +818,11 @@ function renderTsRecord(
     interfaceName: string;
     keyType: string;
     constName: string;
-    valueType: string;
+    // A function, not just a string, because `motion` mixes a number (a
+    // duration in ms) with a string (an easing curve) in one group — and
+    // splitting it into two groups to keep one type per group would put the
+    // duration and the curve it is used with in different places.
+    valueType: string | ((body: JsonObject, where: string) => string);
     interfaceDoc: string[];
     keyDoc: string;
     value: (body: JsonObject, where: string) => string;
@@ -692,8 +843,11 @@ function renderTsRecord(
   for (const [name, body] of entries) {
     if (!first) out.writeln();
     first = false;
+    const where = `${spec.group}.${name}.value`;
+    const valueType =
+      typeof spec.valueType === 'string' ? spec.valueType : spec.valueType(body, where);
     out.write(tsDoc(asString(body['description'], `${spec.group}.${name}.description`)));
-    out.writeln(`  readonly ${name}: ${spec.valueType};`);
+    out.writeln(`  readonly ${name}: ${valueType};`);
   }
   out.writeln('}');
   out.writeln();

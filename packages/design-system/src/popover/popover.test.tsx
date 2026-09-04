@@ -70,6 +70,36 @@ describe('Popover', () => {
     expect(screen.getByRole('dialog')).toHaveAccessibleName('Filters');
   });
 
+  // Popover takes NO `container` prop, because it takes no portal: the surface
+  // is absolutely positioned inside the Root's relative box, which is what
+  // anchors it to its trigger. These two pin that, and with it the reason
+  // Popover is immune to the fullscreen problem Dialog.Root's `container`
+  // solves — it is already wherever its trigger is.
+  it('renders its surface inline under the Root, never portaled to the body', async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+
+    const trigger = screen.getByRole('button', { name: 'Filters' });
+    await user.click(trigger);
+
+    const surface = screen.getByRole('dialog');
+    expect(surface.parentElement).toBe(trigger.parentElement);
+    expect(surface.parentElement).not.toBe(document.body);
+  });
+
+  it('follows its trigger into an arbitrary container, with nothing to configure', async () => {
+    const user = userEvent.setup();
+    const stage = document.createElement('div');
+    document.body.appendChild(stage);
+
+    render(<Example />, { container: stage });
+    await user.click(screen.getByRole('button', { name: 'Filters' }));
+
+    expect(stage.contains(screen.getByRole('dialog'))).toBe(true);
+
+    stage.remove();
+  });
+
   it('closes on Escape', async () => {
     const user = userEvent.setup();
     render(<Example />);

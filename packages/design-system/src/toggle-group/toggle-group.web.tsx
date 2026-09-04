@@ -29,12 +29,13 @@ const ToggleGroupRoot = React.forwardRef<HTMLDivElement, ToggleGroupRootProps>(
       onValueChange,
       multiple = false,
       disabled = false,
+      size = 'md',
       children,
       ...props
     },
     ref,
   ) => {
-    const ctx = useToggleGroupState(value, defaultValue, onValueChange, multiple, disabled);
+    const ctx = useToggleGroupState(value, defaultValue, onValueChange, multiple, disabled, size);
     return (
       <ToggleGroupContext.Provider value={ctx}>
         <div

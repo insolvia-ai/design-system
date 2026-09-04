@@ -14,6 +14,7 @@ import { describe, expect, it } from 'vitest';
 import { colors } from '@insolvia-ai/tokens';
 
 import { rgb, setPrefersColorScheme } from '../../vitest.native.setup';
+import { headingFamily, monoFamily } from '../lib/native-typography';
 import { Text } from './text';
 
 describe('Text (native leaf)', () => {
@@ -37,5 +38,74 @@ describe('Text (native leaf)', () => {
     expect(rgb(getComputedStyle(screen.getByText('Metadata')).color)).toEqual(
       rgb(colors.dark.muted),
     );
+  });
+
+  // `family` is the DS-1 half of this leaf: the same three role names the web
+  // leaf spells `font-heading`/`font-body`/`font-mono`, resolved through
+  // native-typography's per-platform seam. These assert the OVERRIDE in both
+  // directions, because the failure that matters is a family that layers
+  // instead of replacing — the variant's face surviving underneath an explicit
+  // one.
+  it("uses the variant's own family when none is given", () => {
+    render(<Text variant="title">Jump solutions</Text>);
+
+    expect(getComputedStyle(screen.getByText('Jump solutions')).fontFamily).toBe(headingFamily);
+  });
+
+  it('replaces the variant family with family="mono"', () => {
+    render(
+      <Text variant="title" family="mono">
+        R-114-8829
+      </Text>,
+    );
+
+    const style = getComputedStyle(screen.getByText('R-114-8829'));
+    // `monoFamily` is the token stack on this platform (react-native-web),
+    // which is exactly what the `.web` leaf's `font-mono` resolves to — that
+    // equality is what makes the workbench's two panes comparable.
+    expect(style.fontFamily).toBe(monoFamily);
+    expect(style.fontFamily).not.toBe(headingFamily);
+  });
+
+  it('drops the heading face for family="body", the platform sans', () => {
+    render(
+      <Text variant="display" family="body">
+        Big, but not serif
+      </Text>,
+    );
+
+    // `body` is the ABSENCE of a family on this platform — see familyFont in
+    // text.native.tsx — so react-native-web's own base stack renders, which is
+    // the platform sans. Asserted as "neither of the two families this
+    // component can name" rather than against that stack verbatim: the stack
+    // belongs to react-native-web and is not this package's to pin.
+    const style = getComputedStyle(screen.getByText('Big, but not serif'));
+    expect(style.fontFamily).not.toBe(headingFamily);
+    expect(style.fontFamily).not.toBe(monoFamily);
+    expect(style.fontFamily).toContain('sans-serif');
+  });
+
+  // `truncate` is the one of the two new props that CROSSES: RN elides with
+  // `numberOfLines`, not with CSS, so a caller who had reached for
+  // `className="truncate"` had written something that did nothing here. The
+  // web leaf's counterpart is asserted in text.test.tsx.
+  it('elides with numberOfLines when asked to truncate', () => {
+    render(
+      <Text truncate testID="text">
+        A very long run of text that has to elide
+      </Text>,
+    );
+
+    // react-native-web compiles `numberOfLines={1}` into its own atomic
+    // classes rather than an inline style. The hash half of each name is an
+    // implementation detail; the PROPERTY half is what the library guarantees,
+    // so that is what this reads — `r-textOverflow-*` is the ellipsis.
+    expect(screen.getByTestId('text').className).toContain('r-textOverflow');
+  });
+
+  it('does not elide by default', () => {
+    render(<Text testID="text">Wraps as many lines as it needs</Text>);
+
+    expect(screen.getByTestId('text').className).not.toContain('r-textOverflow');
   });
 });

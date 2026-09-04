@@ -91,9 +91,9 @@ const TabPanel = ({ value, children }: TabPanelProps) => {
   // A plain View, like any other RN container — arbitrary content, not just
   // text, is the point of a panel. Raw text still needs the caller's own
   // `<Text>`, the same rule as everywhere else in RN. Accordion's and
-  // Collapsible's panels take the same position as of 0.15.0; they wrap a bare
-  // string for convenience and pass everything else through, which this one
-  // does not need to because a tab panel rarely holds a bare string.
+  // Collapsible's panels are the same plain View as of 0.15.0, and for the
+  // same reason; this leaf was the one that already had it right, so all three
+  // now agree and none of them styles what it holds.
   return <View style={styles.panel}>{children}</View>;
 };
 

@@ -6,6 +6,22 @@
 // with focus-return to the opener, Escape + backdrop-click dismissal, and a
 // body scroll lock. Closed means unmounted — nothing renders, no exit
 // animation — so the popup's MOUNT effects are its open effects.
+//
+// The portal target is `document.body` unless `Dialog.Root` is handed a
+// `container`. That prop exists because the Fullscreen API paints ONLY the
+// fullscreen element's descendants: while some other element is fullscreen, a
+// dialog portaled to the body is mounted, focused, keyboard-reachable and
+// completely invisible. A consumer that puts a surface into fullscreen passes
+// that element and the whole dialog — backdrop and popup — mounts inside it.
+//
+// POSITIONING IS UNCHANGED BY THE TARGET. Both parts are `position: fixed`,
+// which resolves against the VIEWPORT wherever the element is mounted, and the
+// UA gives a fullscreen element `position: fixed; inset: 0` — the same rect,
+// so `fixed inset-0` and the centring translate still land where they read.
+// The one thing that would move them is `transform`, `filter`, `perspective`,
+// `contain` or `will-change` on the container or anything between it and the
+// popup: any of those makes that element the containing block for fixed
+// descendants. Keep them off the element you pass.
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 
@@ -58,14 +74,48 @@ function trapTabKey(
   }
 }
 
+// The portal target, WEB-ONLY on purpose and deliberately a SECOND context
+// rather than another member on DialogContextValue: `dialog.props.ts` is
+// compiled by the native typecheck program too, which has no DOM lib, so an
+// `HTMLElement` cannot live there. A portal target is DOM behavior, and DOM
+// behavior is what a leaf owns.
+const DialogPortalContext = React.createContext<HTMLElement | null>(null);
+
+/** Where the parts portal: the Root's `container`, else `document.body`. */
+function usePortalContainer(): HTMLElement {
+  return React.useContext(DialogPortalContext) ?? document.body;
+}
+
 export interface DialogRootProps extends DialogRootOwnProps {
   children?: React.ReactNode;
+  /**
+   * Portal the backdrop and popup into this element instead of
+   * `document.body` — for a consumer whose page can go fullscreen, where only
+   * the fullscreen element's descendants are painted. Omitted or `null` is
+   * today's behavior exactly.
+   *
+   * An ELEMENT, not a ref: the parts read it WHILE RENDERING, and a ref filled
+   * by the same commit is still `null` on the render that mounts them — the
+   * popup would portal to the body once and never move. Hold the node in
+   * state (`useState<HTMLElement | null>`) and pass that.
+   */
+  container?: HTMLElement | null | undefined;
 }
 
 // Renders no element of its own — it is the state owner and context provider.
-const DialogRoot = ({ open, defaultOpen, onOpenChange, children }: DialogRootProps) => {
+const DialogRoot = ({
+  open,
+  defaultOpen,
+  onOpenChange,
+  container = null,
+  children,
+}: DialogRootProps) => {
   const ctx = useDialogState(open, defaultOpen, onOpenChange);
-  return <DialogRootContext.Provider value={ctx}>{children}</DialogRootContext.Provider>;
+  return (
+    <DialogRootContext.Provider value={ctx}>
+      <DialogPortalContext.Provider value={container}>{children}</DialogPortalContext.Provider>
+    </DialogRootContext.Provider>
+  );
 };
 
 const DialogTrigger = React.forwardRef<HTMLButtonElement, React.ComponentPropsWithoutRef<'button'>>(
@@ -92,6 +142,7 @@ DialogTrigger.displayName = 'Dialog.Trigger';
 const DialogBackdrop = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<'div'>>(
   ({ className, onClick, ...props }, ref) => {
     const { open, setOpen } = useDialogRootContext('Backdrop');
+    const container = usePortalContainer();
     if (!open) return null;
     return createPortal(
       <div
@@ -107,7 +158,7 @@ const DialogBackdrop = React.forwardRef<HTMLDivElement, React.ComponentPropsWith
         className={cn('fixed inset-0 z-40 bg-ink/50', className)}
         {...props}
       />,
-      document.body,
+      container,
     );
   },
 );
@@ -120,6 +171,7 @@ export type DialogPopupProps = React.ComponentPropsWithoutRef<'div'>;
 const DialogPopupImpl = React.forwardRef<HTMLDivElement, DialogPopupProps>(
   ({ className, children, onKeyDown, ...props }, ref) => {
     const { setOpen, titleId, descriptionId } = useDialogRootContext('Popup');
+    const container = usePortalContainer();
     const popupRef = React.useRef<HTMLDivElement | null>(null);
     const setRefs = React.useCallback(
       (node: HTMLDivElement | null) => {
@@ -153,7 +205,9 @@ const DialogPopupImpl = React.forwardRef<HTMLDivElement, DialogPopupProps>(
       return () => opener?.focus();
     }, []);
 
-    // Body scroll lock while open; restore whatever was there on close.
+    // Body scroll lock while open; restore whatever was there on close. Stays
+    // on the BODY whatever `container` is — the element that scrolls the page
+    // is the body regardless of where the popup happens to be mounted.
     React.useEffect(() => {
       const previous = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
@@ -199,7 +253,7 @@ const DialogPopupImpl = React.forwardRef<HTMLDivElement, DialogPopupProps>(
       >
         {children}
       </div>,
-      document.body,
+      container,
     );
   },
 );

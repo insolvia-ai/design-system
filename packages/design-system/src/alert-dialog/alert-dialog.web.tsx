@@ -6,6 +6,12 @@
 // and threading three behavior flags through a shared internal component
 // would bury that contract in conditionals. Same trap, same portal, same
 // scroll lock; dismissal only through an explicit choice (Close/action).
+//
+// The duplication is why `container` is declared HERE too rather than
+// inherited: this leaf composes nothing from dialog.web.tsx, so a consumer
+// aiming a fullscreen portal has to be able to say so on AlertDialog.Root as
+// well. Same prop, same default, same positioning note — dialog.web.tsx's
+// header carries the reasoning once.
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 
@@ -50,14 +56,42 @@ function trapTabKey(
   }
 }
 
+// WEB-ONLY, and its own context rather than a member on
+// AlertDialogContextValue: `alert-dialog.props.ts` is compiled by the native
+// program, which has no DOM lib. Same split as Dialog's.
+const AlertDialogPortalContext = React.createContext<HTMLElement | null>(null);
+
+/** Where the parts portal: the Root's `container`, else `document.body`. */
+function usePortalContainer(): HTMLElement {
+  return React.useContext(AlertDialogPortalContext) ?? document.body;
+}
+
 export interface AlertDialogRootProps extends AlertDialogRootOwnProps {
   children?: React.ReactNode;
+  /**
+   * Portal the backdrop and popup into this element instead of
+   * `document.body`. Omitted or `null` is today's behavior exactly. An
+   * ELEMENT, not a ref — see `DialogRootProps.container` for why.
+   */
+  container?: HTMLElement | null | undefined;
 }
 
 // Renders no element of its own — it is the state owner and context provider.
-const AlertDialogRoot = ({ open, defaultOpen, onOpenChange, children }: AlertDialogRootProps) => {
+const AlertDialogRoot = ({
+  open,
+  defaultOpen,
+  onOpenChange,
+  container = null,
+  children,
+}: AlertDialogRootProps) => {
   const ctx = useAlertDialogState(open, defaultOpen, onOpenChange);
-  return <AlertDialogRootContext.Provider value={ctx}>{children}</AlertDialogRootContext.Provider>;
+  return (
+    <AlertDialogRootContext.Provider value={ctx}>
+      <AlertDialogPortalContext.Provider value={container}>
+        {children}
+      </AlertDialogPortalContext.Provider>
+    </AlertDialogRootContext.Provider>
+  );
 };
 
 const AlertDialogTrigger = React.forwardRef<
@@ -87,6 +121,7 @@ AlertDialogTrigger.displayName = 'AlertDialog.Trigger';
 const AlertDialogBackdrop = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<'div'>>(
   ({ className, ...props }, ref) => {
     const { open } = useAlertDialogRootContext('Backdrop');
+    const container = usePortalContainer();
     if (!open) return null;
     return createPortal(
       <div
@@ -98,7 +133,7 @@ const AlertDialogBackdrop = React.forwardRef<HTMLDivElement, React.ComponentProp
         className={cn('fixed inset-0 z-40 bg-ink/50', className)}
         {...props}
       />,
-      document.body,
+      container,
     );
   },
 );
@@ -111,6 +146,7 @@ export type AlertDialogPopupProps = React.ComponentPropsWithoutRef<'div'>;
 const AlertDialogPopupImpl = React.forwardRef<HTMLDivElement, AlertDialogPopupProps>(
   ({ className, children, onKeyDown, ...props }, ref) => {
     const { titleId, descriptionId } = useAlertDialogRootContext('Popup');
+    const container = usePortalContainer();
     const popupRef = React.useRef<HTMLDivElement | null>(null);
     const setRefs = React.useCallback(
       (node: HTMLDivElement | null) => {
@@ -138,6 +174,7 @@ const AlertDialogPopupImpl = React.forwardRef<HTMLDivElement, AlertDialogPopupPr
       return () => opener?.focus();
     }, []);
 
+    // The scroll lock stays on the BODY whatever `container` is.
     React.useEffect(() => {
       const previous = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
@@ -173,7 +210,7 @@ const AlertDialogPopupImpl = React.forwardRef<HTMLDivElement, AlertDialogPopupPr
       >
         {children}
       </div>,
-      document.body,
+      container,
     );
   },
 );

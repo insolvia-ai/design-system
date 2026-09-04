@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 
 import { AlertDialog } from './alert-dialog';
 
-function DiscardIntake() {
+function DiscardIntake({ container }: { container?: HTMLElement }) {
   return (
-    <AlertDialog.Root>
+    <AlertDialog.Root {...(container ? { container } : {})}>
       <AlertDialog.Trigger>Discard intake</AlertDialog.Trigger>
       <AlertDialog.Backdrop />
       <AlertDialog.Popup>
@@ -66,6 +66,41 @@ describe('AlertDialog', () => {
   });
 
   // The alert-dialog contract: dismissal only through an explicit choice.
+  it('portals the backdrop and popup into document.body by default', async () => {
+    const user = userEvent.setup();
+    render(<DiscardIntake />);
+    await user.click(screen.getByRole('button', { name: 'Discard intake' }));
+
+    expect(screen.getByRole('alertdialog').parentElement).toBe(document.body);
+    expect(document.querySelector('[data-alert-dialog-backdrop]')?.parentElement).toBe(
+      document.body,
+    );
+  });
+
+  // AlertDialog composes nothing from Dialog — it duplicates the markup — so it
+  // declares `container` itself, and the fullscreen case has to be pinned here
+  // separately rather than inherited.
+  it('portals both parts into a custom container, with the trap intact', async () => {
+    const user = userEvent.setup();
+    const stage = document.createElement('div');
+    document.body.appendChild(stage);
+
+    render(<DiscardIntake container={stage} />);
+    await user.click(screen.getByRole('button', { name: 'Discard intake' }));
+
+    const dialog = screen.getByRole('alertdialog');
+    expect(dialog.parentElement).toBe(stage);
+    expect(stage.querySelector('[data-alert-dialog-backdrop]')).not.toBeNull();
+
+    const keep = screen.getByRole('button', { name: 'Keep editing' });
+    expect(keep).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Discard' })).toHaveFocus();
+    expect(document.body.style.overflow).toBe('hidden');
+
+    stage.remove();
+  });
+
   it('does NOT close on Escape', async () => {
     const user = userEvent.setup();
     render(<DiscardIntake />);

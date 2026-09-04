@@ -74,3 +74,32 @@ export const headingFamilyByPlatform = {
 } as const;
 
 export const headingFamily: string = Platform.select(headingFamilyByPlatform);
+
+/**
+ * The mono family for the current platform — the same seam as `heading`, one
+ * step down, for `Text`'s `family="mono"`.
+ *
+ * Same rule and same reason: `web` takes the FULL stack from tokens so
+ * react-native-web resolves it identically to the `.web` leaf's `font-mono`,
+ * while ios and android each take ONE registered family name, because a
+ * comma-separated stack matches nothing in React Native and falls back to the
+ * system sans — mono text set in a proportional face, with no error anywhere.
+ *
+ * iOS ships Menlo; Android has no Menlo and maps the `monospace` generic to
+ * Droid Sans Mono. Both are the same call the web stack makes — take the
+ * platform's mono — rather than a second opinion, and neither needs a font
+ * file shipped from here (see WHY NO FONT FILE IS SHIPPED, above).
+ *
+ * There is no `bodyFamilyByPlatform`. `body` is the absence of a family: the
+ * native leaves have never set one for body copy, so the platform's own sans
+ * renders — which is what `--font-body`'s stack asks for too. Adding one would
+ * be a visual change to every existing native surface, not part of giving
+ * `Text` a family control.
+ */
+export const monoFamilyByPlatform = {
+  ios: 'Menlo',
+  android: 'monospace',
+  default: typography.mono,
+} as const;
+
+export const monoFamily: string = Platform.select(monoFamilyByPlatform);

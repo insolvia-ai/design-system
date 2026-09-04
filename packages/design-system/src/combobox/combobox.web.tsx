@@ -89,8 +89,14 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
       }
     };
 
+    // `min-w-0` for the reason select.web.tsx spells out, arrived at from the
+    // other side. This trigger is an <input>, so there is no truncating span to
+    // free — but an input carries an intrinsic width from its `size` attribute
+    // (20 characters by default) that its own `w-full` cannot undo, and as a
+    // flex item this wrapper's `min-width: auto` resolves to exactly that. So a
+    // Combobox in a constrained row held ~20ch open.
     return (
-      <div ref={rootRef} className="relative">
+      <div ref={rootRef} className="relative min-w-0">
         <input
           ref={ref}
           type="text"

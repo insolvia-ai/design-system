@@ -10,6 +10,21 @@ import * as React from 'react';
 
 import { useControllableState } from '../lib/controllable';
 
+/**
+ * The two heights a Toggle comes in — Button's `sm` and `md` exactly, so a
+ * toggle group and a button sit on one row at one height.
+ *
+ * WHY THIS TYPE IS DECLARED IN THE *GROUP'S* MODULE. It reads like Toggle's
+ * axis, and it is; but `toggle.props.ts` imports THIS file and this file
+ * imports nothing from `../toggle` — a deliberate one-way edge stated in the
+ * header above. The group's context has to carry the size (that is the whole
+ * point of setting it once on `ToggleGroup.Root`), so the type has to be
+ * reachable from here, and importing it from `../toggle` would close the loop.
+ * `toggle.props.ts` re-exports it, so `ToggleSize` is still the name a caller
+ * imports and still reads as Toggle's own axis from outside the package.
+ */
+export type ToggleSize = 'sm' | 'md';
+
 export interface ToggleGroupContextValue {
   /** The group's current pressed value(s). */
   value: string[];
@@ -20,6 +35,14 @@ export interface ToggleGroupContextValue {
   toggle: (itemValue: string) => void;
   /** Group-level disable — ORed with each toggle's own `disabled`, so a toggle cannot opt out of a disabled group. */
   disabled: boolean;
+  /**
+   * The size every member wears unless it names its own. Unlike `disabled`,
+   * which is ORed so a toggle cannot escape a disabled group, this is a
+   * DEFAULT: a group is one control made of parts and its members should agree
+   * on height, but nothing about that is a safety property, so a member that
+   * asks for a different size gets it.
+   */
+  size: ToggleSize;
 }
 
 export const ToggleGroupContext = React.createContext<ToggleGroupContextValue | null>(null);
@@ -50,6 +73,13 @@ export interface ToggleGroupRootOwnProps {
   multiple?: boolean | undefined;
   /** Disables every toggle that reads this group's context. */
   disabled?: boolean | undefined;
+  /**
+   * The size for every toggle in the group. Defaults to `md`. A view switch
+   * meant for a phone toolbar sets `sm` here once rather than on each member —
+   * two members at the default size measured about 157px, which is 44% of a
+   * 390px row before the rest of the toolbar has asked for anything.
+   */
+  size?: ToggleSize | undefined;
 }
 
 /**
@@ -65,6 +95,7 @@ export function useToggleGroupState(
   onValueChange: ((value: string[]) => void) | undefined,
   multiple: boolean,
   disabled: boolean,
+  size: ToggleSize,
 ): ToggleGroupContextValue {
   const [current, setCurrent] = useControllableState<string[]>(
     value,
@@ -86,5 +117,8 @@ export function useToggleGroupState(
     [current, multiple, setCurrent],
   );
 
-  return React.useMemo(() => ({ value: current, toggle, disabled }), [current, toggle, disabled]);
+  return React.useMemo(
+    () => ({ value: current, toggle, disabled, size }),
+    [current, toggle, disabled, size],
+  );
 }

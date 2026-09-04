@@ -9,7 +9,7 @@ import { useToggleGroupState } from './toggle-group.props';
 describe('useToggleGroupState', () => {
   it('starts with nothing pressed without a defaultValue', () => {
     const { result } = renderHook(() =>
-      useToggleGroupState(undefined, undefined, undefined, false, false),
+      useToggleGroupState(undefined, undefined, undefined, false, false, 'md'),
     );
 
     expect(result.current.value).toEqual([]);
@@ -17,7 +17,7 @@ describe('useToggleGroupState', () => {
 
   it('honours defaultValue on first render (uncontrolled)', () => {
     const { result } = renderHook(() =>
-      useToggleGroupState(undefined, ['bold'], undefined, false, false),
+      useToggleGroupState(undefined, ['bold'], undefined, false, false, 'md'),
     );
 
     expect(result.current.value).toEqual(['bold']);
@@ -26,7 +26,7 @@ describe('useToggleGroupState', () => {
   describe('single-select (multiple = false)', () => {
     it('pressing one value replaces any other pressed value', () => {
       const { result } = renderHook(() =>
-        useToggleGroupState(undefined, ['bold'], undefined, false, false),
+        useToggleGroupState(undefined, ['bold'], undefined, false, false, 'md'),
       );
 
       act(() => result.current.toggle('italic'));
@@ -36,7 +36,7 @@ describe('useToggleGroupState', () => {
 
     it('pressing the already-pressed value clears the selection', () => {
       const { result } = renderHook(() =>
-        useToggleGroupState(undefined, ['bold'], undefined, false, false),
+        useToggleGroupState(undefined, ['bold'], undefined, false, false, 'md'),
       );
 
       act(() => result.current.toggle('bold'));
@@ -48,7 +48,7 @@ describe('useToggleGroupState', () => {
   describe('multi-select (multiple = true)', () => {
     it('keeps multiple values pressed at once', () => {
       const { result } = renderHook(() =>
-        useToggleGroupState(undefined, undefined, undefined, true, false),
+        useToggleGroupState(undefined, undefined, undefined, true, false, 'md'),
       );
 
       act(() => result.current.toggle('bold'));
@@ -59,7 +59,7 @@ describe('useToggleGroupState', () => {
 
     it('unpresses only the toggled value', () => {
       const { result } = renderHook(() =>
-        useToggleGroupState(undefined, ['bold', 'italic'], undefined, true, false),
+        useToggleGroupState(undefined, ['bold', 'italic'], undefined, true, false, 'md'),
       );
 
       act(() => result.current.toggle('bold'));
@@ -73,7 +73,7 @@ describe('useToggleGroupState', () => {
       const onValueChange = vi.fn();
       const { result, rerender } = renderHook(
         ({ value }: { value: string[] }) =>
-          useToggleGroupState(value, undefined, onValueChange, false, false),
+          useToggleGroupState(value, undefined, onValueChange, false, false, 'md'),
         { initialProps: { value: ['bold'] } },
       );
 
@@ -92,7 +92,7 @@ describe('useToggleGroupState', () => {
 
   it('carries the disabled flag through to context consumers', () => {
     const { result } = renderHook(() =>
-      useToggleGroupState(undefined, undefined, undefined, false, true),
+      useToggleGroupState(undefined, undefined, undefined, false, true, 'md'),
     );
 
     expect(result.current.disabled).toBe(true);

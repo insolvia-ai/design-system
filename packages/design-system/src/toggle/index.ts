@@ -2,4 +2,4 @@
 // (Metro) by extension. Types come from the platform-agnostic props module.
 export { Toggle } from './toggle';
 export type { ToggleProps } from './toggle';
-export type { ToggleOwnProps, ToggleState } from './toggle.props';
+export type { ToggleOwnProps, ToggleState, ToggleSize } from './toggle.props';

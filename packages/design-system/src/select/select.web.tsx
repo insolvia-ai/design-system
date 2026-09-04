@@ -199,7 +199,16 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
           )}
           {...props}
         >
-          <span className={cn('truncate', selected ? 'text-ink' : 'text-muted')}>
+          {/* `min-w-0` is what makes the `truncate` beside it mean anything.
+              A flex item's `min-width` defaults to `auto`, which is its own
+              content's width — so this span refused to shrink below the
+              label's natural width and pushed the trigger, and everything
+              constraining the trigger, wider than asked. A `w-28` cap on the
+              trigger was silently ignored, and a toolbar that fitted at
+              desktop width wrapped a control onto a second line on a phone.
+              The ellipsis was always here; the box it had to elide inside
+              never existed. */}
+          <span className={cn('min-w-0 truncate', selected ? 'text-ink' : 'text-muted')}>
             {selected?.label ?? placeholder}
           </span>
           <span aria-hidden="true" className="text-muted">

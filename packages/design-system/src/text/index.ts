@@ -2,4 +2,4 @@
 // (Metro) by extension — never add one here.
 export { Text } from './text';
 export type { TextProps } from './text';
-export type { TextTone, TextVariant, TextWeight } from './text.props';
+export type { TextFamily, TextTone, TextVariant, TextWeight } from './text.props';
