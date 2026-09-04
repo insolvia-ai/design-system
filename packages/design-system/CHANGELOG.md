@@ -73,7 +73,11 @@ for any of the latter, this is the release that lets you delete them.
   own pressed state is `Toggle`); both states carry a border and only its
   colour moves, so a chip row never reflows as you press. The helper is the
   primary interface for the case a component cannot serve: a router link takes
-  a function `className` and cannot be a `<button>`.
+  a function `className` and cannot be a `<button>`. On React Native it
+  shrink-wraps (`alignSelf: 'flex-start'`), so a chip in an ordinary column
+  `View` hugs its label instead of running edge to edge — the web leaf's
+  `shrink-0` already said as much, and a parent's default `stretch` would
+  otherwise have overruled it.
 - **`cn()` now knows this package's spacing scale, so your `className`
   overrides win.** `tailwind-merge`'s built-in theme is Tailwind's NUMERIC
   spacing scale, so `p-lg` and `gap-sm` were words it had never heard of and it

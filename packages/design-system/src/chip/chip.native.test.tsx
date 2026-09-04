@@ -75,4 +75,16 @@ describe('Chip (native leaf)', () => {
       backgroundColor: rgb(colors.light.primary),
     });
   });
+
+  // A React Native parent defaults to `alignItems: 'stretch'`, so a chip in an
+  // ordinary column View stretched edge to edge while the web leaf — which
+  // carries `inline-flex shrink-0` — hugged its label. Same family as the
+  // 0.12.2 Popover/Tooltip collapse: a native leaf declaring nothing on an
+  // axis and inheriting the parent's answer.
+  it('shrink-wraps rather than filling its parent', () => {
+    setPrefersColorScheme('light');
+    render(<Chip testID="chip">Drafts</Chip>);
+
+    expect(screen.getByTestId('chip')).toHaveStyle({ alignSelf: 'flex-start' });
+  });
 });

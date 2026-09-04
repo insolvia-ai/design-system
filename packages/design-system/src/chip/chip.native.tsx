@@ -86,6 +86,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    // Shrink-wrap, as the web leaf's `inline-flex shrink-0` already does. A
+    // React Native parent defaults to `alignItems: 'stretch'`, so without this
+    // a chip dropped into an ordinary column View runs edge to edge while the
+    // same markup on web hugs its label — and a chip row is the whole point of
+    // the component. Badge and Calendar declare the same thing for the same
+    // reason; IconButton gets it from a definite width instead.
+    alignSelf: 'flex-start',
     borderRadius: radii.md,
     borderWidth: 1,
   },
