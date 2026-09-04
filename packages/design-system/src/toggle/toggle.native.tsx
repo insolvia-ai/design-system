@@ -146,6 +146,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    // Shrink-wrap, as the web leaf's `inline-flex` does. A React Native parent
+    // defaults to `alignItems: 'stretch'`, so without this a TEXT toggle fills
+    // its parent's width while the web one hugs its label — `iconOnly` already
+    // escaped that through the definite width it sets per size, which is why
+    // this only ever showed on half the component. See chip.native.tsx for the
+    // long version.
+    alignSelf: 'flex-start',
     borderRadius: radii.md,
   },
   label: { ...textScale.sm, fontWeight: '500' },

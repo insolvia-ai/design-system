@@ -18,6 +18,44 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.19.0 — minor
+
+**Widen your range to take this:** `^0.18.x` will not resolve it.
+
+**React Native only, and it changes layout.** `Button`, `Toggle`,
+`ToggleGroup.Root` and `Spinner` no longer stretch to the width of their parent
+— they hug their content, exactly as their web leaves have always done. Web
+consumers get nothing here.
+
+The cause is one asymmetry worth knowing about even if you never read this
+package's source: a React Native parent defaults to `alignItems: 'stretch'`, so
+a child that declares no cross-axis size does not get its natural size, it gets
+the PARENT's. Those four leaves declared none. Their web leaves are all
+`inline-flex`, which hugs. So the same markup gave you a button that fitted its
+label on web and one that ran the full width of the screen on a device — and
+nothing in this repo could see it, because the tests render into jsdom and assert
+roles and labels.
+
+- **If you relied on a full-width native `Button` or `Toggle`, that is now
+  yours to ask for:** `style={{ alignSelf: 'stretch' }}` on the control, or a
+  parent that sizes it. This is the same edit you would already have made on
+  web to get `w-full`, so the two platforms now need the same instruction
+  instead of disagreeing by default.
+- **`Spinner` was the worst of the four and the least visible.** Its `size` sets
+  the diameter of the ring, but under react-native-web that lands on an inner
+  view — the outer box stayed `width: auto` and stretched, so a 16px spinner sat
+  centred in a full-width hole. Anything laid out beside it was pushed away by a
+  box the size of the row.
+- `Switch` and `IconButton` already agreed with their web leaves, through a
+  definite width rather than an alignment, and are unchanged. So is `Ribbon`,
+  which is absolutely positioned and whose width its parent never decided.
+
+The rule is now written down — in `packages/design-system/CLAUDE.md` and the
+component skill — because the package had two conventions and no statement of
+which was right, so each new component guessed.
+
+[#25](https://github.com/insolvia-ai/design-system/pull/25)
+
 ## 0.18.1 — patch
 
 **On React Native, the focus ring is this package's again — everywhere, and for

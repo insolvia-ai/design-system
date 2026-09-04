@@ -103,6 +103,29 @@ at module load, and can never follow the scheme.
 design-system surface stayed light inside a dark app. The whole class of bug is
 invisible to the tests and obvious in the workbench, one toolbar click apart.
 
+## A native leaf must match its web leaf's SIZE
+
+If the web leaf is `inline-*`, it hugs its content, and the native leaf has to
+say so — `alignSelf: 'flex-start'`, or a definite `width`. If the web leaf is
+block/flex-level, the native leaf declares nothing and stretches, which is
+already React Native's answer.
+
+The trap is that "declare nothing" does not mean "natural size" on React Native.
+A parent defaults to `alignItems: 'stretch'`, so an undeclared leaf takes the
+PARENT's width. An `inline-flex` web button hugging its label, beside a native
+button spanning the screen, is the two leaves disagreeing about the most basic
+property a component has — and nothing here can see it. jsdom asserts roles and
+labels; axe does not measure boxes. Chip shipped that way and was caught by
+looking at a workbench screenshot.
+
+`workbench/leaf-pair.tsx` sets the native stage to `alignItems: 'stretch'` on
+purpose, because that is what a consumer's root `View` does. If your native pane
+runs full width and your web pane does not, fix the leaf — never the story.
+
+Do not add `alignSelf` where something else already settles the cross size: a
+definite width (`IconButton`, `Switch`) or absolute positioning (`Ribbon`) makes
+it inert.
+
 ## No hard-coded colours, radii or spacing
 
 Everything comes from `@insolvia-ai/tokens`, semantic layer only (`primary`,

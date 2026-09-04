@@ -58,5 +58,10 @@ const ToggleGroupRoot = ({
 export const ToggleGroup = { Root: ToggleGroupRoot };
 
 const styles = StyleSheet.create({
-  root: { flexDirection: 'row', gap: spacing.xs },
+  // `alignSelf` shrink-wraps the group, as the web leaf's `inline-flex` does. A
+  // React Native parent defaults to `alignItems: 'stretch'`, so without it the
+  // group's box runs the full width of whatever contains it while the web one
+  // ends at the last toggle — the two panes then draw a different component.
+  // See chip.native.tsx for the long version.
+  root: { flexDirection: 'row', alignSelf: 'flex-start', gap: spacing.xs },
 });

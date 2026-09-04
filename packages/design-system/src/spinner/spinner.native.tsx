@@ -11,7 +11,7 @@
 // prop, not a StyleSheet entry, so the 0.2.1 static-colour trap does not apply
 // — but it would if this were ever restyled through StyleSheet.create.
 import * as React from 'react';
-import { ActivityIndicator, type ViewProps } from 'react-native';
+import { ActivityIndicator, StyleSheet, type ViewProps } from 'react-native';
 
 import { useNativeColors } from '../lib/native-theme';
 import { DEFAULT_SPINNER_LABEL, sizePx, type SpinnerSize } from './spinner.props';
@@ -39,8 +39,19 @@ export const Spinner = ({
       // leaves at different diameters for the same `size` prop.
       size={sizePx[size]}
       color={c.primary}
-      style={style}
+      style={[styles.root, style]}
       {...props}
     />
   );
 };
+
+const styles = StyleSheet.create({
+  // Shrink-wrap, as the web leaf's `inline-flex` does. `size` sets the diameter
+  // on the ring INSIDE ActivityIndicator, never on the box around it, so that
+  // box is `width: auto` and a React Native parent's default
+  // `alignItems: 'stretch'` gives it the full width — a 16px spinner then sits
+  // centred in a full-width hole, wherever the layout happens to put it, while
+  // the web leaf's sits where it was placed. See chip.native.tsx for the long
+  // version. Caller `style` still comes after, so a width can be imposed.
+  root: { alignSelf: 'flex-start' },
+});

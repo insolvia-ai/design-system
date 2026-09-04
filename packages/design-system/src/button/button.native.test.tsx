@@ -62,4 +62,17 @@ describe('Button (native leaf)', () => {
     expect(style.outlineOffset).toBe('2px');
     expect(rgb(style.outlineColor)).toEqual(rgb(colors.light.accent));
   });
+
+  // A React Native parent defaults to `alignItems: 'stretch'`, so a button in an
+  // ordinary column View stretched edge to edge while the web leaf — which
+  // carries `inline-flex` — hugged its label. Same family as the 0.12.2
+  // Popover/Tooltip collapse: a native leaf declaring nothing on an axis and
+  // inheriting the parent's answer.
+  it('shrink-wraps rather than filling its parent', () => {
+    render(<Button>Join the waitlist</Button>);
+
+    expect(screen.getByRole('button', { name: 'Join the waitlist' })).toHaveStyle({
+      alignSelf: 'flex-start',
+    });
+  });
 });
