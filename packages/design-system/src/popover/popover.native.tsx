@@ -16,10 +16,10 @@
 import * as React from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
-import { useNativeColors } from '../lib/native-theme';
-import { headingFamily, textScale } from '../lib/native-typography';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
+import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
 import {
   PopoverContext,
   usePopoverContext,
@@ -77,6 +77,7 @@ export interface PopoverContentProps extends ViewProps {
 const PopoverContent = ({ label, style, children, ...props }: PopoverContentProps) => {
   const { open, contentId, titleId } = usePopoverContext('Content');
   const c = useNativeColors();
+  const r = useNativeRadii();
   if (!open) return null;
 
   let hasTitle = false;
@@ -113,7 +114,12 @@ const PopoverContent = ({ label, style, children, ...props }: PopoverContentProp
         role="dialog"
         accessibilityLabel={hasTitle ? undefined : label}
         {...webAria}
-        style={[styles.content, { borderColor: c.line, backgroundColor: c.card }, style]}
+        style={[
+          styles.content,
+          { borderRadius: r.lg },
+          { borderColor: c.line, backgroundColor: c.card },
+          style,
+        ]}
         {...props}
       >
         {children}
@@ -125,8 +131,13 @@ const PopoverContent = ({ label, style, children, ...props }: PopoverContentProp
 const PopoverTitle = ({ children }: { children?: React.ReactNode }) => {
   const { titleId } = usePopoverContext('Title');
   const c = useNativeColors();
+  const heading = useNativeHeadingFamily();
   return (
-    <Text nativeID={titleId} accessibilityRole="header" style={[styles.title, { color: c.ink }]}>
+    <Text
+      nativeID={titleId}
+      accessibilityRole="header"
+      style={[styles.title, { fontFamily: heading }, { color: c.ink }]}
+    >
       {children}
     </Text>
   );
@@ -173,7 +184,6 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
     gap: spacing.sm,
     borderWidth: 1,
-    borderRadius: radii.lg,
     padding: spacing.md,
     // The web leaf's `shadow-lg`, in the shape React Native takes — the same
     // numbers card.native.tsx already uses for its `raised` elevation, so the
@@ -186,7 +196,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
   },
-  title: { fontFamily: headingFamily, ...textScale.sm, fontWeight: '600' },
+  title: { ...textScale.sm, fontWeight: '600' },
   close: { alignSelf: 'flex-start', paddingVertical: spacing.xs },
   closeLabel: { ...textScale.sm, fontWeight: '500' },
 });

@@ -23,10 +23,10 @@
 import * as React from 'react';
 import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import { useToggleState, type ToggleOwnProps, type ToggleSize } from './toggle.props';
 
@@ -87,6 +87,7 @@ export function Toggle({
   // Colors resolve per render so the leaf follows the OS scheme; only the
   // scheme-independent layout lives at module level in StyleSheet.create.
   const c = useNativeColors();
+  const r = useNativeRadii();
   // This package's ring rather than the browser's default blue one, which is
   // what react-native-web paints on an unringed Pressable — see
   // lib/native-focus.native.ts. The web leaf has always drawn the package ring;
@@ -118,6 +119,7 @@ export function Toggle({
       }}
       style={(pressableState) => [
         styles.base,
+        { borderRadius: r.md },
         iconOnly
           ? { width: sizeHeight[state.size], height: sizeHeight[state.size] }
           : { height: sizeHeight[state.size], paddingHorizontal: sizePadX[state.size] },
@@ -153,7 +155,6 @@ const styles = StyleSheet.create({
     // this only ever showed on half the component. See chip.native.tsx for the
     // long version.
     alignSelf: 'flex-start',
-    borderRadius: radii.md,
   },
   label: { ...textScale.sm, fontWeight: '500' },
 });

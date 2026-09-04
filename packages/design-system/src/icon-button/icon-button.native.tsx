@@ -4,10 +4,8 @@
 import * as React from 'react';
 import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 
-import { radii } from '@insolvia-ai/tokens';
-
 import { useNativeFocusRing } from '../lib/native-focus';
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import type { IconButtonIntent, IconButtonOwnProps, IconButtonSize } from './icon-button.props';
 
 // `children` is Omit-ed because PressableProps types it as a render function
@@ -61,6 +59,7 @@ export function IconButton({
   // Colors resolve per render so the leaf follows the OS scheme; only the
   // scheme-independent maps and layout live at module level.
   const c = useNativeColors();
+  const r = useNativeRadii();
   // This package's ring rather than the browser's default blue one, which is
   // what react-native-web paints on an unringed Pressable — see
   // lib/native-focus.native.ts. An icon button is the control most likely to be
@@ -122,6 +121,7 @@ export function IconButton({
       }}
       style={(state) => [
         styles.base,
+        { borderRadius: r.md },
         {
           width: sizeBox[size],
           height: sizeBox[size],
@@ -150,7 +150,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radii.md,
   },
   icon: {
     textAlign: 'center',

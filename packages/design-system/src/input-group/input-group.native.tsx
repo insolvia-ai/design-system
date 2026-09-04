@@ -13,10 +13,10 @@
 import * as React from 'react';
 import { StyleSheet, Text, View, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
 import { CONTROL_HEIGHT_PX } from '../input/input.props';
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import { InputGroupContext, type InputGroupRootOwnProps } from './input-group.props';
 
@@ -32,6 +32,7 @@ const InputGroupRoot = ({
   ...props
 }: InputGroupRootProps) => {
   const c = useNativeColors();
+  const r = useNativeRadii();
   const ctx = React.useMemo(() => ({ bare: true as const }), []);
 
   return (
@@ -39,6 +40,7 @@ const InputGroupRoot = ({
       <View
         style={[
           styles.root,
+          { borderRadius: r.md },
           {
             height: CONTROL_HEIGHT_PX,
             borderColor: invalid ? c.danger : c.line,
@@ -80,7 +82,6 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
     overflow: 'hidden',
     borderWidth: 1,
-    borderRadius: radii.md,
   },
   addon: {
     flexShrink: 0,

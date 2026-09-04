@@ -9,9 +9,9 @@
 import * as React from 'react';
 import { StyleSheet, Text, View, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing, type Radii } from '@insolvia-ai/tokens';
 
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import { positionOffsets, type RibbonPosition, type RibbonTone } from './ribbon.props';
 
@@ -24,12 +24,17 @@ export interface RibbonProps extends ViewProps {
 
 // The corner radii per position, matching the web leaf's `rounded-*` pairs:
 // the outer corner follows the card's `lg`, the inner one softens with `md`.
-const positionRadii: Record<RibbonPosition, object> = {
-  'top-left': { borderTopLeftRadius: radii.lg, borderBottomRightRadius: radii.md },
-  'top-right': { borderTopRightRadius: radii.lg, borderBottomLeftRadius: radii.md },
-  'bottom-left': { borderBottomLeftRadius: radii.lg, borderTopRightRadius: radii.md },
-  'bottom-right': { borderBottomRightRadius: radii.lg, borderTopLeftRadius: radii.md },
-};
+//
+// A FUNCTION of the resolved radii rather than a module-level constant: the
+// values reach this from `useNativeRadii()` at render time, so a
+// `ThemeProvider` can move them. Built at module load it would be frozen at the
+// token defaults, which is the whole bug this seam closes.
+const positionRadii = (r: Radii): Record<RibbonPosition, object> => ({
+  'top-left': { borderTopLeftRadius: r.lg, borderBottomRightRadius: r.md },
+  'top-right': { borderTopRightRadius: r.lg, borderBottomLeftRadius: r.md },
+  'bottom-left': { borderBottomLeftRadius: r.lg, borderTopRightRadius: r.md },
+  'bottom-right': { borderBottomRightRadius: r.lg, borderTopLeftRadius: r.md },
+});
 
 export const Ribbon = ({
   tone = 'primary',
@@ -39,6 +44,7 @@ export const Ribbon = ({
   ...props
 }: RibbonProps) => {
   const c = useNativeColors();
+  const r = useNativeRadii();
   const background = tone === 'primary' ? c.primary : c.surfaceAlt;
   const foreground = tone === 'primary' ? c.primaryText : c.ink;
 
@@ -47,7 +53,7 @@ export const Ribbon = ({
       style={[
         styles.root,
         positionOffsets[position],
-        positionRadii[position],
+        positionRadii(r)[position],
         { backgroundColor: background },
         style,
       ]}

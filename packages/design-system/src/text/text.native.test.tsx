@@ -14,6 +14,7 @@ import { describe, expect, it } from 'vitest';
 import { colors } from '@insolvia-ai/tokens';
 
 import { rgb, setPrefersColorScheme } from '../../vitest.native.setup';
+import { ThemeProvider } from '../lib/theme';
 import { headingFamily, monoFamily } from '../lib/native-typography';
 import { Text } from './text';
 
@@ -107,5 +108,48 @@ describe('Text (native leaf)', () => {
     render(<Text testID="text">Wraps as many lines as it needs</Text>);
 
     expect(screen.getByTestId('text').className).not.toContain('r-textOverflow');
+  });
+});
+
+describe('Text (native leaf) — the fonts seam', () => {
+  // Companion to the Button radius pair: `familyFont` was a module-level map
+  // built from `Platform.select` at load, so a provider could not reach it and
+  // a React Native consumer could not set a display face at all — while a web
+  // consumer set `--font-heading` and moved every heading at once.
+  it('uses the platform family with no provider', () => {
+    render(<Text variant="heading">Ship it</Text>);
+
+    expect(screen.getByText('Ship it').style.fontFamily).toBe(headingFamily);
+  });
+
+  it('takes a heading family from a ThemeProvider above it', () => {
+    render(
+      <ThemeProvider theme={{ fonts: { heading: 'Spectral_600SemiBold' } }}>
+        <Text variant="heading">Ship it</Text>
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText('Ship it').style.fontFamily).toBe('Spectral_600SemiBold');
+  });
+
+  it('leaves body copy on the platform sans, which is what --font-body asks for', () => {
+    render(
+      <ThemeProvider theme={{ fonts: { heading: 'Spectral_600SemiBold' } }}>
+        <Text>Ship it</Text>
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText('Ship it').style.fontFamily).toBe('');
+  });
+
+  it('overrides mono independently of heading', () => {
+    render(
+      <ThemeProvider theme={{ fonts: { mono: 'IBMPlexMono' } }}>
+        <Text family="mono">npm ci</Text>
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText('npm ci').style.fontFamily).toBe('IBMPlexMono');
+    expect(monoFamily).not.toBe('IBMPlexMono');
   });
 });

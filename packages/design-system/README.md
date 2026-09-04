@@ -225,16 +225,37 @@ React Native — wrap the tree in `ThemeProvider`:
 ```tsx
 import { ThemeProvider } from '@insolvia-ai/design-system';
 
-<ThemeProvider theme={{ light: { primary: '#155E63' }, dark: { primary: '#7FD1D9' } }}>
+<ThemeProvider
+  theme={{
+    light: { primary: '#155E63' },
+    dark: { primary: '#7FD1D9' },
+    radii: { md: 8 },
+    fonts: { heading: 'Spectral_600SemiBold' },
+  }}
+>
   <App />
 </ThemeProvider>;
 ```
 
-Overrides are partial — supply only the roles you change — and speak the
+Overrides are partial — supply only what you change — and speak the
 **semantic** layer only; raw palette names are exported nowhere, which is what
 keeps a re-brand a one-place change. One asymmetry: on native the derived states
 (`primaryHover`, …) are pre-computed, so overriding `primary` alone does not
 move them; override them explicitly. On web they follow.
+
+`radii` and `fonts` are the non-colour half of the same seam, and they are NOT
+nested under a scheme — a corner and a type family do not change with light and
+dark, which is what the web side already says: `theme.css` declares
+`--radius-*` and `--font-*` once, and its `[data-theme='dark']` block redefines
+only colours. Two rules worth knowing:
+
+- **`radii` covers the corner steps (`none`, `xs`, `sm`, `md`, `lg`); `pill` is
+  pinned.** The leaves that use `pill` are drawing a shape — a switch capsule,
+  an avatar circle, a progress track — not rounding a corner.
+- **`fonts` takes one registered family name per role, never a CSS stack**, and
+  uses it verbatim rather than mapping it per platform. `heading` and `mono`
+  only: the native leaves set no family for body copy, so the platform's own
+  sans renders, which is what `--font-body`'s stack asks for anyway.
 
 ## No build step — the package publishes source
 

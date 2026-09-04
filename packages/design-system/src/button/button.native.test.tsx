@@ -7,9 +7,10 @@ import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { colors } from '@insolvia-ai/tokens';
+import { colors, radii } from '@insolvia-ai/tokens';
 
 import { rgb, setPrefersColorScheme } from '../../vitest.native.setup';
+import { ThemeProvider } from '../lib/theme';
 import { Button } from './button';
 
 describe('Button (native leaf)', () => {
@@ -23,6 +24,33 @@ describe('Button (native leaf)', () => {
     await user.click(button);
 
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  // The RENDERED proof for the radius seam. Before it, `borderRadius` was baked
+  // into this leaf's `StyleSheet.create` block at module load, so a provider
+  // could not reach it and a React Native consumer could not re-round a single
+  // component — while a web consumer moved every corner with one
+  // `--radius-md`. The unit tests in lib/theme.native.test.tsx pin the
+  // resolver; this pins that a leaf actually applies it.
+  // `borderTopLeftRadius`, not `borderRadius`: react-native-web expands the
+  // shorthand into all four longhands, so the shorthand property reads empty.
+  it('draws the token radius with no provider', () => {
+    render(<Button>Join the waitlist</Button>);
+
+    const button = screen.getByRole('button', { name: 'Join the waitlist' });
+    expect(button.style.borderTopLeftRadius).toBe(`${radii.md}px`);
+  });
+
+  it('takes its corner from a ThemeProvider above it', () => {
+    render(
+      <ThemeProvider theme={{ radii: { md: 12 } }}>
+        <Button>Join the waitlist</Button>
+      </ThemeProvider>,
+    );
+
+    const button = screen.getByRole('button', { name: 'Join the waitlist' });
+    expect(button.style.borderTopLeftRadius).toBe('12px');
+    expect(button.style.borderBottomRightRadius).toBe('12px');
   });
 
   it('resolves light colors when the OS scheme is light', () => {

@@ -35,11 +35,11 @@ import {
   type ViewProps,
 } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
 import { useNativeFocusRing } from '../lib/native-focus';
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import {
   OverlayPortal,
@@ -86,6 +86,7 @@ export const Select = ({
 }: SelectProps) => {
   const field = React.useContext(FieldContext);
   const c = useNativeColors();
+  const r = useNativeRadii();
   const focus = useNativeFocusRing();
   const state = useSelectState({ options, value, defaultValue, onValueChange });
   const { open, setOpen, active, setActive, commit, selected, rootId } = state;
@@ -199,6 +200,7 @@ export const Select = ({
       } as unknown as Partial<ViewProps>)}
       style={[
         styles.list,
+        { borderRadius: r.md },
         anchor
           ? overlayPortalPosition({
               top: anchor.bottom + spacing.xs,
@@ -304,6 +306,7 @@ export const Select = ({
         }}
         style={[
           styles.trigger,
+          { borderRadius: r.md },
           {
             backgroundColor: disabled ? c.surfaceAlt : c.card,
             borderColor: invalid ? c.danger : c.line,
@@ -348,7 +351,6 @@ const styles = StyleSheet.create({
     height: 44,
     paddingHorizontal: spacing.sm,
     borderWidth: 1,
-    borderRadius: radii.md,
   },
   triggerLabel: { flexShrink: 1, ...textScale.sm },
   chevron: { fontSize: 12 },
@@ -357,7 +359,6 @@ const styles = StyleSheet.create({
   list: {
     maxHeight: 240,
     borderWidth: 1,
-    borderRadius: radii.md,
     paddingVertical: spacing.xs,
   },
   listInline: {

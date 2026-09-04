@@ -28,11 +28,11 @@ import {
   type TextInputProps,
 } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
 import { useNativeFocusRing } from '../lib/native-focus';
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 // Explicit `.native`, mirroring the `.web` imports in the sibling leaf.
 import { Calendar } from '../calendar/calendar.native';
 import { DatePicker } from '../date-picker/date-picker.native';
@@ -90,6 +90,7 @@ export const DateInput = ({
 }: DateInputProps) => {
   const field = React.useContext(FieldContext);
   const c = useNativeColors();
+  const r = useNativeRadii();
   const focus = useNativeFocusRing();
   const state = useDateInputState({
     mode,
@@ -248,6 +249,7 @@ export const DateInput = ({
         } as object)}
         style={[
           styles.control,
+          { borderRadius: r.md },
           {
             borderColor: invalid ? c.danger : c.line,
             backgroundColor: disabled ? c.surfaceAlt : c.card,
@@ -302,7 +304,6 @@ const styles = StyleSheet.create({
     paddingLeft: spacing.sm,
     paddingRight: CONTROL_HEIGHT,
     borderWidth: 1,
-    borderRadius: radii.md,
     fontSize: 14,
   },
   button: {

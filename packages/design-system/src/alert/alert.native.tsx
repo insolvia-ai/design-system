@@ -3,9 +3,9 @@
 import * as React from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import {
   AlertContext,
@@ -31,6 +31,7 @@ const AlertRoot = ({
   ...props
 }: AlertRootProps) => {
   const c = useNativeColors();
+  const r = useNativeRadii();
   const ctx = React.useMemo(
     () => ({ intent, onDismiss, dismissLabel }),
     [intent, onDismiss, dismissLabel],
@@ -51,6 +52,7 @@ const AlertRoot = ({
         role={alertRole(intent)}
         style={[
           styles.root,
+          { borderRadius: r.md },
           {
             borderColor: c.line,
             borderLeftColor: stripeColor[intent],
@@ -113,7 +115,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     // Matches the web leaf's `border-l-4`.
     borderLeftWidth: 4,
-    borderRadius: radii.md,
     padding: spacing.md,
   },
   body: { flex: 1, flexShrink: 1, gap: spacing.xs },

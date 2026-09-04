@@ -4,10 +4,10 @@
 import * as React from 'react';
 import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import type { ButtonIntent, ButtonSize } from './button.props';
 
@@ -57,6 +57,10 @@ export function Button({
   // Colors resolve per render so the leaf follows the OS scheme; only the
   // scheme-independent maps and layout live at module level.
   const c = useNativeColors();
+  // Radii resolve per render for the same reason colours do: `StyleSheet.create`
+  // runs once at module load, so a corner baked in there could never follow a
+  // `ThemeProvider`.
+  const r = useNativeRadii();
   // Without this a focused Button falls through to the BROWSER's default focus
   // ring under react-native-web — blue, hard against the control — while the
   // web leaf draws this package's own. The migration that introduced
@@ -101,6 +105,7 @@ export function Button({
             ? { minHeight: sizeHeight[size], paddingVertical: sizePadY[size] }
             : { height: sizeHeight[size] }),
           paddingHorizontal: sizePadX[size],
+          borderRadius: r.md,
           backgroundColor: intentBg[intent],
           opacity: disabled ? 0.5 : state.pressed ? 0.9 : 1,
         },
@@ -141,7 +146,6 @@ const styles = StyleSheet.create({
     // package claims never happens. Badge, Chip and Calendar declare the same
     // thing; IconButton reaches it through a definite width instead.
     alignSelf: 'flex-start',
-    borderRadius: radii.md,
   },
   label: {
     fontWeight: '500',

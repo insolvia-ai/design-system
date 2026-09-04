@@ -9,10 +9,10 @@
 import * as React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
-import { useNativeColors } from '../lib/native-theme';
-import { headingFamily, textScale } from '../lib/native-typography';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
+import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
 import {
   DEFAULT_NAV_LABEL,
   SidebarContext,
@@ -66,10 +66,13 @@ const SidebarHead = ({ style, children, ...props }: ViewProps & { children?: Rea
 
 const SidebarLogo = ({ children }: { children?: React.ReactNode }) => {
   const c = useNativeColors();
+  const heading = useNativeHeadingFamily();
   return (
     <View accessible={false} style={styles.logo}>
       {typeof children === 'string' ? (
-        <Text style={[styles.logoText, { color: c.brand }]}>{children}</Text>
+        <Text style={[styles.logoText, { fontFamily: heading }, { color: c.brand }]}>
+          {children}
+        </Text>
       ) : (
         children
       )}
@@ -80,10 +83,11 @@ const SidebarLogo = ({ children }: { children?: React.ReactNode }) => {
 const SidebarTitle = ({ children }: { children?: React.ReactNode }) => {
   const { collapsed } = useSidebarContext('Title');
   const c = useNativeColors();
+  const heading = useNativeHeadingFamily();
   // Removed rather than hidden while collapsed, matching the web leaf.
   if (collapsed) return null;
   return (
-    <Text numberOfLines={1} style={[styles.title, { color: c.ink }]}>
+    <Text numberOfLines={1} style={[styles.title, { fontFamily: heading }, { color: c.ink }]}>
       {children}
     </Text>
   );
@@ -92,6 +96,7 @@ const SidebarTitle = ({ children }: { children?: React.ReactNode }) => {
 const SidebarToggle = ({ children }: { children?: React.ReactNode }) => {
   const { collapsed, toggle, navId } = useSidebarContext('Toggle');
   const c = useNativeColors();
+  const r = useNativeRadii();
 
   const webAria = { 'aria-controls': navId } as object;
 
@@ -102,7 +107,7 @@ const SidebarToggle = ({ children }: { children?: React.ReactNode }) => {
       accessibilityState={{ expanded: !collapsed }}
       {...webAria}
       onPress={toggle}
-      style={styles.toggle}
+      style={[styles.toggle, { borderRadius: r.md }]}
     >
       <Text style={[styles.toggleGlyph, { color: c.muted }]}>
         {children ?? (collapsed ? '»' : '«')}
@@ -164,6 +169,7 @@ export interface SidebarItemProps extends SidebarItemOwnProps {
 const SidebarItem = ({ label, active = false, icon, onPress }: SidebarItemProps) => {
   const { collapsed } = useSidebarContext('Item');
   const c = useNativeColors();
+  const r = useNativeRadii();
 
   // `aria-current` is web-only and outside RN's types; omitted rather than set
   // to undefined when this is not the current page.
@@ -179,6 +185,7 @@ const SidebarItem = ({ label, active = false, icon, onPress }: SidebarItemProps)
       onPress={onPress}
       style={[
         styles.item,
+        { borderRadius: r.md },
         collapsed && styles.itemCollapsed,
         active ? { backgroundColor: c.surfaceAlt } : null,
       ]}
@@ -251,15 +258,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   logo: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  logoText: { fontFamily: headingFamily, ...textScale.lg, fontWeight: '600' },
-  title: { fontFamily: headingFamily, ...textScale.base, fontWeight: '600', flexShrink: 1 },
+  logoText: { ...textScale.lg, fontWeight: '600' },
+  title: { ...textScale.base, fontWeight: '600', flexShrink: 1 },
   toggle: {
     marginLeft: 'auto',
     width: 32,
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radii.md,
   },
   toggleGlyph: { ...textScale.sm },
   nav: { flex: 1 },
@@ -279,7 +285,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginHorizontal: spacing.sm,
     paddingHorizontal: spacing.sm,
-    borderRadius: radii.md,
   },
   itemCollapsed: { justifyContent: 'center' },
   itemIcon: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },

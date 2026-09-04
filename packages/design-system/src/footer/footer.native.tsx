@@ -6,7 +6,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { headingFamily, textScale } from '../lib/native-typography';
+import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
 import type { FooterGroupOwnProps } from './footer.props';
 
 const FooterRoot = ({ style, ...props }: ViewProps) => {
@@ -25,9 +25,10 @@ interface GroupProps extends FooterGroupOwnProps {
 
 const FooterGroup = ({ title, children }: GroupProps) => {
   const c = useNativeColors();
+  const heading = useNativeHeadingFamily();
   return (
     <View accessibilityRole="summary" accessibilityLabel={title} style={styles.group}>
-      <Text style={[styles.groupTitle, { color: c.ink }]}>{title}</Text>
+      <Text style={[styles.groupTitle, { fontFamily: heading }, { color: c.ink }]}>{title}</Text>
       <View style={styles.groupLinks}>{children}</View>
     </View>
   );
@@ -69,7 +70,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xl,
   },
   group: { flexDirection: 'column', gap: spacing.sm },
-  groupTitle: { fontFamily: headingFamily, ...textScale.sm, fontWeight: '600' },
+  groupTitle: { ...textScale.sm, fontWeight: '600' },
   groupLinks: { flexDirection: 'column', gap: spacing.xs },
   link: { ...textScale.sm },
   note: {

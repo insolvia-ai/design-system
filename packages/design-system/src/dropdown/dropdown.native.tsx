@@ -13,9 +13,9 @@
 import * as React from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import {
   DropdownContext,
@@ -72,6 +72,7 @@ export interface DropdownContentProps extends ViewProps {
 const DropdownContent = ({ style, children, ...props }: DropdownContentProps) => {
   const { open, menuId, triggerId } = useDropdownContext('Content');
   const c = useNativeColors();
+  const r = useNativeRadii();
   if (!open) return null;
 
   // RN's `Role` union carries 'menu' and 'menuitem'; `aria-labelledby` on a
@@ -84,7 +85,12 @@ const DropdownContent = ({ style, children, ...props }: DropdownContentProps) =>
       nativeID={menuId}
       role="menu"
       {...webAria}
-      style={[styles.content, { borderColor: c.line, backgroundColor: c.card }, style]}
+      style={[
+        styles.content,
+        { borderRadius: r.md },
+        { borderColor: c.line, backgroundColor: c.card },
+        style,
+      ]}
       {...props}
     >
       {children}
@@ -162,7 +168,6 @@ const styles = StyleSheet.create({
     zIndex: 20,
     minWidth: 192,
     borderWidth: 1,
-    borderRadius: radii.md,
     paddingVertical: spacing.xs,
   },
   item: {

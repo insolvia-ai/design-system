@@ -19,7 +19,7 @@ import * as React from 'react';
 import { StyleSheet, Text as RNText, type TextProps as RNTextProps } from 'react-native';
 
 import { useNativeColors } from '../lib/native-theme';
-import { headingFamily, monoFamily, textScale } from '../lib/native-typography';
+import { textScale, useNativeHeadingFamily, useNativeMonoFamily } from '../lib/native-typography';
 import {
   isHeadingVariant,
   variantFamily,
@@ -65,14 +65,17 @@ const weightValue: Record<TextWeight, '400' | '500' | '600'> = {
  * would change every existing native surface, which giving `Text` a family
  * control is not licence to do. See native-typography.native.ts.
  *
- * Module level is safe for all three: `Platform.select` has already resolved,
- * and a family — unlike a colour — does not follow the colour scheme.
+ * A FUNCTION of the resolved families rather than a module-level constant.
+ * `Platform.select` resolves at module load and a family does not follow the
+ * colour scheme, so this used to be safe to freeze — but a `ThemeProvider`'s
+ * `fonts` override arrives through context, which a module-level map cannot
+ * see.
  */
-const familyFont: Record<TextFamily, string | undefined> = {
-  heading: headingFamily,
+const familyFont = (heading: string, mono: string): Record<TextFamily, string | undefined> => ({
+  heading,
   body: undefined,
-  mono: monoFamily,
-};
+  mono,
+});
 
 export const Text = ({
   variant = 'body',
@@ -85,6 +88,8 @@ export const Text = ({
   ...props
 }: TextProps) => {
   const c = useNativeColors();
+  const heading = useNativeHeadingFamily();
+  const mono = useNativeMonoFamily();
   // Three tones, for the contrast reason text.props.ts measures out.
   const toneColor: Record<TextTone, string> = {
     ink: c.ink,
@@ -109,7 +114,7 @@ export const Text = ({
           // override REPLACES the variant's family instead of layering over
           // it — the same reason the web leaf resolves it before building its
           // class list.
-          fontFamily: familyFont[family ?? variantFamily[variant]],
+          fontFamily: familyFont(heading, mono)[family ?? variantFamily[variant]],
         },
         style,
       ]}

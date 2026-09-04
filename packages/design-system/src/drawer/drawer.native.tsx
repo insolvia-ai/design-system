@@ -13,7 +13,7 @@ import { Modal, Pressable, StyleSheet, Text, View, type ViewProps } from 'react-
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { headingFamily, textScale } from '../lib/native-typography';
+import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
 import {
   DrawerRootContext,
   useDrawerRootContext,
@@ -120,8 +120,13 @@ const DrawerPanel = ({ side: sideProp, children, style, ...props }: DrawerPanelP
 const DrawerTitle = ({ children }: { children?: React.ReactNode }) => {
   const { titleId } = useDrawerRootContext('Title');
   const c = useNativeColors();
+  const heading = useNativeHeadingFamily();
   return (
-    <Text nativeID={titleId} accessibilityRole="header" style={[styles.title, { color: c.ink }]}>
+    <Text
+      nativeID={titleId}
+      accessibilityRole="header"
+      style={[styles.title, { fontFamily: heading }, { color: c.ink }]}
+    >
       {children}
     </Text>
   );
@@ -188,7 +193,7 @@ const styles = StyleSheet.create({
     // side it enters from, which is what distinguishes it from a Dialog card.
     borderRadius: 0,
   },
-  title: { fontFamily: headingFamily, ...textScale.lg, fontWeight: '600' },
+  title: { ...textScale.lg, fontWeight: '600' },
   description: { ...textScale.sm },
   close: { alignSelf: 'flex-start', paddingVertical: spacing.xs },
   closeLabel: { ...textScale.sm, fontWeight: '500' },
