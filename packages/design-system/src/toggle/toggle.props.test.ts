@@ -17,7 +17,7 @@ import { useToggleState } from './toggle.props';
 describe('useToggleState (standalone)', () => {
   it('starts unpressed without defaultPressed', () => {
     const { result } = renderHook(() =>
-      useToggleState(undefined, undefined, undefined, undefined, undefined),
+      useToggleState(undefined, undefined, undefined, undefined, undefined, undefined),
     );
 
     expect(result.current.pressed).toBe(false);
@@ -25,7 +25,7 @@ describe('useToggleState (standalone)', () => {
 
   it('honours defaultPressed on first render (uncontrolled)', () => {
     const { result } = renderHook(() =>
-      useToggleState(undefined, true, undefined, undefined, undefined),
+      useToggleState(undefined, true, undefined, undefined, undefined, undefined),
     );
 
     expect(result.current.pressed).toBe(true);
@@ -34,7 +34,7 @@ describe('useToggleState (standalone)', () => {
   it('toggle flips uncontrolled pressed state and fires onPressedChange', () => {
     const onPressedChange = vi.fn();
     const { result } = renderHook(() =>
-      useToggleState(undefined, false, onPressedChange, undefined, undefined),
+      useToggleState(undefined, false, onPressedChange, undefined, undefined, undefined),
     );
 
     act(() => result.current.toggle());
@@ -52,7 +52,7 @@ describe('useToggleState (standalone)', () => {
     const onPressedChange = vi.fn();
     const { result, rerender } = renderHook(
       ({ pressed }: { pressed: boolean }) =>
-        useToggleState(pressed, undefined, onPressedChange, undefined, undefined),
+        useToggleState(pressed, undefined, onPressedChange, undefined, undefined, undefined),
       { initialProps: { pressed: true } },
     );
 
@@ -69,7 +69,7 @@ describe('useToggleState (standalone)', () => {
   it('a disabled toggle ignores toggle() entirely', () => {
     const onPressedChange = vi.fn();
     const { result } = renderHook(() =>
-      useToggleState(undefined, false, onPressedChange, true, undefined),
+      useToggleState(undefined, false, onPressedChange, true, undefined, undefined),
     );
 
     act(() => result.current.toggle());
@@ -91,10 +91,11 @@ describe('useToggleState (inside a group)', () => {
       value: ['bold'],
       toggle: vi.fn(),
       disabled: false,
+      size: 'md',
     };
 
     const { result } = renderHook(
-      () => useToggleState(false, false, undefined, undefined, 'bold'),
+      () => useToggleState(false, false, undefined, undefined, 'bold', undefined),
       { wrapper: wrapper(group) },
     );
 
@@ -106,10 +107,11 @@ describe('useToggleState (inside a group)', () => {
       value: [],
       toggle: vi.fn(),
       disabled: false,
+      size: 'md',
     };
 
     const { result } = renderHook(
-      () => useToggleState(undefined, undefined, undefined, undefined, 'italic'),
+      () => useToggleState(undefined, undefined, undefined, undefined, 'italic', undefined),
       { wrapper: wrapper(group) },
     );
 
@@ -119,10 +121,15 @@ describe('useToggleState (inside a group)', () => {
   });
 
   it('is disabled when the group is disabled, even if this toggle is not', () => {
-    const group: ToggleGroupContextValue = { value: [], toggle: vi.fn(), disabled: true };
+    const group: ToggleGroupContextValue = {
+      value: [],
+      toggle: vi.fn(),
+      disabled: true,
+      size: 'md',
+    };
 
     const { result } = renderHook(
-      () => useToggleState(undefined, undefined, undefined, undefined, 'italic'),
+      () => useToggleState(undefined, undefined, undefined, undefined, 'italic', undefined),
       { wrapper: wrapper(group) },
     );
 
@@ -133,10 +140,15 @@ describe('useToggleState (inside a group)', () => {
   });
 
   it('a group-membered toggle WITHOUT a value prop stays standalone', () => {
-    const group: ToggleGroupContextValue = { value: ['x'], toggle: vi.fn(), disabled: false };
+    const group: ToggleGroupContextValue = {
+      value: ['x'],
+      toggle: vi.fn(),
+      disabled: false,
+      size: 'md',
+    };
 
     const { result } = renderHook(
-      () => useToggleState(undefined, true, undefined, undefined, undefined),
+      () => useToggleState(undefined, true, undefined, undefined, undefined, undefined),
       { wrapper: wrapper(group) },
     );
 

@@ -6,6 +6,13 @@
 // Closed means unmounted, so the panel's MOUNT effects are its open effects.
 //
 // The panel is the only thing that differs, and `sideStyles` holds that.
+//
+// `Drawer.Root`'s `container` aims both portals somewhere other than the body,
+// for the fullscreen case; dialog.web.tsx's header carries the reasoning and
+// the positioning note, which applies here unchanged — `sideStyles` is
+// `inset-*` on a `fixed` box, so it resolves against the viewport wherever the
+// panel is mounted, and only a transform/filter/contain/will-change ancestor
+// inside the container would re-anchor it.
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 
@@ -52,8 +59,24 @@ function trapTabKey(
   }
 }
 
+// WEB-ONLY, and its own context rather than a member on DrawerContextValue:
+// `drawer.props.ts` is compiled by the native program, which has no DOM lib.
+// Same split as Dialog's, for the same reason.
+const DrawerPortalContext = React.createContext<HTMLElement | null>(null);
+
+/** Where the parts portal: the Root's `container`, else `document.body`. */
+function usePortalContainer(): HTMLElement {
+  return React.useContext(DrawerPortalContext) ?? document.body;
+}
+
 export interface DrawerRootProps extends DrawerRootOwnProps {
   children?: React.ReactNode;
+  /**
+   * Portal the backdrop and panel into this element instead of
+   * `document.body`. Omitted or `null` is today's behavior exactly. An
+   * ELEMENT, not a ref — see `DialogRootProps.container` for why.
+   */
+  container?: HTMLElement | null | undefined;
 }
 
 const DrawerRoot = ({
@@ -61,11 +84,16 @@ const DrawerRoot = ({
   defaultOpen,
   onOpenChange,
   side = 'right',
+  container = null,
   children,
 }: DrawerRootProps) => {
   const state = useDrawerState(open, defaultOpen, onOpenChange);
   const ctx = React.useMemo(() => ({ ...state, side }), [state, side]);
-  return <DrawerRootContext.Provider value={ctx}>{children}</DrawerRootContext.Provider>;
+  return (
+    <DrawerRootContext.Provider value={ctx}>
+      <DrawerPortalContext.Provider value={container}>{children}</DrawerPortalContext.Provider>
+    </DrawerRootContext.Provider>
+  );
 };
 
 const DrawerTrigger = React.forwardRef<HTMLButtonElement, React.ComponentPropsWithoutRef<'button'>>(
@@ -92,6 +120,7 @@ DrawerTrigger.displayName = 'Drawer.Trigger';
 const DrawerBackdrop = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<'div'>>(
   ({ className, onClick, ...props }, ref) => {
     const { open, setOpen } = useDrawerRootContext('Backdrop');
+    const container = usePortalContainer();
     if (!open) return null;
     return createPortal(
       <div
@@ -105,7 +134,7 @@ const DrawerBackdrop = React.forwardRef<HTMLDivElement, React.ComponentPropsWith
         className={cn('fixed inset-0 z-40 bg-ink/50', className)}
         {...props}
       />,
-      document.body,
+      container,
     );
   },
 );
@@ -119,6 +148,7 @@ export interface DrawerPanelProps extends React.ComponentPropsWithoutRef<'div'> 
 const DrawerPanelImpl = React.forwardRef<HTMLDivElement, DrawerPanelProps>(
   ({ className, side: sideProp, children, onKeyDown, ...props }, ref) => {
     const { setOpen, titleId, descriptionId, side: rootSide } = useDrawerRootContext('Panel');
+    const container = usePortalContainer();
     const side = sideProp ?? rootSide;
     const panelRef = React.useRef<HTMLDivElement | null>(null);
     const setRefs = React.useCallback(
@@ -146,6 +176,8 @@ const DrawerPanelImpl = React.forwardRef<HTMLDivElement, DrawerPanelProps>(
       return () => opener?.focus();
     }, []);
 
+    // The scroll lock stays on the BODY whatever `container` is — the body is
+    // what scrolls the page, wherever the panel is mounted.
     React.useEffect(() => {
       const previous = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
@@ -181,7 +213,7 @@ const DrawerPanelImpl = React.forwardRef<HTMLDivElement, DrawerPanelProps>(
       >
         {children}
       </div>,
-      document.body,
+      container,
     );
   },
 );

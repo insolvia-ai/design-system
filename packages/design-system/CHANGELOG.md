@@ -18,6 +18,142 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.17.0 — minor
+
+**Widen your range to take this:** `^0.16.x` will not resolve it.
+
+**Needs `@insolvia-ai/tokens` 0.4.0** for the neutral ramps, `--font-mono`, the
+motion tokens, `danger-text` and the `overlay-*` roles. Bump both, or a `danger`
+Button renders an unstyled foreground and `intent="overlay"` renders nothing at
+all.
+
+Two things at once: everything a consumer needs to build a themed video player
+and a dense, metadata-heavy chrome, plus nine gaps a consumer had been papering
+over in its own stylesheet, closed at the root. If you carry local workarounds
+for any of the latter, this is the release that lets you delete them.
+
+- **Focused text controls no longer zoom the page on iOS.** `theme.css` now
+  carries an unlayered `@media (pointer: coarse)` rule holding `input`,
+  `textarea` and `select` at `max(16px, 1em)`. iOS Safari zooms on focus
+  whenever a field is under 16px, and this package's controls are `text-sm`
+  (14px). The rule is keyed on pointer, not viewport width — the condition is
+  touch, not narrow — and the fix is deliberately NOT `maximum-scale=1` in a
+  viewport meta, which disables pinch-zoom and fails WCAG 1.4.4. Desktop is
+  untouched.
+- **New component: `Slider`.** An interactive range — controlled or
+  uncontrolled, `min`/`max`/`step`, `onValueCommit` on release, an optional
+  `buffered` secondary fill for a video seek bar, and a required accessible
+  `label`. One component rather than a compound: the web leaf is a themed
+  native `<input type="range">` whose track and thumb are pseudo-elements, not
+  boxes (the props module holds the argument). The native leaf is a
+  PanResponder drag over core RN primitives — no native-module dependency —
+  with `accessibilityRole="adjustable"` and increment/decrement actions running
+  the same step arithmetic as the web keyboard.
+- **New component: `IconButton`.** A square icon-only button on Button's height
+  scale (`sm` 32dp, `md` 44dp), named by a required `label` (aria-label + title
+  on web, accessibilityLabel on native), with an optional presentational
+  `pressed` for toggles. Intents are Button's three plus `danger` — the glyph
+  rides on `primary-text`, the one foreground measured to clear WCAG 1.4.11 on
+  the danger fill in both schemes — plus `overlay`, for controls drawn over
+  media on the new `overlay-*` roles. **If you defined your own chrome roles
+  over the neutral ramp, `overlay` replaces them.** Default intent is `ghost`,
+  because an icon button is nearly always an affordance sitting on something
+  else.
+- **`IconButton` size `sm` meets a 44px hit area on coarse pointers.** A
+  centred `::after` under `@media (pointer: coarse)` on web, `hitSlop` on
+  native — the TARGET grows, the drawn box does not, which `min-width`/
+  `min-height` could not have done. `md` is already 44 and gets nothing.
+  **Delete any hand-applied touch-target class.** (Wrapping in `Tooltip` was
+  rejected — a leaf may not import another component's leaf, and the extra
+  wrapper would change your layout; the `title` from `label` covers the
+  pointer case.)
+- **New component: `Chip`, with a `chipClass` helper.** A bordered, pressable
+  label — tag filters, a phone's nav row, a "which of these is involved"
+  toggle. `pressed` is controlled and presentational (a control that owns its
+  own pressed state is `Toggle`); both states carry a border and only its
+  colour moves, so a chip row never reflows as you press. The helper is the
+  primary interface for the case a component cannot serve: a router link takes
+  a function `className` and cannot be a `<button>`. On React Native it
+  shrink-wraps (`alignSelf: 'flex-start'`), so a chip in an ordinary column
+  `View` hugs its label instead of running edge to edge — the web leaf's
+  `shrink-0` already said as much, and a parent's default `stretch` would
+  otherwise have overruled it.
+- **`cn()` now knows this package's spacing scale, so your `className`
+  overrides win.** `tailwind-merge`'s built-in theme is Tailwind's NUMERIC
+  spacing scale, so `p-lg` and `gap-sm` were words it had never heard of and it
+  kept both sides of a conflict — `twMerge('p-lg gap-sm', 'p-0 gap-0')`
+  returned all four classes and the stylesheet decided which painted. Overriding
+  a component's padding or gap from the outside was therefore impossible and
+  needed an inline `style`. It now behaves exactly as a numeric override always
+  did. **Delete those inline spacing styles.**
+- **`truncate` now beats `text-balance`.** The same merge is taught that the two
+  conflict, because `text-wrap: balance` also resets `text-wrap-mode: wrap` and
+  so ran over `truncate`'s `white-space: nowrap`. This fixes a bare
+  `className="truncate"` as well as the new prop below. **Delete any
+  `style={{ textWrap: 'nowrap' }}` you added to make a heading elide.**
+- **`Text` takes `truncate`.** One line, elided — `overflow-hidden
+  text-ellipsis whitespace-nowrap` on web, `numberOfLines={1}` on native. The
+  native half is why this is a prop and not a documented class: a
+  `className="truncate"` did nothing at all on that leaf.
+- **`Text` gains `family`** — `'body' | 'heading' | 'mono'`, overriding the
+  family the variant implies. `mono` is the new tokens role, for ids, keys,
+  durations, byte counts and timestamps. `tabular-nums` is deliberately not
+  bundled in; a monospaced face already advances digits identically.
+- **`Text variant="caption"` lays out as a BLOCK now. This is a visual
+  change.** It was inline, so two captions — or a caption under a body line —
+  ran onto one line with nothing between them, and `truncate` did nothing
+  because an inline box has no width to elide against. The element is still a
+  `<span>` (a caption often sits inside running text, and `<p>` cannot nest
+  inside `<p>`); only the display moved. **If you were adding `className="block"`
+  to your captions, delete it.** For the rare genuinely-inline caption, pass
+  `inline` — web-only, since an RN `<Text>` already lays out either way
+  depending on where you put it.
+- **`Button` and `buttonClass` take `intent="danger"`**, on the `danger-text`
+  foreground tokens 0.4.0 measures. It is the same fill row `IconButton` ships
+  with here, so a text button and an icon button that destroy the same thing
+  read as one control. **Delete any local `bg-danger` recipe.**
+- **`Button` and `buttonClass` take `wrap`** for a sentence-length label —
+  auto height and normal wrapping instead of a fixed height and
+  `whitespace-nowrap`, which made an armed delete ("Confirm — delete 54 files")
+  run off the side of a phone and give the page a horizontal scrollbar. The
+  minimum height equals the old fixed height, so a one-line label is unchanged.
+- **`Select`'s trigger label can truncate inside a constrained parent.** Its
+  span is `min-w-0` now; without it a flex item will not shrink below its own
+  text, so a `w-28` cap on the trigger was silently ignored and toolbars wrapped
+  onto a second line at phone widths. `Combobox`'s wrapper and `Sidebar.Item`'s
+  label got the same treatment for the same reason. **Delete any
+  `[role="combobox"] > .truncate { min-width: 0 }` rule.**
+- **`Toggle` and `ToggleGroup.Root` take `size`** (`sm` | `md`), set once on
+  the group and overridable per member, plus `iconOnly` for a square,
+  glyph-only member. `iconOnly` REQUIRES `label` in the type, so an unnamed
+  icon toggle does not compile. A two-item icon group is narrow enough for a
+  phone toolbar, which the default size was not.
+- **`Toggle`'s `md` is 44dp now, up from 36. This is a visual change.** It set
+  no height at all and landed at 36 from its padding, while every other `md`
+  control in this package — Button, the Select trigger, every Wheel row — is
+  44, the WCAG 2.5.5 floor each of them cites. Bottom-aligned in a form row
+  that put two labels on two lines. **If you were normalising control heights
+  in your own stylesheet, re-check that rule.**
+- **`Dialog.Root`, `Drawer.Root` and `AlertDialog.Root` take
+  `container?: HTMLElement | null`.** Every portal in that component then
+  targets it instead of `document.body`. The reason is the Fullscreen API:
+  the browser paints only descendants of the fullscreen element, so a dialog
+  portalled to the body is invisible while anything is fullscreen — pass the
+  fullscreen container and it paints. An element, deliberately not a ref (the
+  portal target is read during render); hold it in state. Scroll lock stays on
+  the body either way. `Popover` has no such prop because it never portals —
+  its surface is anchored inline under its Root and follows the trigger into
+  fullscreen already; two tests now pin that.
+- **New theme tokens** (via `@insolvia-ai/tokens` 0.4.0): a 12-step neutral ramp
+  (`--color-neutral-1…12`) with a matching alpha ramp
+  (`--color-neutral-a1…a12`), light and dark; `--font-mono`;
+  `--radius-none` / `--radius-xs`; motion tokens emitted on real Tailwind
+  namespaces (`duration-fast`, `duration-base`, `ease-standard`);
+  `--color-danger-text`; and the `--color-overlay-*` roles. All additive — no
+  existing role moved.
+
+[#20](https://github.com/insolvia-ai/design-system/pull/20)
+
 ## 0.16.0 — minor
 
 **Widen your range to take this:** `^0.15.x` will not resolve it.

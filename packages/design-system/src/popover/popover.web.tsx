@@ -4,6 +4,16 @@
 // list — not portaled like Dialog. A popover is non-modal: no focus trap, no
 // scroll lock, no backdrop. What it does owe is the two dismissals a
 // non-modal surface must have — Escape, and a pointer press outside it.
+//
+// NO `container` PROP, unlike Dialog, Drawer and AlertDialog. Those portal to
+// `document.body` and so vanish when some other element is fullscreen — only a
+// fullscreen element's descendants are painted — which is what their
+// `container` prop aims elsewhere. This leaf never leaves the tree: the
+// surface is `position: absolute` inside the Root's `relative` box, which is
+// what anchors it to its own trigger. A popover whose trigger is inside the
+// fullscreen element is therefore inside it too, with nothing to configure,
+// and portaling it anywhere would break the anchoring outright — the offsets
+// are measured from the Root, not the viewport. The test file pins that.
 import * as React from 'react';
 
 import { cn } from '../lib/cn';

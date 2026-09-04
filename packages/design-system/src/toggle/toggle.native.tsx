@@ -27,7 +27,24 @@ import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
-import { useToggleState, type ToggleOwnProps } from './toggle.props';
+import { useToggleState, type ToggleOwnProps, type ToggleSize } from './toggle.props';
+
+// The web leaf's `toggleSizeStyles` / `toggleIconSizeStyles` in this leaf's
+// dialect. `md` is 44 on both — the WCAG 2.5.5 floor every other `md` control
+// in the package holds, and which this component used to miss at 36; the props
+// module records that change.
+const sizeHeight: Record<ToggleSize, number> = { sm: 32, md: 44 };
+const sizePadX: Record<ToggleSize, number> = { sm: spacing.sm, md: spacing.md };
+
+/**
+ * The 44dp hit area for the one size that is under it, exactly as
+ * icon-button.native.tsx does it: `hitSlop` grows the touch area without
+ * touching layout or paint, and there is no pointer query because a React
+ * Native surface is a touchscreen. Only `iconOnly` needs it — a text toggle at
+ * `sm` is 32 tall but as wide as its label, and RN cannot express a
+ * height-only expansion without also guessing at the width.
+ */
+const iconHitSlop: Record<ToggleSize, number> = { sm: 6, md: 0 };
 
 // `disabled` is Omit-ed from PressableProps: it declares `boolean | null |
 // undefined`, ToggleOwnProps declares `boolean | undefined` — extending both
@@ -36,9 +53,16 @@ import { useToggleState, type ToggleOwnProps } from './toggle.props';
 // narrower type wins outright (the AccordionRootProps `defaultValue` Omit on
 // the web leaf is the same idiom, for the same reason). `onPress` is
 // Omit-ed too: this component owns press handling to drive the toggle.
-export interface ToggleProps extends Omit<PressableProps, 'disabled' | 'onPress'>, ToggleOwnProps {
-  children?: React.ReactNode;
-}
+//
+// An INTERSECTION rather than an `interface … extends`, because ToggleOwnProps
+// is a union — see the web leaf's note and toggle.props. `accessibilityLabel`
+// is Omit-ed for the reason IconButton omits it: `label` owns the accessible
+// name outright.
+export type ToggleProps = Omit<
+  PressableProps,
+  'disabled' | 'onPress' | 'accessibilityLabel' | 'aria-label'
+> &
+  ToggleOwnProps & { children?: React.ReactNode };
 
 export function Toggle({
   pressed,
@@ -46,11 +70,14 @@ export function Toggle({
   onPressedChange,
   disabled,
   value,
+  size,
+  iconOnly = false,
+  label,
   children,
   style,
   ...props
 }: ToggleProps) {
-  const state = useToggleState(pressed, defaultPressed, onPressedChange, disabled, value);
+  const state = useToggleState(pressed, defaultPressed, onPressedChange, disabled, value, size);
   // Colors resolve per render so the leaf follows the OS scheme; only the
   // scheme-independent layout lives at module level in StyleSheet.create.
   const c = useNativeColors();
@@ -63,11 +90,18 @@ export function Toggle({
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected: state.pressed, disabled: state.disabled }}
+      // Required by the type when `iconOnly`; `undefined` sets no label at all
+      // otherwise, so a text toggle keeps its name-from-content.
+      accessibilityLabel={label}
+      hitSlop={iconOnly ? iconHitSlop[state.size] : 0}
       {...webAria}
       disabled={state.disabled}
       onPress={() => state.toggle()}
       style={(pressableState) => [
         styles.base,
+        iconOnly
+          ? { width: sizeHeight[state.size], height: sizeHeight[state.size] }
+          : { height: sizeHeight[state.size], paddingHorizontal: sizePadX[state.size] },
         {
           backgroundColor: state.pressed ? c.primary : 'transparent',
           opacity: state.disabled ? 0.5 : pressableState.pressed ? 0.9 : 1,
@@ -84,13 +118,15 @@ export function Toggle({
 }
 
 const styles = StyleSheet.create({
+  // Height and horizontal padding moved OUT to the per-size blocks above; what
+  // is left is scheme- and size-independent, which is all StyleSheet.create can
+  // hold. `paddingVertical` is gone rather than kept: it was what produced the
+  // old 36px height, and a fixed height plus vertical padding would fight.
   base: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radii.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
   },
   label: { ...textScale.sm, fontWeight: '500' },
 });

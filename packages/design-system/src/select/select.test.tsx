@@ -228,4 +228,18 @@ describe('Select', () => {
     await user.click(screen.getByRole('combobox'));
     expect(screen.queryByRole('listbox')).toBeNull();
   });
+
+  // The bug this pins: a flex item's `min-width` defaults to `auto`, which is
+  // its own content's width, so the label span refused to shrink and pushed
+  // the trigger — and everything constraining it — wider than asked. A `w-28`
+  // cap was silently ignored, and a toolbar that fitted at desktop width
+  // wrapped a control onto a second line on a phone. The ellipsis was always
+  // here; the box it had to elide inside was not.
+  it('lets the trigger label shrink inside a width-constrained parent', () => {
+    render(<Select options={DISTRICTS} defaultValue="ny" aria-label="District" />);
+
+    const label = screen.getByRole('combobox').querySelector('span');
+    expect(label).toHaveClass('truncate');
+    expect(label).toHaveClass('min-w-0');
+  });
 });

@@ -1,13 +1,17 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, userEvent } from 'storybook/test';
+import { View } from 'react-native';
 
 import { ToggleGroup as ToggleGroupWeb } from '@design-system/toggle-group/toggle-group.web.tsx';
 import { ToggleGroup as ToggleGroupNative } from '@design-system/toggle-group/toggle-group.native.tsx';
 import { Toggle as ToggleWeb } from '@design-system/toggle/toggle.web.tsx';
 import { Toggle as ToggleNative } from '@design-system/toggle/toggle.native.tsx';
+import type { ToggleSize } from '@design-system/toggle/toggle.props.ts';
 
 import { LeafPair, pair } from './leaf-pair.tsx';
+
+const SIZES = ['sm', 'md'] as const satisfies readonly ToggleSize[];
 
 /**
  * `ToggleGroup` is a parts object (`Root` only) composed with `Toggle`, not a
@@ -24,6 +28,7 @@ type ToggleGroupArgs = {
   defaultValue: string[];
   multiple: boolean;
   disabled: boolean;
+  size: ToggleSize;
   onValueChange: (value: string[]) => void;
 };
 
@@ -34,10 +39,12 @@ const meta = {
     defaultValue: ['left'],
     multiple: false,
     disabled: false,
+    size: 'md',
     onValueChange: fn(),
   },
   argTypes: {
     defaultValue: { control: false },
+    size: { control: 'inline-radio', options: [...SIZES] },
   },
   render: (args) => (
     <LeafPair
@@ -47,6 +54,7 @@ const meta = {
           defaultValue={args.defaultValue}
           multiple={args.multiple}
           disabled={args.disabled}
+          size={args.size}
           onValueChange={args.onValueChange}
           aria-label="Text alignment"
         >
@@ -60,6 +68,7 @@ const meta = {
           defaultValue={args.defaultValue}
           multiple={args.multiple}
           disabled={args.disabled}
+          size={args.size}
           onValueChange={args.onValueChange}
           aria-label="Text alignment"
         >
@@ -181,6 +190,70 @@ export const MultiSelect: Story = {
           <ToggleNative value="italic">Italic</ToggleNative>
           <ToggleNative value="underline">Underline</ToggleNative>
         </ToggleGroupNative.Root>
+      }
+    />
+  ),
+};
+
+/**
+ * The case `size` exists for: a view switch that has to share a phone toolbar.
+ *
+ * A two-item group at the default size measures about 157px. In a 390px
+ * viewport with 16px of side padding that is 44% of the row before the sort
+ * control, the filter and the overflow button have asked for anything — which
+ * is why a consumer had to hide its sort control below `sm` and file the
+ * result as a known limitation.
+ *
+ * Three rows, narrowing: the default, `size="sm"`, and `sm` with `iconOnly`
+ * members. Both panes are capped at 358px — a 390px phone minus its padding —
+ * so what you are looking at is whether the row still fits.
+ *
+ * The icon-only members REQUIRE a `label`; the type will not let them ship
+ * without one, which is the whole reason that mode is safe to reach for.
+ */
+export const OnAPhoneToolbar: Story = {
+  render: () => (
+    <LeafPair
+      note="Both panes are 358px — a 390px phone minus its side padding. Watch whether the row still fits."
+      web={
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: 358 }}>
+          <ToggleGroupWeb.Root defaultValue={['folders']} aria-label="View (default)">
+            <ToggleWeb value="folders">Folders</ToggleWeb>
+            <ToggleWeb value="media">Media</ToggleWeb>
+          </ToggleGroupWeb.Root>
+          <ToggleGroupWeb.Root defaultValue={['folders']} size="sm" aria-label="View (small)">
+            <ToggleWeb value="folders">Folders</ToggleWeb>
+            <ToggleWeb value="media">Media</ToggleWeb>
+          </ToggleGroupWeb.Root>
+          <ToggleGroupWeb.Root defaultValue={['folders']} size="sm" aria-label="View (icons)">
+            <ToggleWeb value="folders" iconOnly label="Folders">
+              ▤
+            </ToggleWeb>
+            <ToggleWeb value="media" iconOnly label="Media">
+              ▦
+            </ToggleWeb>
+          </ToggleGroupWeb.Root>
+        </div>
+      }
+      native={
+        <View style={{ flexDirection: 'column', gap: 12, width: 358 }}>
+          <ToggleGroupNative.Root defaultValue={['folders']} aria-label="View (default)">
+            <ToggleNative value="folders">Folders</ToggleNative>
+            <ToggleNative value="media">Media</ToggleNative>
+          </ToggleGroupNative.Root>
+          <ToggleGroupNative.Root defaultValue={['folders']} size="sm" aria-label="View (small)">
+            <ToggleNative value="folders">Folders</ToggleNative>
+            <ToggleNative value="media">Media</ToggleNative>
+          </ToggleGroupNative.Root>
+          <ToggleGroupNative.Root defaultValue={['folders']} size="sm" aria-label="View (icons)">
+            <ToggleNative value="folders" iconOnly label="Folders">
+              ▤
+            </ToggleNative>
+            <ToggleNative value="media" iconOnly label="Media">
+              ▦
+            </ToggleNative>
+          </ToggleGroupNative.Root>
+        </View>
       }
     />
   ),

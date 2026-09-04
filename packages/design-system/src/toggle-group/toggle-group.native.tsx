@@ -40,11 +40,12 @@ const ToggleGroupRoot = ({
   onValueChange,
   multiple = false,
   disabled = false,
+  size = 'md',
   children,
   style,
   ...props
 }: ToggleGroupRootProps) => {
-  const ctx = useToggleGroupState(value, defaultValue, onValueChange, multiple, disabled);
+  const ctx = useToggleGroupState(value, defaultValue, onValueChange, multiple, disabled, size);
   return (
     <ToggleGroupContext.Provider value={ctx}>
       <View role="group" style={[styles.root, style]} {...props}>

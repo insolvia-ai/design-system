@@ -30,8 +30,8 @@ import { useControllableState } from '../lib/controllable';
  * - `file` — React Native has no file input at all. It needs a document-picker
  *   native module, which this package cannot declare (see the dependency rule
  *   in CLAUDE.md).
- * - `range` — a slider. RN has no built-in one, and a slider is its own
- *   component with its own keyboard grammar, not a text field wearing a hat.
+ * - `range` — a slider is its own component with its own keyboard grammar,
+ *   not a text field wearing a hat. It exists: see `Slider`.
  * - `color` — needs a colour picker; same story as `file`.
  */
 export type InputType = 'text' | 'number' | 'email' | 'password' | 'search' | 'tel' | 'url';

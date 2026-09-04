@@ -16,6 +16,63 @@ the PR is why, what was rejected, and how it was verified.
 > `0.1.x` is absent because it was never published — the package was
 > `private: true` while every consumer resolved it from the same workspace.
 
+## 0.4.0 — minor
+
+**Widen your range to take this:** `^0.3.x` will not resolve it.
+
+All additive — no existing token changed value.
+
+- **New `ramps` group: a 12-step neutral ramp and a 12-step alpha ramp**
+  (`neutral1`–`neutral12`, `neutralA1`–`neutralA12`), light and dark, taken
+  from Radix Colors' gray scales. Emitted as `--color-neutral-*` /
+  `--color-neutral-a*` custom properties in both schemes, and as per-scheme
+  members of `ColorScheme` for React Native, so `ThemeProvider` can override
+  them through the seam it already has. They are steps, not roles — the
+  generated doc comments say to prefer a semantic role where one says what you
+  mean.
+- **New `semantic.dangerText`** — the foreground that sits on top of `danger`,
+  emitted as `--color-danger-text` and as a `ColorScheme` member. Measured
+  against this file's own values at 6.1:1 light (white on `#B3352E`) and 6.2:1
+  dark (`#071B31` on `#E27F79`), both clear of the 4.5:1 WCAG AA floor for body
+  text — which is what lets a destructive button carry a LABEL and not only a
+  glyph. It holds `primaryText`'s values, so nothing you have rendered moves;
+  what changes is that overriding your primary foreground no longer silently
+  moves the foreground on your danger fill too.
+- **New overlay role set: `overlayInk`, `overlayMuted`, `overlayScrim`,
+  `overlayHover`, `overlayActive`** — for controls drawn on top of MEDIA (a
+  player's transport, a delete affordance on a frame, a filmstrip's arrows),
+  where the surface roles cannot work: `surfaceAlt` over a dark frame is
+  invisible and over a bright one is a grey box. Emitted as
+  `--color-overlay-*` and as `ColorScheme` members, and overridable through the
+  same seams as every other role.
+
+  **These declare the same value in both schemes, deliberately.** They describe
+  a photograph rather than your canvas, and a photograph does not follow the OS
+  colour scheme — chrome over media is light-on-dark in a light app exactly as
+  in a dark one. If you were mapping your own chrome onto the neutral ramp per
+  scheme, these replace it; `overlayScrim` is opaque so you apply the alpha you
+  want at the call site (`bg-overlay-scrim/80`, a gradient stop).
+- **New palette entries `whiteAlpha30` and `whiteAlpha70`**, beside the
+  existing `whiteAlpha20`, feeding the alpha overlay roles. As ever, palette
+  names are emitted nowhere — go through the semantic layer.
+- **New `fonts.mono`** — the system monospace stack, emitted as `--font-mono`
+  (which intentionally re-declares Tailwind's own default of the same value)
+  and as a typed member for React Native; the design-system's
+  `native-typography` maps it to Menlo on iOS and `monospace` on Android.
+- **New `radii.none` (0) and `radii.xs` (2 / 0.125rem)**, ahead of `sm`.
+- **New `motion` group** — `durationFast` (120ms), `durationBase` (200ms),
+  `easingStandard` (`cubic-bezier(0.2, 0, 0, 1)`). Durations emit as
+  `--transition-duration-*`, the namespace this Tailwind actually resolves
+  `duration-*` utilities from; the easing emits as `--ease-standard`.
+- **The generator now emits a mobile zoom guard** into the design-system's
+  `theme.css`: `@media (pointer: coarse) { input, textarea, select {
+  font-size: max(16px, 1em); } }`, unlayered so it beats the utility layer.
+  It lives in the generator, not `tokens.json`, which stays pure data. It also
+  now refuses two colour tokens sharing one flat name, and `radii` gained
+  calc-safe `0px` rendering.
+
+[#20](https://github.com/insolvia-ai/design-system/pull/20)
+
 ## 0.3.2 — patch
 
 - **No token value changed, and nothing this package exports changed.** The

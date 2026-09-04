@@ -9,7 +9,7 @@ It succeeded a web-only predecessor (0.1.x, Base UI), retired at 0.2.x.
 
 ## Components
 
-Forty-two components, shelved the way a component library's documentation site
+Forty-five components, shelved the way a component library's documentation site
 conventionally shelves them — by what you reach for them FOR. The workbench's
 sidebar uses these same five groups in this same order (`.storybook/preview.tsx`
 pins it), so the catalogue and the place you look at it agree.
@@ -27,9 +27,9 @@ pins it), so the catalogue and the place you look at it agree.
 
 **Forms** — what takes input.
 
-`Button` · `Checkbox` · `CheckboxGroup` · `Combobox` · `Field` · `Input` ·
-`InputGroup` · `RadioGroup` · `Select` · `Switch` · `Textarea` · `Toggle` ·
-`ToggleGroup`
+`Button` · `Checkbox` · `CheckboxGroup` · `Chip` · `Combobox` · `Field` ·
+`IconButton` · `Input` · `InputGroup` · `RadioGroup` · `Select` · `Slider` ·
+`Switch` · `Textarea` · `Toggle` · `ToggleGroup`
 
 **Dates.** `DateInput` is the FIELD most callers want: a masked text input with
 a button that opens a picker. WHICH picker is its `picker` prop — `wheels` (the

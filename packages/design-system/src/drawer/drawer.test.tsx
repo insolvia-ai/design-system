@@ -4,9 +4,15 @@ import { describe, expect, it } from 'vitest';
 
 import { Drawer } from './drawer';
 
-function Example({ side }: { side?: 'left' | 'right' | 'top' | 'bottom' }) {
+function Example({
+  side,
+  container,
+}: {
+  side?: 'left' | 'right' | 'top' | 'bottom';
+  container?: HTMLElement;
+}) {
   return (
-    <Drawer.Root {...(side ? { side } : {})}>
+    <Drawer.Root {...(side ? { side } : {})} {...(container ? { container } : {})}>
       <Drawer.Trigger>Open filters</Drawer.Trigger>
       <Drawer.Backdrop />
       <Drawer.Panel data-testid="panel">
@@ -74,6 +80,41 @@ describe('Drawer', () => {
     await user.click(screen.getByRole('button', { name: 'Done' }));
 
     await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
+  it('portals the backdrop and panel into document.body by default', async () => {
+    const user = userEvent.setup();
+    render(<Example />);
+    await user.click(screen.getByRole('button', { name: 'Open filters' }));
+
+    expect(screen.getByRole('dialog').parentElement).toBe(document.body);
+    expect(document.querySelector('[data-drawer-backdrop]')?.parentElement).toBe(document.body);
+  });
+
+  // Only a fullscreen element's descendants are painted, so a panel portaled
+  // to the body during fullscreen is invisible; `container` re-aims it.
+  it('portals both parts into a custom container, with focus and lock intact', async () => {
+    const user = userEvent.setup();
+    const stage = document.createElement('div');
+    document.body.appendChild(stage);
+
+    render(<Example container={stage} />);
+    const trigger = screen.getByRole('button', { name: 'Open filters' });
+    await user.click(trigger);
+
+    const panel = screen.getByRole('dialog');
+    expect(panel.parentElement).toBe(stage);
+    expect(stage.querySelector('[data-drawer-backdrop]')).not.toBeNull();
+
+    // The focus trap works on the PANEL, not the portal target.
+    expect(screen.getByRole('button', { name: 'Done' })).toHaveFocus();
+    expect(document.body.style.overflow).toBe('hidden');
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(trigger).toHaveFocus());
+
+    stage.remove();
   });
 
   it('locks body scroll while open and restores it after', async () => {

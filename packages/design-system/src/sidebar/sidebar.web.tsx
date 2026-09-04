@@ -203,7 +203,10 @@ const SidebarItem = React.forwardRef<HTMLAnchorElement, SidebarItemProps>(
             {icon}
           </span>
         )}
-        {collapsed ? null : <span className="truncate">{label}</span>}
+        {/* `min-w-0` for the reason select.web.tsx spells out: a flex
+            item will not shrink below its own text, so without it a long
+            label pushes the rail wider instead of eliding inside it. */}
+        {collapsed ? null : <span className="min-w-0 truncate">{label}</span>}
       </a>
     );
   },

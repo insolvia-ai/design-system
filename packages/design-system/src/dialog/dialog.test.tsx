@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 
 import { Dialog } from './dialog';
 
-function DeleteDraft() {
+function DeleteDraft({ container }: { container?: HTMLElement }) {
   return (
-    <Dialog.Root>
+    <Dialog.Root {...(container ? { container } : {})}>
       <Dialog.Trigger>Delete draft</Dialog.Trigger>
       <Dialog.Backdrop />
       <Dialog.Popup>
@@ -119,6 +119,48 @@ describe('Dialog', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('portals the backdrop and popup into document.body by default', async () => {
+    const user = userEvent.setup();
+    render(<DeleteDraft />);
+    await user.click(screen.getByRole('button', { name: 'Delete draft' }));
+
+    expect(screen.getByRole('dialog').parentElement).toBe(document.body);
+    expect(document.querySelector('[data-dialog-backdrop]')?.parentElement).toBe(document.body);
+  });
+
+  // The Fullscreen API paints only the fullscreen element's descendants, so a
+  // dialog portaled to the body while something else is fullscreen is mounted,
+  // focused and invisible. `container` is what aims it at that element instead.
+  it('portals both parts into a custom container, with the trap and lock intact', async () => {
+    const user = userEvent.setup();
+    const stage = document.createElement('div');
+    document.body.appendChild(stage);
+
+    render(<DeleteDraft container={stage} />);
+    const trigger = screen.getByRole('button', { name: 'Delete draft' });
+    await user.click(trigger);
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.parentElement).toBe(stage);
+    expect(stage.querySelector('[data-dialog-backdrop]')).not.toBeNull();
+
+    // Focus wiring operates on the POPUP element, not on the portal target, so
+    // moving the target must not touch it — asserted rather than assumed.
+    const cancel = screen.getByRole('button', { name: 'Cancel' });
+    expect(cancel).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Delete' })).toHaveFocus();
+
+    // The scroll lock is the PAGE's, so it stays on the body either way.
+    expect(document.body.style.overflow).toBe('hidden');
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+
+    stage.remove();
   });
 
   it('locks body scroll while open and restores it on close', async () => {
