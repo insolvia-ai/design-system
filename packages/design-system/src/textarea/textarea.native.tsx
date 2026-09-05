@@ -8,12 +8,12 @@
 import * as React from 'react';
 import { StyleSheet, TextInput, type TextInputProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
 import { useInputGroup } from '../input-group/input-group.props';
 import { useNativeFocusRing } from '../lib/native-focus';
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { minHeightForRows, useTextareaState, type TextareaOwnProps } from './textarea.props';
 
 export interface TextareaProps
@@ -47,6 +47,7 @@ export const Textarea = ({
   const field = React.useContext(FieldContext);
   const group = useInputGroup();
   const c = useNativeColors();
+  const r = useNativeRadii();
   const focus = useNativeFocusRing();
   const [text, setText] = useTextareaState({ value, defaultValue, onValueChange });
 
@@ -86,6 +87,7 @@ export const Textarea = ({
           ? styles.bare
           : [
               styles.boxed,
+              { borderRadius: r.md },
               {
                 borderColor: isInvalid ? c.danger : c.line,
                 backgroundColor: disabled ? c.surfaceAlt : c.card,
@@ -108,6 +110,6 @@ const styles = StyleSheet.create({
     // Android centres the first line of a multiline input without this.
     textAlignVertical: 'top',
   },
-  boxed: { borderWidth: 1, borderRadius: radii.md },
+  boxed: { borderWidth: 1 },
   bare: { flex: 1, minWidth: 0, width: 'auto', backgroundColor: 'transparent' },
 });

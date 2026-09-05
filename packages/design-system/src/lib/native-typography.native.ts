@@ -32,6 +32,8 @@ import { Platform } from 'react-native';
 
 import { typography } from '@insolvia-ai/tokens';
 
+import { useThemeOverrides } from './theme';
+
 /**
  * The heading family for the current platform.
  *
@@ -112,3 +114,31 @@ export const monoFamilyByPlatform = {
 } as const;
 
 export const monoFamily: string = Platform.select(monoFamilyByPlatform);
+
+/**
+ * The heading family in scope, honouring any `ThemeProvider` above this
+ * component.
+ *
+ * This is the seam the indirection above exists for. `headingFamily` resolves
+ * the PLATFORM's default at module load; a consumer's `fonts.heading` replaces
+ * it outright rather than being mapped per platform, because a consumer naming
+ * a family has already registered exactly that family in its own app bundle —
+ * mapping `'Spectral_600SemiBold'` onto `System` on iOS would discard the one
+ * thing they asked for.
+ *
+ * One registered family name, never a stack. React Native matches a single
+ * family and falls back to the system sans for anything else, with no error,
+ * so a CSS stack here renders as the default and looks like the override was
+ * ignored.
+ */
+export function useNativeHeadingFamily(): string {
+  return useThemeOverrides().fonts?.heading ?? headingFamily;
+}
+
+/**
+ * The mono family in scope — the same seam as `heading`, for `Text`'s
+ * `family="mono"`. Same one-registered-name rule.
+ */
+export function useNativeMonoFamily(): string {
+  return useThemeOverrides().fonts?.mono ?? monoFamily;
+}

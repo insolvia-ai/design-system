@@ -11,7 +11,7 @@
 // static in StyleSheet.create and apply colors from this hook at render time.
 import { useColorScheme } from 'react-native';
 
-import { colors, type ColorScheme } from '@insolvia-ai/tokens';
+import { colors, radii, type ColorScheme, type Radii } from '@insolvia-ai/tokens';
 
 import { useThemeOverrides, type ThemeOverrides } from './theme';
 
@@ -74,4 +74,53 @@ export function nativeColorsWith(
  */
 export function useNativeColors(): ColorScheme {
   return nativeColorsWith(useColorScheme(), useThemeOverrides());
+}
+
+/**
+ * The package's radii with a consumer's overrides merged over the top.
+ *
+ * Exported for testing and for a consumer doing its own resolution outside a
+ * React tree; components use `useNativeRadii()`.
+ */
+export function nativeRadiiWith(overrides: ThemeOverrides): Radii {
+  const patch = overrides.radii;
+
+  // Identity when there is nothing to apply — same reason as `nativeColorsWith`
+  // above: the un-themed case must return the shared frozen token object rather
+  // than a fresh one per render, or every `React.memo` and dependency array
+  // downstream compares unequal forever.
+  if (patch === undefined) return radii;
+
+  // `pill` is NOT themeable, and overriding it here would be honoured by
+  // nothing anyway — the leaves that draw a capsule or a circle (Switch's
+  // track and thumb, Avatar, Badge, RadioGroup's indicator, the Progress,
+  // Meter and Slider tracks) read `radii.pill` from the tokens package
+  // directly and do not call this hook.
+  //
+  // That is the token package's own distinction, kept rather than reinvented:
+  // a pill is a SHAPE, not a corner. A consumer re-rounding its brand wants
+  // its cards and inputs rounded; it does not want its Switch to stop being a
+  // capsule. Pinning it here means the documented behaviour and the actual
+  // behaviour agree, instead of a `pill` key that is silently inert.
+  return { ...radii, ...patch, pill: radii.pill } as Radii;
+}
+
+/**
+ * The corner radii in scope, honouring any `ThemeProvider` above this
+ * component.
+ *
+ * Radii are NOT scheme-dependent and this hook takes no scheme, matching the
+ * web side: `styles/theme.css` declares `--radius-*` once and its
+ * `[data-theme='dark']` block redefines only colours.
+ *
+ * Covers the CORNER steps — `none`, `xs`, `sm`, `md`, `lg`. `pill` comes back
+ * unchanged whatever a consumer passes; see `nativeRadiiWith`.
+ *
+ * A leaf must call this and apply the value in its render-time style array.
+ * `StyleSheet.create` runs once at module load, so a `borderRadius` baked in
+ * there can never follow a provider — the exact shape of the 0.2.1 dark-mode
+ * bug, one property along.
+ */
+export function useNativeRadii(): Radii {
+  return nativeRadiiWith(useThemeOverrides());
 }

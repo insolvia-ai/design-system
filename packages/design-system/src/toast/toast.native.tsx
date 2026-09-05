@@ -13,9 +13,9 @@
 import * as React from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import {
   DEFAULT_TOAST_DISMISS_LABEL,
@@ -49,6 +49,7 @@ const ToastViewport = ({
 }: ToastViewportProps) => {
   const { toasts, api } = useToastList();
   const c = useNativeColors();
+  const r = useNativeRadii();
 
   const stripeColor: Record<ToastIntent, string> = {
     info: c.primary,
@@ -72,6 +73,7 @@ const ToastViewport = ({
           role={toastRole(toast.intent)}
           style={[
             styles.toast,
+            { borderRadius: r.md },
             {
               borderColor: c.line,
               borderLeftColor: stripeColor[toast.intent],
@@ -126,7 +128,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderWidth: 1,
     borderLeftWidth: 4,
-    borderRadius: radii.md,
     padding: spacing.md,
   },
   body: { flex: 1, flexShrink: 1, gap: spacing.xs },

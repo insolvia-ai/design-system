@@ -12,9 +12,9 @@
 import * as React from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import {
   TooltipContext,
@@ -76,6 +76,7 @@ export interface TooltipContentProps extends ViewProps {
 const TooltipContent = ({ children, style, ...props }: TooltipContentProps) => {
   const { open, tooltipId } = useTooltipContext('Content');
   const c = useNativeColors();
+  const r = useNativeRadii();
   if (!open) return null;
   return (
     // TWO VIEWS, and the outer one is the fix — the same shape, and the same
@@ -96,7 +97,7 @@ const TooltipContent = ({ children, style, ...props }: TooltipContentProps) => {
         // pointing at this element. Same omission select.native.tsx documents
         // for `listbox`.
         {...({ role: 'tooltip' } as unknown as Partial<ViewProps>)}
-        style={[styles.bubble, { backgroundColor: c.ink }, style]}
+        style={[styles.bubble, { borderRadius: r.md }, { backgroundColor: c.ink }, style]}
         {...props}
       >
         <Text style={[styles.bubbleLabel, { color: c.bg }]}>{children}</Text>
@@ -133,7 +134,6 @@ const styles = StyleSheet.create({
   bubble: {
     // Of the anchor, so the label wraps at 256 and never exceeds it.
     maxWidth: '100%',
-    borderRadius: radii.md,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
   },

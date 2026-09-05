@@ -12,10 +12,10 @@
 import * as React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
-import { useNativeColors } from '../lib/native-theme';
-import { headingFamily, textScale } from '../lib/native-typography';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
+import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
 import {
   AlertDialogRootContext,
   useAlertDialogRootContext,
@@ -57,6 +57,7 @@ export type AlertDialogPopupProps = ViewProps;
 const AlertDialogPopup = ({ children, style, ...props }: AlertDialogPopupProps) => {
   const { open, setOpen, titleId, descriptionId } = useAlertDialogRootContext('Popup');
   const c = useNativeColors();
+  const r = useNativeRadii();
 
   // Same child-presence scan as Field.Root — point only at rendered parts.
   let hasTitle = false;
@@ -108,7 +109,7 @@ const AlertDialogPopup = ({ children, style, ...props }: AlertDialogPopupProps) 
           aria-modal
           aria-labelledby={hasTitle ? titleId : undefined}
           {...webAria}
-          style={[styles.card, { backgroundColor: c.card }, style]}
+          style={[styles.card, { borderRadius: r.lg }, { backgroundColor: c.card }, style]}
           {...props}
         >
           {children}
@@ -121,8 +122,13 @@ const AlertDialogPopup = ({ children, style, ...props }: AlertDialogPopupProps) 
 const AlertDialogTitle = ({ children }: { children?: React.ReactNode }) => {
   const { titleId } = useAlertDialogRootContext('Title');
   const c = useNativeColors();
+  const heading = useNativeHeadingFamily();
   return (
-    <Text nativeID={titleId} accessibilityRole="header" style={[styles.title, { color: c.ink }]}>
+    <Text
+      nativeID={titleId}
+      accessibilityRole="header"
+      style={[styles.title, { fontFamily: heading }, { color: c.ink }]}
+    >
       {children}
     </Text>
   );
@@ -170,11 +176,10 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 448, // matches the web leaf's max-w-md (28rem)
-    borderRadius: radii.lg,
     padding: spacing.lg,
     gap: spacing.md,
   },
-  title: { fontFamily: headingFamily, ...textScale.lg, fontWeight: '600' },
+  title: { ...textScale.lg, fontWeight: '600' },
   description: { ...textScale.sm },
   close: { alignSelf: 'flex-start', paddingVertical: spacing.xs },
   closeLabel: { ...textScale.sm, fontWeight: '500' },

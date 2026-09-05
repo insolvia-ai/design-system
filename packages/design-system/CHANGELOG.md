@@ -18,6 +18,58 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.20.0 — minor
+
+**Widen your range to take this:** `^0.19.x` will not resolve it.
+
+React Native only. No web leaf changed, and no default moved on either
+platform: an app with no `ThemeProvider`, or one passing only colours, renders
+exactly as it did on 0.19.1.
+
+- **`ThemeProvider` takes `radii` and `fonts` now — and 0.18.0's entry was
+  wrong to say it already did.** That entry told you to set "`--radius-md` (or
+  `ThemeProvider`'s `radii`)" and to "point `fonts.heading` at a serif". The
+  web half was true; there was no such prop, so on React Native there was no
+  way to do either. The native leaves read `radii` and the heading family
+  straight out of `@insolvia-ai/tokens` into `StyleSheet.create`, which runs
+  once at module load and no context can reach. They are read at render time
+  now, the same way colours already are.
+
+  ```tsx
+  <ThemeProvider
+    theme={{
+      light: { primary: '#155E63' },
+      radii: { md: 8 },
+      fonts: { heading: 'Spectral_600SemiBold' },
+    }}
+  >
+  ```
+
+  This matters because the base theme states no corner and no display face on
+  purpose — both are brand decisions. Until now a web consumer could make them
+  and a React Native consumer could not, which made the 0.18.0 base
+  un-re-brandable on one platform.
+
+- **`radii` covers the corner steps — `none`, `xs`, `sm`, `md`, `lg`. `pill` is
+  pinned and passing it does nothing.** The components that use `pill` are
+  drawing a shape rather than rounding a corner — Switch's track and thumb,
+  Avatar, Badge, RadioGroup's indicator, the Progress, Meter and Slider tracks
+  — and a re-brand that wanted rounder cards has never meant it wanted a
+  rectangular switch.
+
+- **`fonts` takes ONE registered family name per role, never a CSS stack**, and
+  the value is used verbatim rather than mapped per platform: a consumer naming
+  a family has already registered exactly that family in its own app bundle.
+  `heading` and `mono` only — `body` is deliberately absent, because the native
+  leaves have never set a family for body copy (the platform's own sans
+  renders, which is what `--font-body`'s stack asks for) and accepting one
+  would restyle every existing native surface.
+
+- **An unknown key is still ignored rather than rejected**, as with colours —
+  `ThemeOverrides` stays a loose record. Check your spelling; a typo is silent.
+
+[#28](https://github.com/insolvia-ai/design-system/pull/28)
+
 ## 0.19.1 — patch
 
 - **No code changed. This file did.** 0.17.0's entry claimed a release you cannot

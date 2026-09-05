@@ -7,12 +7,12 @@
 import * as React from 'react';
 import { StyleSheet, TextInput, type TextInputProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
 import { useInputGroup } from '../input-group/input-group.props';
 import { useNativeFocusRing } from '../lib/native-focus';
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import {
   CONTROL_HEIGHT_PX,
   isSecureType,
@@ -52,6 +52,7 @@ export const Input = ({
   const field = React.useContext(FieldContext);
   const group = useInputGroup();
   const c = useNativeColors();
+  const r = useNativeRadii();
   const focus = useNativeFocusRing();
   const [text, setText] = useInputState({ value, defaultValue, onValueChange });
 
@@ -103,6 +104,7 @@ export const Input = ({
             styles.bare
           : [
               styles.boxed,
+              { borderRadius: r.md },
               {
                 borderColor: isInvalid ? c.danger : c.line,
                 backgroundColor: disabled ? c.surfaceAlt : c.card,
@@ -124,7 +126,6 @@ const styles = StyleSheet.create({
   },
   boxed: {
     borderWidth: 1,
-    borderRadius: radii.md,
   },
   bare: {
     flex: 1,

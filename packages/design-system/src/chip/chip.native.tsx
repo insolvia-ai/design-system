@@ -4,10 +4,10 @@
 import * as React from 'react';
 import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import type { ChipSize } from './chip.props';
 
@@ -53,6 +53,7 @@ export function Chip({
   // Colors resolve per render so the leaf follows the OS scheme; only the
   // scheme-independent layout lives at module level in StyleSheet.create.
   const c = useNativeColors();
+  const r = useNativeRadii();
   // This package's ring rather than the browser's default blue one, which is
   // what react-native-web paints on an unringed Pressable — see
   // lib/native-focus.native.ts. A chip ROW is tabbed through end to end, so the
@@ -87,6 +88,7 @@ export function Chip({
       }}
       style={(state) => [
         styles.base,
+        { borderRadius: r.md },
         {
           height: sizeHeight[size],
           paddingHorizontal: sizePadX[size],
@@ -120,7 +122,6 @@ const styles = StyleSheet.create({
     // the component. Badge and Calendar declare the same thing for the same
     // reason; IconButton gets it from a definite width instead.
     alignSelf: 'flex-start',
-    borderRadius: radii.md,
     borderWidth: 1,
   },
   label: { ...textScale.sm, fontWeight: '500' },

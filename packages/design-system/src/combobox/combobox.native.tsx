@@ -22,11 +22,11 @@ import {
   type ViewProps,
 } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
 import { useNativeFocusRing } from '../lib/native-focus';
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import { getListboxId, getOptionId } from '../select/select.props';
 import {
@@ -57,6 +57,7 @@ export const Combobox = ({
 }: ComboboxProps) => {
   const field = React.useContext(FieldContext);
   const c = useNativeColors();
+  const r = useNativeRadii();
   const focus = useNativeFocusRing();
   const state = useComboboxState({ options, value, defaultValue, onValueChange });
   const { query, setQuery, visible, open, setOpen, active, setActive, commit, revert, rootId } =
@@ -140,6 +141,7 @@ export const Combobox = ({
         }}
         style={[
           styles.control,
+          { borderRadius: r.md },
           {
             borderColor: isInvalid ? c.danger : c.line,
             backgroundColor: disabled ? c.surfaceAlt : c.card,
@@ -169,7 +171,11 @@ export const Combobox = ({
             role: 'listbox',
             onMouseDown: (event: { preventDefault: () => void }) => event.preventDefault(),
           } as unknown as Partial<ViewProps>)}
-          style={[styles.list, { borderColor: c.line, backgroundColor: c.card }]}
+          style={[
+            styles.list,
+            { borderRadius: r.md },
+            { borderColor: c.line, backgroundColor: c.card },
+          ]}
         >
           <ScrollView keyboardShouldPersistTaps="always">
             {visible.map((option) => {
@@ -211,7 +217,11 @@ export const Combobox = ({
         // leaf for why an option-less listbox is not the right shape.
         <View
           role="status"
-          style={[styles.empty, { borderColor: c.line, backgroundColor: c.card }]}
+          style={[
+            styles.empty,
+            { borderRadius: r.md },
+            { borderColor: c.line, backgroundColor: c.card },
+          ]}
         >
           <Text style={[styles.emptyLabel, { color: c.muted }]}>{emptyMessage}</Text>
         </View>
@@ -231,7 +241,6 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: spacing.sm,
     borderWidth: 1,
-    borderRadius: radii.md,
     fontSize: 14,
   },
   list: {
@@ -242,7 +251,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
     maxHeight: 240,
     borderWidth: 1,
-    borderRadius: radii.md,
     paddingVertical: spacing.xs,
     overflow: 'hidden',
   },
@@ -262,7 +270,6 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
     borderWidth: 1,
-    borderRadius: radii.md,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
   },

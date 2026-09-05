@@ -5,10 +5,10 @@
 import * as React from 'react';
 import { Image, StyleSheet, Text, View, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
-import { useNativeColors } from '../lib/native-theme';
-import { headingFamily, textScale } from '../lib/native-typography';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
+import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
 import { CARD_IMAGE_HEIGHT, type CardElevation, type CardImageOwnProps } from './card.props';
 
 export interface CardProps extends ViewProps {
@@ -17,10 +17,12 @@ export interface CardProps extends ViewProps {
 
 const CardRoot = ({ elevation = 'flat', style, ...props }: CardProps) => {
   const c = useNativeColors();
+  const r = useNativeRadii();
   return (
     <View
       style={[
         styles.root,
+        { borderRadius: r.lg },
         { borderColor: c.line, backgroundColor: c.card },
         elevation === 'raised' ? styles.raised : null,
         style,
@@ -32,8 +34,12 @@ const CardRoot = ({ elevation = 'flat', style, ...props }: CardProps) => {
 
 const CardTitle = ({ children }: { children?: React.ReactNode }) => {
   const c = useNativeColors();
+  const heading = useNativeHeadingFamily();
   return (
-    <Text accessibilityRole="header" style={[styles.title, { color: c.ink }]}>
+    <Text
+      accessibilityRole="header"
+      style={[styles.title, { fontFamily: heading }, { color: c.ink }]}
+    >
       {children}
     </Text>
   );
@@ -62,6 +68,7 @@ const CardFooter = ({ style, ...props }: ViewProps) => (
  */
 const CardImage = ({ src, alt, caption, height = CARD_IMAGE_HEIGHT }: CardImageOwnProps) => {
   const c = useNativeColors();
+  const r = useNativeRadii();
   const decorative = alt === '';
 
   return (
@@ -91,13 +98,17 @@ const CardImage = ({ src, alt, caption, height = CARD_IMAGE_HEIGHT }: CardImageO
       */}
       <View
         {...(decorative ? {} : ({ role: 'img', accessibilityLabel: alt } as Partial<ViewProps>))}
-        style={styles.imageBox}
+        style={[styles.imageBox, { borderTopLeftRadius: r.lg, borderTopRightRadius: r.lg }]}
       >
         <Image
           source={{ uri: src }}
           alt={alt}
           resizeMode="cover"
-          style={[styles.image, { height }]}
+          style={[
+            styles.image,
+            { borderTopLeftRadius: r.lg, borderTopRightRadius: r.lg },
+            { height },
+          ]}
         />
       </View>
       {caption === undefined ? null : (
@@ -119,7 +130,6 @@ const styles = StyleSheet.create({
   root: {
     flexDirection: 'column',
     gap: spacing.sm,
-    borderRadius: radii.lg,
     borderWidth: 1,
     padding: spacing.lg,
   },
@@ -130,7 +140,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
   },
-  title: { fontFamily: headingFamily, ...textScale.lg, fontWeight: '600' },
+  title: { ...textScale.lg, fontWeight: '600' },
   body: { ...textScale.sm },
   footer: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingTop: spacing.sm },
   // Cancels the Root's padding, exactly as the web leaf's `-mx-lg -mt-lg`.
@@ -143,15 +153,11 @@ const styles = StyleSheet.create({
   imageBox: {
     width: '100%',
     overflow: 'hidden',
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
   },
   image: {
     width: '100%',
     // The Root has no `overflow: hidden` (it would clip a Ribbon), so the
     // image rounds its own top corners to match the card's radius.
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
   },
   caption: { ...textScale.xs, paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
 });

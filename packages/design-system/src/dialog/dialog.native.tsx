@@ -10,10 +10,10 @@
 import * as React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
-import { useNativeColors } from '../lib/native-theme';
-import { headingFamily, textScale } from '../lib/native-typography';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
+import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
 import {
   DialogRootContext,
   useDialogRootContext,
@@ -56,6 +56,7 @@ export type DialogPopupProps = ViewProps;
 const DialogPopup = ({ children, style, ...props }: DialogPopupProps) => {
   const { open, setOpen, titleId, descriptionId } = useDialogRootContext('Popup');
   const c = useNativeColors();
+  const r = useNativeRadii();
 
   // Same child-presence scan as Field.Root: the card only points at the
   // Title/Description ids when those parts are actually rendered — a dangling
@@ -97,7 +98,10 @@ const DialogPopup = ({ children, style, ...props }: DialogPopupProps) => {
           style={StyleSheet.absoluteFill}
           onPress={() => setOpen(false)}
         />
-        <View style={[styles.card, { backgroundColor: c.card }, style]} {...props}>
+        <View
+          style={[styles.card, { borderRadius: r.lg }, { backgroundColor: c.card }, style]}
+          {...props}
+        >
           {children}
         </View>
       </View>
@@ -108,8 +112,13 @@ const DialogPopup = ({ children, style, ...props }: DialogPopupProps) => {
 const DialogTitle = ({ children }: { children?: React.ReactNode }) => {
   const { titleId } = useDialogRootContext('Title');
   const c = useNativeColors();
+  const heading = useNativeHeadingFamily();
   return (
-    <Text nativeID={titleId} accessibilityRole="header" style={[styles.title, { color: c.ink }]}>
+    <Text
+      nativeID={titleId}
+      accessibilityRole="header"
+      style={[styles.title, { fontFamily: heading }, { color: c.ink }]}
+    >
       {children}
     </Text>
   );
@@ -157,11 +166,10 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 448, // matches the web leaf's max-w-md (28rem)
-    borderRadius: radii.lg,
     padding: spacing.lg,
     gap: spacing.md,
   },
-  title: { fontFamily: headingFamily, ...textScale.lg, fontWeight: '600' },
+  title: { ...textScale.lg, fontWeight: '600' },
   description: { ...textScale.sm },
   close: { alignSelf: 'flex-start', paddingVertical: spacing.xs },
   closeLabel: { ...textScale.sm, fontWeight: '500' },

@@ -38,9 +38,9 @@ import {
   type ViewProps,
 } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import {
   ITEM_HEIGHT,
@@ -90,6 +90,7 @@ export const Wheel = ({
   ...props
 }: WheelProps) => {
   const c = useNativeColors();
+  const r = useNativeRadii();
   const state = useWheelState({ items, value, defaultValue, onValueChange });
   const {
     value: current,
@@ -177,7 +178,7 @@ export const Wheel = ({
       <View
         pointerEvents="none"
         aria-hidden
-        style={[styles.band, { backgroundColor: c.surfaceAlt }]}
+        style={[styles.band, { borderRadius: r.md }, { backgroundColor: c.surfaceAlt }]}
       />
 
       <ScrollView
@@ -198,7 +199,7 @@ export const Wheel = ({
         onScroll={handleScroll}
         onScrollEndDrag={settle}
         onMomentumScrollEnd={settle}
-        style={[styles.scroller, snapStyle]}
+        style={[styles.scroller, { borderRadius: r.md }, snapStyle]}
         contentContainerStyle={styles.content}
       >
         {items.map((item, itemIndex) => {
@@ -264,9 +265,8 @@ const styles = StyleSheet.create({
     // numbers are constants, so there is nothing for a percentage to buy.
     top: (WHEEL_HEIGHT - ITEM_HEIGHT) / 2,
     height: ITEM_HEIGHT,
-    borderRadius: radii.md,
   },
-  scroller: { flexGrow: 0, borderRadius: radii.md },
+  scroller: { flexGrow: 0 },
   // The blank space that lets the first and last rows reach the middle.
   content: { paddingVertical: WHEEL_PADDING },
   row: {

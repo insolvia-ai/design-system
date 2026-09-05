@@ -20,9 +20,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { radii } from '@insolvia-ai/tokens';
-
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import {
   CheckboxRootContext,
   useCheckboxRootContext,
@@ -59,6 +57,7 @@ const CheckboxRoot = ({
     value,
   );
   const c = useNativeColors();
+  const r = useNativeRadii();
 
   const ctx: CheckboxIndicatorContextValue = {
     checked: state.checked,
@@ -83,6 +82,7 @@ const CheckboxRoot = ({
         }}
         style={[
           styles.base,
+          { borderRadius: r.sm },
           {
             borderColor: active ? c.primary : c.line,
             backgroundColor: active ? c.primary : c.card,
@@ -137,7 +137,6 @@ const styles = StyleSheet.create({
   base: {
     height: 20,
     width: 20,
-    borderRadius: radii.sm,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',

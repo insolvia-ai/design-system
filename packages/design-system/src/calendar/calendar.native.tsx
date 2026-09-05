@@ -13,9 +13,9 @@
 import * as React from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import { isOutOfRange } from '../lib/date';
 import {
@@ -47,6 +47,7 @@ export const Calendar = ({
   ...props
 }: CalendarProps) => {
   const c = useNativeColors();
+  const r = useNativeRadii();
   const state = useCalendarState({
     value,
     defaultValue,
@@ -72,7 +73,15 @@ export const Calendar = ({
   const webOnly = { onKeyDown: handleKeyDown, 'aria-labelledby': labelId } as object;
 
   return (
-    <View style={[styles.root, { borderColor: c.line, backgroundColor: c.card }, style]} {...props}>
+    <View
+      style={[
+        styles.root,
+        { borderRadius: r.lg },
+        { borderColor: c.line, backgroundColor: c.card },
+        style,
+      ]}
+      {...props}
+    >
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"
@@ -138,6 +147,7 @@ export const Calendar = ({
                     onPress={() => select(day.iso)}
                     style={[
                       styles.day,
+                      { borderRadius: r.md },
                       selected ? { backgroundColor: c.primary } : null,
                       disabled ? styles.disabled : null,
                     ]}
@@ -169,7 +179,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     gap: spacing.sm,
     borderWidth: 1,
-    borderRadius: radii.lg,
     padding: spacing.md,
   },
   header: {
@@ -191,7 +200,6 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radii.md,
   },
   dayLabel: { ...textScale.sm },
   daySelected: { fontWeight: '500' },

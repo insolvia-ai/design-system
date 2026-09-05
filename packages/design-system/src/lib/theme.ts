@@ -42,35 +42,89 @@
 import * as React from 'react';
 
 /**
- * Semantic colour overrides, per scheme.
+ * Theme overrides: colours per scheme, plus the scheme-independent brand
+ * decisions the base theme declines to make.
  *
- * Keys are semantic role names (`primary`, `bg`, `ink`, `muted`, `line`,
- * `card`, `danger`, …) — never raw palette names, which this package does not
- * expose in either direction. Values are anything React Native accepts as a
- * colour.
+ * Colour keys are semantic role names (`primary`, `bg`, `ink`, `muted`,
+ * `line`, `card`, `danger`, …) — never raw palette names, which this package
+ * does not expose in either direction. Values are anything React Native
+ * accepts as a colour.
  *
- * Partial by design: supply only the roles you are changing and the rest fall
- * through to the defaults. Note that derived states (`primaryHover`,
+ * Partial by design throughout: supply only what you are changing and the rest
+ * falls through to the defaults. Note that derived states (`primaryHover`,
  * `primaryActive`, …) are pre-computed values rather than live blends on
  * native, so overriding `primary` alone does NOT move them — override them
  * explicitly if they matter. On web they follow automatically, because there
  * they really are `color-mix()` over the base.
+ *
+ * `radii` and `fonts` exist because the base theme states no corner and no
+ * display face, on the reasoning that both are brand decisions. That left a
+ * web consumer able to make them (`--radius-md`, `--font-heading`) and a React
+ * Native consumer unable to make them at all: the native leaves read those
+ * tokens straight out of `@insolvia-ai/tokens` into `StyleSheet.create`, which
+ * runs once at module load and no context can reach. They are read at render
+ * time now, like colours.
  */
 export interface ThemeOverrides {
-  // `| undefined` on both is required, not noise: `exactOptionalPropertyTypes`
-  // is on, so without it a caller cannot pass through a possibly-absent half —
-  // which is exactly what `ThemeProvider` does when it re-wraps `theme`.
+  // `| undefined` on every member is required, not noise:
+  // `exactOptionalPropertyTypes` is on, so without it a caller cannot pass
+  // through a possibly-absent half — which is exactly what `ThemeProvider`
+  // does when it re-wraps `theme`.
   readonly light?: Readonly<Record<string, string>> | undefined;
   readonly dark?: Readonly<Record<string, string>> | undefined;
+  /**
+   * Corner radii, by token name (`none`, `xs`, `sm`, `md`, `lg`, `pill`), in
+   * density-independent pixels.
+   *
+   * NOT nested under a scheme, unlike the colours above, because a corner does
+   * not change with the colour scheme — and that is not an assumption, it is
+   * what the web side already does: `styles/theme.css` declares `--radius-*`
+   * once in `@theme`, and its `[data-theme='dark']` block redefines colours
+   * and nothing else. A per-scheme radius here would be a seam the two
+   * platforms do not share.
+   *
+   * The base theme sets every radius except `pill` to 0, deliberately — a
+   * corner is a brand decision and the default theme makes none. `{ md: 8 }`
+   * is how a native consumer makes one.
+   *
+   * `pill` is the one step this cannot move, and passing it is a no-op. The
+   * components that use it are drawing a SHAPE — a Switch capsule, an Avatar
+   * circle, a Progress track — rather than rounding a corner, and a re-brand
+   * that wanted rounder cards has never meant it wanted a rectangular switch.
+   */
+  readonly radii?: Readonly<Record<string, number>> | undefined;
+  /**
+   * Type families, by role (`heading`, `mono`).
+   *
+   * ONE family name, never a CSS stack: React Native resolves a single
+   * registered family and silently falls back to the system sans for anything
+   * it cannot match, so `'Spectral, Georgia, serif'` here renders as neither.
+   * The family has to be registered in the consumer's own app bundle first —
+   * this package ships no font file and cannot (see
+   * `lib/native-typography.native.ts`).
+   *
+   * `body` is deliberately absent. The native leaves have never set a family
+   * for body copy — the platform's own sans renders, which is what
+   * `--font-body`'s stack asks for too — so accepting one here would be a
+   * visual change to every existing native surface rather than a seam.
+   */
+  readonly fonts?: Readonly<Record<string, string>> | undefined;
 }
 
 const ThemeContext = React.createContext<ThemeOverrides>({});
 
 /**
- * Override semantic colours for every design-system component below this point.
+ * Override the theme for every design-system component below this point.
  *
  * ```tsx
- * <ThemeProvider theme={{ light: { primary: '#155E63' }, dark: { primary: '#7FD1D9' } }}>
+ * <ThemeProvider
+ *   theme={{
+ *     light: { primary: '#155E63' },
+ *     dark: { primary: '#7FD1D9' },
+ *     radii: { md: 8 },
+ *     fonts: { heading: 'Spectral_600SemiBold' },
+ *   }}
+ * >
  *   <App />
  * </ThemeProvider>
  * ```
@@ -87,13 +141,13 @@ export function ThemeProvider({
   theme: ThemeOverrides;
   children: React.ReactNode;
 }) {
-  // Memoised on the two halves rather than on `theme`, so a caller passing an
+  // Memoised on the members rather than on `theme`, so a caller passing an
   // inline object literal — which is the obvious way to write it, and the way
   // the doc comment above shows — does not re-render every themed leaf on every
   // parent render.
   const value = React.useMemo<ThemeOverrides>(
-    () => ({ light: theme.light, dark: theme.dark }),
-    [theme.light, theme.dark],
+    () => ({ light: theme.light, dark: theme.dark, radii: theme.radii, fonts: theme.fonts }),
+    [theme.light, theme.dark, theme.radii, theme.fonts],
   );
 
   return React.createElement(ThemeContext.Provider, { value }, children);

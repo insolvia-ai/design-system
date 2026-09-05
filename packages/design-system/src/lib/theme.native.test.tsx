@@ -9,9 +9,15 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { colors } from '@insolvia-ai/tokens';
+import { colors, radii } from '@insolvia-ai/tokens';
 
-import { nativeColorsWith, useNativeColors } from './native-theme.native';
+import {
+  nativeColorsWith,
+  nativeRadiiWith,
+  useNativeColors,
+  useNativeRadii,
+} from './native-theme.native';
+import { useNativeHeadingFamily, useNativeMonoFamily } from './native-typography.native';
 import { ThemeProvider, type ThemeOverrides } from './theme';
 
 function ShowPrimary() {
@@ -98,3 +104,99 @@ function ShowBoth() {
     </>
   );
 }
+
+function ShowRadii() {
+  const r = useNativeRadii();
+  return (
+    <>
+      <span data-testid="md">{String(r.md)}</span>
+      <span data-testid="pill">{String(r.pill)}</span>
+    </>
+  );
+}
+
+function ShowFamilies() {
+  return (
+    <>
+      <span data-testid="heading">{useNativeHeadingFamily()}</span>
+      <span data-testid="mono">{useNativeMonoFamily()}</span>
+    </>
+  );
+}
+
+describe('nativeRadiiWith', () => {
+  it('returns the SAME object when nothing is overridden', () => {
+    // Identity for the same reason `nativeColorsWith` needs it: a fresh object
+    // per render defeats every downstream memo, and equality would not catch it.
+    expect(nativeRadiiWith({})).toBe(radii);
+  });
+
+  it('merges a partial override, leaving the other steps alone', () => {
+    const merged = nativeRadiiWith({ radii: { md: 12 } });
+
+    expect(merged.md).toBe(12);
+    expect(merged.sm).toBe(radii.sm);
+    expect(merged.lg).toBe(radii.lg);
+  });
+
+  it('refuses to move `pill`, whatever is passed', () => {
+    // A pill is a shape, not a corner. The leaves that draw one read the token
+    // directly, so honouring an override here would only make the type lie.
+    expect(nativeRadiiWith({ radii: { pill: 4 } }).pill).toBe(radii.pill);
+    expect(nativeRadiiWith({ radii: { md: 12, pill: 0 } })).toMatchObject({
+      md: 12,
+      pill: radii.pill,
+    });
+  });
+
+  it('ignores a colour-only theme', () => {
+    expect(nativeRadiiWith({ light: { primary: '#155E63' } })).toBe(radii);
+  });
+});
+
+describe('useNativeRadii', () => {
+  it('uses the token defaults with no provider', () => {
+    render(<ShowRadii />);
+    expect(screen.getByTestId('md')).toHaveTextContent(String(radii.md));
+  });
+
+  it('picks up a ThemeProvider above it', () => {
+    render(
+      <ThemeProvider theme={{ radii: { md: 12 } }}>
+        <ShowRadii />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId('md')).toHaveTextContent('12');
+    expect(screen.getByTestId('pill')).toHaveTextContent(String(radii.pill));
+  });
+});
+
+describe('font families', () => {
+  it('fall back to the platform defaults with no provider', () => {
+    render(<ShowFamilies />);
+    // Under react-native-web the platform arm is the token stack, which is what
+    // makes the two workbench panes comparable at all.
+    expect(screen.getByTestId('heading')).not.toBeEmptyDOMElement();
+  });
+
+  it('take a ThemeProvider override verbatim, without per-platform mapping', () => {
+    // Verbatim is the point: a consumer naming a family has registered exactly
+    // that family, so mapping it onto `System` would discard the override.
+    render(
+      <ThemeProvider theme={{ fonts: { heading: 'Spectral_600SemiBold', mono: 'IBMPlexMono' } }}>
+        <ShowFamilies />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId('heading')).toHaveTextContent('Spectral_600SemiBold');
+    expect(screen.getByTestId('mono')).toHaveTextContent('IBMPlexMono');
+  });
+
+  it('leaves the other family alone when only one is overridden', () => {
+    render(
+      <ThemeProvider theme={{ fonts: { heading: 'Spectral_600SemiBold' } }}>
+        <ShowFamilies />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId('mono')).not.toHaveTextContent('Spectral_600SemiBold');
+  });
+});

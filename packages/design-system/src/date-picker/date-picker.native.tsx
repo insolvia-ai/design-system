@@ -11,10 +11,10 @@
 import * as React from 'react';
 import { StyleSheet, Text, View, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import { Wheel } from '../wheel/wheel.native';
 import {
@@ -63,6 +63,7 @@ export const DatePicker = ({
 }: DatePickerProps) => {
   const field = React.useContext(FieldContext);
   const c = useNativeColors();
+  const r = useNativeRadii();
   const state = useDatePickerState({
     mode,
     value,
@@ -98,6 +99,7 @@ export const DatePicker = ({
       {...webAria}
       style={[
         styles.root,
+        { borderRadius: r.lg },
         { borderColor: invalid ? c.danger : c.line, backgroundColor: c.card },
         style,
       ]}
@@ -141,7 +143,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     gap: spacing.sm,
     borderWidth: 1,
-    borderRadius: radii.lg,
     padding: spacing.md,
   },
   summary: { ...textScale.sm, fontWeight: '500', textAlign: 'center' },

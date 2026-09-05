@@ -15,10 +15,10 @@ import * as React from 'react';
 // caller's control is still typed against a TextInput's contract.
 import { StyleSheet, Text, View, type TextInputProps, type ViewProps } from 'react-native';
 
-import { radii, spacing } from '@insolvia-ai/tokens';
+import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
-import { useNativeColors } from '../lib/native-theme';
+import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale } from '../lib/native-typography';
 import {
   FieldContext,
@@ -114,6 +114,7 @@ export interface FieldControlProps {
 const FieldControl = ({ render, style }: FieldControlProps) => {
   const { labelId, controlId, describedBy, invalid } = useFieldContext('Control');
   const c = useNativeColors();
+  const r = useNativeRadii();
 
   // React Native has no `:focus` selector, so the focused state is held in a
   // hook and the ring applied as a style — the web leaf gets the same thing
@@ -178,6 +179,7 @@ const FieldControl = ({ render, style }: FieldControlProps) => {
     },
     style: [
       styles.control,
+      { borderRadius: r.md },
       {
         borderColor: invalid ? c.danger : c.line,
         backgroundColor: readOnly ? c.surfaceAlt : c.card,
@@ -230,7 +232,6 @@ const styles = StyleSheet.create({
   control: {
     height: 40,
     width: '100%',
-    borderRadius: radii.md,
     borderWidth: 1,
     paddingHorizontal: spacing.sm,
     fontSize: 14,
