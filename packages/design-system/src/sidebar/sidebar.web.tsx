@@ -32,7 +32,7 @@ const SidebarRoot = React.forwardRef<HTMLDivElement, SidebarRootProps>(
           data-collapsed={ctx.collapsed ? '' : undefined}
           style={{ width: ctx.collapsed ? sidebarWidth.collapsed : sidebarWidth.expanded }}
           className={cn(
-            'flex h-full flex-col gap-sm border-r border-line bg-card py-md transition-[width]',
+            'flex h-full flex-col gap-sm border-r border-line bg-card py-md transition-[width] motion-reduce:transition-none',
             className,
           )}
           {...props}
@@ -194,6 +194,7 @@ const SidebarItem = React.forwardRef<HTMLAnchorElement, SidebarItemProps>(
           collapsed && 'justify-center',
           active ? 'bg-surface-alt font-medium text-ink' : 'text-muted hover:bg-surface-alt',
           focusRing,
+          'touch-manipulation',
           className,
         )}
         {...props}

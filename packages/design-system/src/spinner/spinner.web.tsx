@@ -30,7 +30,13 @@ export const Spinner = React.forwardRef<HTMLSpanElement, SpinnerProps>(
           track, `border-t-primary` the moving arc. */}
       <span
         aria-hidden="true"
-        className={cn('animate-spin rounded-pill border-line border-t-primary', sizeStyles[size])}
+        className={cn(
+          // A spinner that STOPS under reduced motion reads as "finished, not
+          // loading" — worse than the motion it was meant to avoid. So this
+          // slows the spin instead of stopping it.
+          'animate-spin rounded-pill border-line border-t-primary motion-reduce:[animation-duration:3s]',
+          sizeStyles[size],
+        )}
       />
     </span>
   ),

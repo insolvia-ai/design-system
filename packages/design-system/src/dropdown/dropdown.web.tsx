@@ -88,7 +88,7 @@ const DropdownTrigger = React.forwardRef<HTMLButtonElement, DropdownTriggerProps
             setOpen(true);
           }
         }}
-        className={cn('cursor-pointer', focusRing, disabledStyles, className)}
+        className={cn('cursor-pointer touch-manipulation', focusRing, disabledStyles, className)}
         {...props}
       />
     );
@@ -210,7 +210,7 @@ const DropdownItem = React.forwardRef<HTMLButtonElement, DropdownItemProps>(
           setOpen(false);
         }}
         className={cn(
-          'flex min-h-[44px] w-full cursor-pointer items-center px-sm py-xs text-left',
+          'flex min-h-[44px] w-full cursor-pointer touch-manipulation items-center px-sm py-xs text-left',
           'hover:bg-surface-alt focus:bg-surface-alt focus:outline-none',
           disabled && 'cursor-not-allowed text-muted hover:bg-transparent',
           className,

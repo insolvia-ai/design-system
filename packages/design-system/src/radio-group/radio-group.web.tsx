@@ -133,6 +133,7 @@ const RadioGroupItem = React.forwardRef<HTMLButtonElement, RadioGroupItemProps>(
         className={cn(
           'flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-pill border border-line bg-card',
           focusRing,
+          'touch-manipulation',
           disabledStyles,
           'aria-checked:border-primary',
           className,

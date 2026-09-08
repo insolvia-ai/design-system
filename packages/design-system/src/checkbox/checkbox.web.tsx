@@ -82,6 +82,7 @@ const CheckboxRoot = React.forwardRef<HTMLButtonElement, CheckboxRootProps>(
             'aria-checked:border-primary aria-checked:bg-primary',
             'aria-[checked=mixed]:border-primary aria-[checked=mixed]:bg-primary',
             focusRing,
+            'touch-manipulation',
             disabledStyles,
             className,
           )}

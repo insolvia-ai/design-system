@@ -82,6 +82,7 @@ const BreadcrumbsItem = React.forwardRef<HTMLAnchorElement, BreadcrumbsItemProps
           className={cn(
             'rounded-sm text-muted underline-offset-2 hover:underline',
             focusRing,
+            'touch-manipulation',
             className,
           )}
           {...props}
