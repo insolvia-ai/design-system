@@ -107,7 +107,7 @@ Four of the new components — number field, tree view, transfer list, data grid
 off it by getting a touch-first native leaf rather than a port of the desktop
 one; the README's "How it got here" records what each gives up there.
 
-[#PRNUM](https://github.com/insolvia-ai/design-system/pull/PRNUM)
+[#29](https://github.com/insolvia-ai/design-system/pull/29)
 
 ## 0.20.0 — minor
 
