@@ -17,11 +17,19 @@ const ELEVATIONS = ['flat', 'raised'] as const satisfies readonly CardElevation[
 
 // An inline data URI, not a hosted placeholder: the workbench and its a11y
 // gate must render with no network, and a story that silently shows a broken
-// image is worse than one that shows none. Built with a template literal and
-// `encodeURIComponent` so the SVG's own quotes need no escaping — a hand-
-// escaped data URI is unreadable and, as this file briefly proved, easy to
-// break.
-const SHIP_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
+// image is worse than one that shows none. Built with a template literal so
+// the SVG's own quotes need no escaping — a hand-escaped data URI is
+// unreadable and, as this file briefly proved, easy to break.
+//
+// BASE64, NOT `utf8,` + encodeURIComponent — measured in the workbench, where
+// the native pane painted nothing. react-native-web's Image special-cases a
+// `data:image/svg+xml;utf8,` source (`svgDataUriPattern` in its Image module)
+// and runs encodeURIComponent over the tail itself, so a tail that is ALREADY
+// encoded arrives double-encoded and the browser cannot decode it: the load
+// errors, and an errored Image paints no background. A base64 payload matches
+// no special case and the same string works in a web `<img>` and in the
+// native leaf.
+const SHIP_IMAGE = `data:image/svg+xml;base64,${btoa(
   `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="320">` +
     `<rect width="640" height="320" fill="#0B2A4A"/>` +
     `<text x="320" y="176" font-family="Georgia" font-size="40" fill="#FFFFFF" text-anchor="middle">Wayfarer</text>` +
