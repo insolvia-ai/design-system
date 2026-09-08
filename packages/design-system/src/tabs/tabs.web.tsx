@@ -105,6 +105,7 @@ const Tab = React.forwardRef<HTMLButtonElement, TabProps>(
           'flex cursor-pointer items-center gap-sm border-b-2 px-md py-sm font-body text-sm font-medium',
           active ? 'border-primary text-ink' : 'border-transparent text-muted',
           focusRing,
+          'touch-manipulation',
           disabledStyles,
           className,
         )}

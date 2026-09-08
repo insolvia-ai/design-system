@@ -205,7 +205,7 @@ const DrawerPanelImpl = React.forwardRef<HTMLDivElement, DrawerPanelProps>(
           if (event.key === 'Tab') trapTabKey(event, panelRef.current);
         }}
         className={cn(
-          'fixed z-50 flex flex-col gap-md overflow-auto border-line bg-card p-lg shadow-lg outline-none',
+          'fixed z-50 flex flex-col gap-md overflow-auto overscroll-contain border-line bg-card p-lg shadow-lg outline-none',
           sideStyles[side],
           className,
         )}
@@ -271,6 +271,7 @@ const DrawerClose = React.forwardRef<HTMLButtonElement, React.ComponentPropsWith
         className={cn(
           'cursor-pointer self-start py-xs text-sm font-medium text-ink',
           focusRing,
+          'touch-manipulation',
           disabledStyles,
           className,
         )}

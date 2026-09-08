@@ -120,7 +120,13 @@ that ignores the status will wipe saved dates on that ambiguity.
 
 ## What is deliberately absent
 
-Desktop-menu surfaces (menubar, navigation menu), preview card, number field,
-scroll area and context menu are not in the package: each needs a desktop-first
+Desktop-menu surfaces (menubar, navigation menu), preview card, scroll area
+and context menu are not in the package: each needs a desktop-first
 interaction model with no touch counterpart. Don't wait for them — compose from
 what is there, or raise it upstream.
+
+Number field, tree view, transfer list and data grid used to be on that list
+and came off it in 0.21.0, each with a touch-first native leaf — `NumberInput`,
+`TreeView`, `TransferList`, `DataGrid`. The README's "How it got here" says what
+each one gives up on native (a data grid cannot virtualise or resize columns
+there, a tree separates "select" from "expand" into two touch targets).

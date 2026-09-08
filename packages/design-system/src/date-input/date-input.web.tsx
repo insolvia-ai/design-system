@@ -207,6 +207,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             'absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center rounded-md text-muted',
             'hover:text-ink disabled:cursor-not-allowed disabled:text-muted',
             focusRing,
+            'touch-manipulation',
           )}
         >
           <span aria-hidden="true" className="flex items-center justify-center">

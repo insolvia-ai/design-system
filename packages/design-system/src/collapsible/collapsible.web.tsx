@@ -68,6 +68,7 @@ const CollapsibleTrigger = React.forwardRef<
       className={cn(
         'flex cursor-pointer items-center gap-sm py-sm text-left font-body text-sm font-medium text-ink',
         focusRing,
+        'touch-manipulation',
         disabledStyles,
         className,
       )}

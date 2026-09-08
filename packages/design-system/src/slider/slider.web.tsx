@@ -168,6 +168,7 @@ export const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
           MOZ_TRACK,
           MOZ_THUMB,
           focusRing,
+          'touch-manipulation',
           disabledStyles,
           className,
         )}

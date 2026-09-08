@@ -88,6 +88,7 @@ export function chipClass({ pressed, size = 'md', className }: ChipClassOptions 
   return cn(
     'inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md border font-body font-medium no-underline transition-colors',
     focusRing,
+    'touch-manipulation',
     disabledStyles,
     chipSizeStyles[size],
     pressed === true ? chipStateStyles.pressed : chipStateStyles.rest,

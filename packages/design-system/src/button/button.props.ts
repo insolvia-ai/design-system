@@ -109,6 +109,7 @@ export function buttonClass({
     // second line. The two have to move together, so they are chosen together.
     wrap ? 'whitespace-normal' : 'whitespace-nowrap',
     focusRing,
+    'touch-manipulation',
     disabledStyles,
     intentStyles[intent],
     wrap ? wrapSizeStyles[size] : sizeStyles[size],

@@ -135,6 +135,7 @@ export const Combobox = React.forwardRef<HTMLInputElement, ComboboxProps>(
             'h-11 w-full rounded-md border border-line bg-card px-sm font-body text-sm text-ink',
             'placeholder:text-muted',
             focusRing,
+            'touch-manipulation',
             'disabled:cursor-not-allowed disabled:bg-surface-alt disabled:text-muted',
             isInvalid && 'border-danger',
             className,

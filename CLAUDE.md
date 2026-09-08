@@ -43,6 +43,7 @@ claims about who consumes what.
 | When you're… | Open |
 |---|---|
 | adding or changing a component | `design-system-component` skill |
+| reviewing a leaf for interaction/a11y craft | `design-system-guidelines` skill |
 | changing the skills consumers install | [`plugins/design-system/README.md`](plugins/design-system/README.md) — bump the plugin, all three manifests |
 | adding a skill for working HERE | `.claude/skills/<name>/SKILL.md`, description opening `Contributor.`, and `metadata.internal: true` — without the flag it is offered to third parties installing the consumer skills |
 | releasing — version bumps, changelog entries, publishing | `design-system-release` skill |

@@ -55,6 +55,7 @@ const SwitchRoot = React.forwardRef<HTMLButtonElement, SwitchRootProps>(
             'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-pill transition-colors',
             'data-[state=unchecked]:bg-line data-[state=checked]:bg-primary',
             focusRing,
+            'touch-manipulation',
             disabledStyles,
             className,
           )}
@@ -76,7 +77,7 @@ const SwitchThumb = React.forwardRef<HTMLSpanElement, React.ComponentPropsWithou
         ref={ref}
         data-state={checked ? 'checked' : 'unchecked'}
         className={cn(
-          'pointer-events-none inline-block h-5 w-5 translate-x-0.5 rounded-pill bg-card shadow-sm transition-transform',
+          'pointer-events-none inline-block h-5 w-5 translate-x-0.5 rounded-pill bg-card shadow-sm transition-transform motion-reduce:transition-none',
           'data-[state=checked]:translate-x-[22px]',
           className,
         )}

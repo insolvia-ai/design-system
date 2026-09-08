@@ -246,7 +246,7 @@ const DialogPopupImpl = React.forwardRef<HTMLDivElement, DialogPopupProps>(
           // holds the four width utilities on the container scale instead, so
           // the class can say what it means; `styles/theme.test.ts` is what
           // fails if the shadowing ever comes back.
-          'fixed left-1/2 top-1/2 z-50 flex w-full max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-md rounded-lg bg-card p-lg shadow-lg outline-none',
+          'fixed left-1/2 top-1/2 z-50 flex w-full max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-md overscroll-contain rounded-lg bg-card p-lg shadow-lg outline-none',
           className,
         )}
         {...props}
@@ -322,6 +322,7 @@ const DialogClose = React.forwardRef<HTMLButtonElement, React.ComponentPropsWith
         className={cn(
           'cursor-pointer self-start py-xs text-sm font-medium text-ink',
           focusRing,
+          'touch-manipulation',
           disabledStyles,
           className,
         )}

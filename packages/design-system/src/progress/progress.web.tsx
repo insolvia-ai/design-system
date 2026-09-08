@@ -62,8 +62,8 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, React.ComponentPropsW
         ref={ref}
         data-state={indeterminate ? 'indeterminate' : 'progressing'}
         className={cn(
-          'h-full rounded-pill bg-primary transition-[width]',
-          indeterminate && 'w-1/3 animate-pulse',
+          'h-full rounded-pill bg-primary transition-[width] motion-reduce:transition-none',
+          indeterminate && 'w-1/3 animate-pulse motion-reduce:animate-none',
           className,
         )}
         style={indeterminate ? style : { width: `${percent}%`, ...style }}
