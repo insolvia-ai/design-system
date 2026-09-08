@@ -18,13 +18,21 @@ const VARIANTS = ['standard', 'quilted'] as const satisfies readonly ImageListVa
 // `card.stories.tsx`'s `SHIP_IMAGE` documents). Plain safe hex values here
 // ONLY: a story is not a leaf, so it never has to go through the semantic
 // token layer the components themselves are held to.
+//
+// BASE64, NOT `utf8,` + encodeURIComponent — measured in the workbench, where
+// the native pane painted nothing. react-native-web's Image special-cases a
+// `data:image/svg+xml;utf8,` source and runs encodeURIComponent over the tail
+// itself, so a tail that is ALREADY encoded arrives double-encoded and the
+// browser cannot decode it: the load errors, and an errored Image paints no
+// background. A base64 payload matches no special case and the same string
+// works in a web `<img>` and in the native leaf.
 function swatch(seed: number, hex: string): string {
-  return `data:image/svg+xml;utf8,${encodeURIComponent(
+  const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300">` +
-      `<rect width="300" height="300" fill="${hex}"/>` +
-      `<text x="150" y="168" font-family="Georgia, serif" font-size="64" fill="#FFFFFF" text-anchor="middle">${seed}</text>` +
-      `</svg>`,
-  )}`;
+    `<rect width="300" height="300" fill="${hex}"/>` +
+    `<text x="150" y="168" font-family="Georgia, serif" font-size="64" fill="#FFFFFF" text-anchor="middle">${seed}</text>` +
+    `</svg>`;
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
 const HEXES = ['#0B2A4A', '#7A2E2E', '#2E5B3E', '#5B3E7A', '#7A5B2E', '#2E5B7A'];
@@ -99,16 +107,17 @@ export const Basic: Story = {};
 /**
  * `variant="quilted"` lets an `Item` span more than one row or column —
  * `Item.rows`/`Item.cols` become `grid-row`/`grid-column` spans on the web
- * pane. The native pane widens the same tile by `cols` (a wider share of the
- * flex row) and cannot honour `rows` at all — a wrapping flex row has no row
- * track to span, so the tall tile on the web pane shows up merely WIDE on
- * the native one. That gap is the point of pairing the two leaves here.
+ * pane. The native pane draws the same SHAPE (its aspect ratio is
+ * `cols / rows`) but cannot PACK around it — a wrapping flex row has no row
+ * tracks to flow the next tiles into beside a tall one, so on native they
+ * start a fresh row underneath instead. That gap is the point of pairing the
+ * two leaves here.
  */
 export const Quilted: Story = {
   args: { variant: 'quilted' },
   render: (args) => (
     <LeafPair
-      note="The first tile spans 2 rows and 2 columns on web; the native pane can only widen it, never make it taller — see the doc comment above this story."
+      note="The first tile spans 2 rows and 2 columns on web; the native pane draws the same shape but cannot flow the next tiles beside it — see the doc comment above this story."
       web={
         <ImageListWeb.Root columns={args.columns} gap={args.gap} variant="quilted">
           <ImageListWeb.Item src={TILES[0]!.src} alt={TILES[0]!.alt} rows={2} cols={2} />

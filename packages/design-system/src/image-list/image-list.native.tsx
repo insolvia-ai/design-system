@@ -53,10 +53,24 @@ const ImageListRoot = ({
   children,
   ...props
 }: ImageListRootProps) => {
-  const ctx = React.useMemo(() => ({ columns, variant }), [columns, variant]);
+  const gapPx = gapValue[gap];
+  const ctx = React.useMemo(() => ({ columns, variant, gapPx }), [columns, variant, gapPx]);
+  // THE GUTTER IS NEGATIVE MARGIN PLUS ITEM PADDING, NOT `columnGap` —
+  // measured in the workbench, where three `33.33%` tiles plus two column
+  // gaps came to more than a row and the third tile wrapped, so the native
+  // pane showed two columns beside the web pane's three. A CSS grid takes
+  // its gap out of the tracks; a wrapping flex row adds it on top of the
+  // percentages. Pulling the row out by half a gap on each side and padding
+  // every tile by the same half is the flex-only spelling of "N equal
+  // columns with a gutter between them" — `rowGap` alone is safe because
+  // rows have no percentage to overflow.
   return (
     <ImageListContext.Provider value={ctx}>
-      <View role="list" style={[styles.root, { gap: gapValue[gap] }, style]} {...props}>
+      <View
+        role="list"
+        style={[styles.root, { rowGap: gapPx, marginHorizontal: -gapPx / 2 }, style]}
+        {...props}
+      >
         {children}
       </View>
     </ImageListContext.Provider>
@@ -73,26 +87,30 @@ export interface ImageListItemProps extends Omit<ViewProps, 'children'>, ImageLi
  * same span `Item.cols` asks for on web, just spelled as a width instead of
  * a `grid-column`.
  *
- * `Item.rows` has NO native equivalent and is silently ignored here — a
- * wrapping flex row has no row TRACK to span the way a CSS grid does; making
- * a tile taller would only push every tile after it down by that much,
- * which is not what "spans two rows" means on web. `rows` still exists on
- * `ImageListItemOwnProps` because the type is shared with the web leaf,
- * where it does mean something.
+ * `Item.rows` shapes the tile but cannot pack it. The tile's aspect ratio is
+ * `cols / rows`, so a 2×2 tile is a big square, a 2×1 a wide strip and a 1×2
+ * a tall one — the same SHAPES the web grid draws. What a wrapping flex row
+ * cannot do is flow the next tiles into the space beside a tall one: a CSS
+ * grid has row tracks to place them in, flex has only the row the tall tile
+ * sits on, so tiles after it start a fresh row underneath. Measured in the
+ * workbench — the first draft pinned `aspectRatio: 1`, which turned every
+ * widened tile into a square whatever `rows` said, and that was a wider
+ * divergence than the packing one this leaf is honest about.
  */
 const ImageListItem = ({
   src,
   alt,
-  rows: _rows = 1,
+  rows = 1,
   cols = 1,
   style,
   children,
   ...props
 }: ImageListItemProps) => {
-  const { columns, variant } = useImageListContext('Item');
+  const { columns, variant, gapPx = 0 } = useImageListContext('Item');
   const r = useNativeRadii();
   const decorative = alt === '';
   const effectiveCols = variant === 'quilted' ? cols : 1;
+  const effectiveRows = variant === 'quilted' ? rows : 1;
   // RN's `DimensionValue` only accepts a percentage as the template-literal
   // type `${number}%`, not a plain `string` — a bare template literal would
   // widen back to `string` and fail the `style` overload below.
@@ -101,10 +119,15 @@ const ImageListItem = ({
   return (
     <View
       role="listitem"
-      style={[styles.item, { width: widthPercent, borderRadius: r.md }, style]}
+      style={[styles.cell, { width: widthPercent, paddingHorizontal: gapPx / 2 }, style]}
       {...props}
     >
-      {/*
+      {/* The tile proper: the cell above is width + gutter, this is the box
+          the image, the radius and an absolute `ItemBar` all measure against. */}
+      <View
+        style={[styles.item, { aspectRatio: effectiveCols / effectiveRows, borderRadius: r.md }]}
+      >
+        {/*
         THE NAME GOES ON THIS WRAPPER, NOT ON THE Image — measured, not
         assumed, and the same finding `card.native.tsx` documents in full:
         react-native-web renders an `Image` as a background-painted <View>
@@ -116,13 +139,14 @@ const ImageListItem = ({
         <img>. `alt` still goes to the Image below for a REAL device, where
         RN's own Image maps it to the accessibility label directly.
       */}
-      <View
-        {...(decorative ? {} : { role: 'img', accessibilityLabel: alt })}
-        style={styles.imageBox}
-      >
-        <Image source={{ uri: src }} alt={alt} resizeMode="cover" style={styles.image} />
+        <View
+          {...(decorative ? {} : { role: 'img', accessibilityLabel: alt })}
+          style={styles.imageBox}
+        >
+          <Image source={{ uri: src }} alt={alt} resizeMode="cover" style={styles.image} />
+        </View>
+        {children}
       </View>
-      {children}
     </View>
   );
 };
@@ -179,8 +203,18 @@ export const ImageList = {
 
 const styles = StyleSheet.create({
   root: { flexDirection: 'row', flexWrap: 'wrap' },
-  item: { position: 'relative', overflow: 'hidden', aspectRatio: 1 },
-  imageBox: { width: '100%', height: '100%' },
+  cell: {},
+  item: { position: 'relative', overflow: 'hidden' },
+  // ABSOLUTE FILL, NOT `height: '100%'`. The tile's height comes from
+  // `aspectRatio` alone, which CSS does not count as a definite height, and
+  // a percentage height against an indefinite parent resolves to `auto` in a
+  // browser — 0 for a background-painted Image under react-native-web. Yoga
+  // on a device resolves the same percentage against the aspect-ratio height,
+  // so the two engines disagree about `height: '100%'` here and agree about
+  // an absolutely positioned box, which is sized by its offsets on both.
+  // Spelled out rather than `StyleSheet.absoluteFill`: that export is a
+  // registered style id in this React Native's types, not a spreadable object.
+  imageBox: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
   image: { width: '100%', height: '100%' },
   bar: {
     position: 'absolute',

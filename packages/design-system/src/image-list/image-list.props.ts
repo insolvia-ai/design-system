@@ -50,6 +50,13 @@ export interface ImageListContextValue {
   columns: number;
   /** `Root`'s `variant` — spans are only ever honoured under `quilted`. */
   variant: ImageListVariant;
+  /**
+   * `Root`'s gap in dp — NATIVE ONLY, which is why it is optional. The web
+   * leaf's CSS grid takes the gap out of the tracks by itself; a wrapping
+   * flex row cannot, so the native `Item` needs the number to build its
+   * gutter (see image-list.native.tsx). The web leaf never sets it.
+   */
+  gapPx?: number | undefined;
 }
 
 export const ImageListContext = React.createContext<ImageListContextValue | null>(null);

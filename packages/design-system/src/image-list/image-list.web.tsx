@@ -90,10 +90,14 @@ export interface ImageListItemProps
  * corners.
  *
  * Under `quilted`, the tile's box comes from the grid area it spans instead
- * (`spanStyle`) — CSS only applies `aspect-square` when a dimension is
- * otherwise unconstrained, so a spanned tile's grid-given rectangle wins
- * outright and the image still covers it via `object-cover`. Nothing has to
- * branch on `variant` here for that reason; the browser already resolves it.
+ * (`spanStyle`), and `aspect-square` must NOT be on it — measured in the
+ * workbench, where a 2×2 tile painted taller than its two 120px rows and the
+ * tile placed in the row below drew over its bottom edge. The first draft
+ * assumed the grid area would win over the aspect ratio; CSS says the
+ * opposite for a grid item — an `aspect-ratio` turns the default `normal`
+ * self-alignment into `start`, so the tile takes its ratio-derived height
+ * and overflows the tracks. Dropping the ratio lets the default stretch fill
+ * exactly the rows it spans, and `object-cover` still crops the image to it.
  */
 const ImageListItem = React.forwardRef<HTMLLIElement, ImageListItemProps>(
   ({ className, src, alt, rows = 1, cols = 1, style, children, ...props }, ref) => {
@@ -101,7 +105,11 @@ const ImageListItem = React.forwardRef<HTMLLIElement, ImageListItemProps>(
     return (
       <li
         ref={ref}
-        className={cn('relative aspect-square overflow-hidden rounded-md', className)}
+        className={cn(
+          'relative overflow-hidden rounded-md',
+          variant === 'quilted' ? 'min-h-0' : 'aspect-square',
+          className,
+        )}
         style={{ ...spanStyle(variant, rows, cols), ...style }}
         {...props}
       >
