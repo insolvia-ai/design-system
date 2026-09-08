@@ -197,6 +197,7 @@ export function iconButtonClass({
   return cn(
     'inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md p-0 font-body no-underline transition-colors',
     focusRing,
+    'touch-manipulation',
     disabledStyles,
     iconIntentStyles[intent],
     iconSizeStyles[size],

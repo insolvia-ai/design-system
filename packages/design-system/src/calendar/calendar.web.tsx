@@ -156,6 +156,7 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
                           !selected && !disabled && 'hover:bg-surface-alt',
                           disabled && 'cursor-not-allowed text-muted opacity-50',
                           focusRing,
+                          'touch-manipulation',
                         )}
                       >
                         {day.day}

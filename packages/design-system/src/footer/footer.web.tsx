@@ -43,6 +43,7 @@ const FooterLink = React.forwardRef<HTMLAnchorElement, React.ComponentPropsWitho
         className={cn(
           'rounded-sm font-body text-sm text-muted no-underline transition-colors hover:text-ink',
           focusRing,
+          'touch-manipulation',
           className,
         )}
         {...props}

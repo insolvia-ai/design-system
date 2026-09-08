@@ -55,7 +55,10 @@ const MeterIndicator = React.forwardRef<HTMLDivElement, React.ComponentPropsWith
     return (
       <div
         ref={ref}
-        className={cn('h-full rounded-pill bg-primary transition-[width]', className)}
+        className={cn(
+          'h-full rounded-pill bg-primary transition-[width] motion-reduce:transition-none',
+          className,
+        )}
         style={{ width: `${percent}%`, ...style }}
         {...props}
       />

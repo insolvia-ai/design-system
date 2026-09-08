@@ -178,6 +178,7 @@ const PopoverClose = React.forwardRef<HTMLButtonElement, React.ComponentPropsWit
         className={cn(
           'cursor-pointer self-start py-xs font-body text-sm font-medium text-ink',
           focusRing,
+          'touch-manipulation',
           disabledStyles,
           className,
         )}

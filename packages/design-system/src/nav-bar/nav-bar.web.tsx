@@ -32,6 +32,7 @@ const NavBarBrand = React.forwardRef<HTMLAnchorElement, React.ComponentPropsWith
       className={cn(
         'rounded-sm font-heading text-lg font-semibold text-brand no-underline',
         focusRing,
+        'touch-manipulation',
         className,
       )}
       {...props}
@@ -61,6 +62,7 @@ const NavBarLink = React.forwardRef<HTMLAnchorElement, NavBarLinkProps>(
           'rounded-sm font-body text-sm no-underline transition-colors hover:text-ink',
           active ? 'font-medium text-ink' : 'text-muted',
           focusRing,
+          'touch-manipulation',
           className,
         )}
         {...props}

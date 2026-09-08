@@ -129,6 +129,8 @@ than to a ref, so nothing to clean up can take them out.
 
 ## Before you open it
 
+- Run the `design-system-guidelines` checklist over the changed leaves before
+  writing the body — its findings are often the "How to review" section.
 - `git diff main...HEAD` — self-review. It is the only review there is.
 - `npm run ci` green locally.
 - `./scripts/dev-up.sh` and actually look at the component, in both panes and

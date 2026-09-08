@@ -95,6 +95,7 @@ export const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
           // shared fragment, as iconButtonClass.
           iconOnly && state.size === 'sm' && coarseTouchTarget,
           focusRing,
+          'touch-manipulation',
           disabledStyles,
           state.pressed
             ? 'bg-primary text-primary-text hover:bg-primary-hover active:bg-primary-active'

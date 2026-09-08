@@ -213,6 +213,7 @@ export const Wheel = React.forwardRef<HTMLDivElement, WheelProps>(
                   // WCAG 1.4.1 wants the state carried by something other than
                   // colour anyway.
                   item.disabled ? 'cursor-not-allowed line-through' : 'cursor-pointer',
+                  'touch-manipulation',
                 )}
                 style={{
                   height: ITEM_HEIGHT,

@@ -9,7 +9,7 @@ It succeeded a web-only predecessor (0.1.x, Base UI), retired at 0.2.x.
 
 ## Components
 
-Forty-five components, shelved the way a component library's documentation site
+Sixty-six components, shelved the way a component library's documentation site
 conventionally shelves them — by what you reach for them FOR. The workbench's
 sidebar uses these same five groups in this same order (`.storybook/preview.tsx`
 pins it), so the catalogue and the place you look at it agree.
@@ -17,19 +17,21 @@ pins it), so the catalogue and the place you look at it agree.
 **Data display** — what shows something.
 
 `Accordion` · `Alert` · `Avatar` · `Badge` · `Breadcrumbs` · `Card` ·
-`Collapsible` · `Meter` · `Progress` · `Ribbon` · `Spinner` · `Table` · `Tabs` ·
-`Text`
+`Collapsible` · `DataGrid` · `EmptyState` · `ImageList` · `List` · `Masonry` ·
+`Meter` · `Progress` · `Ribbon` · `Skeleton` · `Spinner` · `Table` · `Tabs` ·
+`Text` · `Timeline` · `TreeView`
 
 **Overlays** — what floats above the page.
 
-`AlertDialog` · `Dialog` · `Drawer` · `Dropdown` · `Popover` · `Sidebar` ·
-`Toast` · `Tooltip`
+`AlertDialog` · `Backdrop` · `Dialog` · `Drawer` · `Dropdown` · `Popover` ·
+`Sidebar` · `Toast` · `Tooltip`
 
 **Forms** — what takes input.
 
-`Button` · `Checkbox` · `CheckboxGroup` · `Chip` · `Combobox` · `Field` ·
-`IconButton` · `Input` · `InputGroup` · `RadioGroup` · `Select` · `Slider` ·
-`Switch` · `Textarea` · `Toggle` · `ToggleGroup`
+`Button` · `ButtonGroup` · `Checkbox` · `CheckboxGroup` · `Chip` · `Combobox` ·
+`Field` · `IconButton` · `Input` · `InputGroup` · `NumberInput` ·
+`PasswordInput` · `PinInput` · `RadioGroup` · `Rating` · `Select` · `Slider` ·
+`Switch` · `Textarea` · `Toggle` · `ToggleGroup` · `TransferList`
 
 **Dates.** `DateInput` is the FIELD most callers want: a masked text input with
 a button that opens a picker. WHICH picker is its `picker` prop — `wheels` (the
@@ -45,7 +47,8 @@ how the field reads, and the date arithmetic they share lives in
 **Layout** — page furniture. This shelf is ours; the convention above has no
 home for it.
 
-`Footer` · `NavBar` · `Separator`
+`BottomNav` · `Footer` · `Link` · `NavBar` · `Pagination` · `Separator` ·
+`Stack` · `Stepper` · `VisuallyHidden`
 
 Two conventions run through all of them: compound components export their parts
 under one name (`Dialog.Root`, `Dialog.Trigger`, …), and input-taking components
@@ -133,10 +136,28 @@ list is reproduced here with what actually happened to each:
   now a type error naming its replacement, rather than a silent change in what
   renders.
 
+**0.21.0 added twenty-one components** — the gaps a second catalogue pass
+found once the mainstream one was closed. Loading and empty states (`Skeleton`,
+`EmptyState`, `Backdrop`), lists and data (`List`, `DataGrid`, `TreeView`,
+`TransferList`, `Pagination`, `Timeline`, `ImageList`, `Masonry`), form
+controls a questionnaire needs (`NumberInput`, `PinInput`, `PasswordInput`,
+`Rating`, `ButtonGroup`, `Stepper`), and page furniture (`Link`, `BottomNav`,
+`Stack`, `VisuallyHidden`). Four of them — Number Field, Tree View, Transfer
+List, Data Grid — sat on the "desktop-first, no touch counterpart" list below
+until this release, and each came off it by getting a touch-first native leaf
+rather than a port of the desktop one: `TreeView` splits "select" and "expand"
+into two touch targets, `DataGrid` renders a horizontally scrolling row list
+and does not virtualise, resize or edit, `TransferList` is checkboxes and
+buttons rather than drag, and `NumberInput` is the numeric keypad plus two
+steppers. The same release added the `data-state` convention on every new web
+leaf, reduced-motion variants on every animated leaf, `overscroll-contain` on
+every overlay panel and `touch-manipulation` on every pressable — the
+`design-system-guidelines` checklist, applied.
+
 Still not ported, and still for the original reasons: desktop-menu surfaces
-(Menubar, Navigation Menu), Preview Card, Number Field, Scroll Area and Context
-Menu — each needs a desktop-first interaction model with no touch counterpart
-worth the surface area.
+(Menubar, Navigation Menu), Preview Card, Scroll Area and Context Menu — each
+needs a desktop-first interaction model with no touch counterpart worth the
+surface area.
 
 **`Select` came off that list in 0.4.0**, because the intake questionnaire
 needs it and a form cannot route around a missing select. The two reasons it

@@ -173,6 +173,7 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
             'flex h-11 w-full items-center justify-between gap-sm rounded-md border border-line bg-card px-sm',
             'font-body text-sm text-ink',
             focusRing,
+            'touch-manipulation',
             // Ringed while the list is OPEN, not only while focus-visible.
             //
             // `focusRing` is `:focus-visible` only, which is right for a

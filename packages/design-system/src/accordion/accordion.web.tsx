@@ -107,6 +107,7 @@ const AccordionTrigger = React.forwardRef<
       className={cn(
         'flex flex-1 cursor-pointer items-center justify-between gap-md py-md text-left font-body text-base font-medium text-ink',
         focusRing,
+        'touch-manipulation',
         disabledStyles,
         className,
       )}

@@ -203,7 +203,7 @@ const AlertDialogPopupImpl = React.forwardRef<HTMLDivElement, AlertDialogPopupPr
           // `max-w-md` is 28rem, matching Dialog. It used to be 16px, because
           // the spacing scale shadowed Tailwind's container scale for every
           // named width utility; dialog.web.tsx has the full account.
-          'fixed left-1/2 top-1/2 z-50 flex w-full max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-md rounded-lg bg-card p-lg shadow-lg outline-none',
+          'fixed left-1/2 top-1/2 z-50 flex w-full max-w-md -translate-x-1/2 -translate-y-1/2 flex-col gap-md overscroll-contain rounded-lg bg-card p-lg shadow-lg outline-none',
           className,
         )}
         {...props}
@@ -272,6 +272,7 @@ const AlertDialogClose = React.forwardRef<
       className={cn(
         'cursor-pointer self-start py-xs text-sm font-medium text-ink',
         focusRing,
+        'touch-manipulation',
         disabledStyles,
         className,
       )}

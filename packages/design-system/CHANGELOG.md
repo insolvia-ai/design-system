@@ -18,6 +18,97 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.21.0 — minor
+
+**Widen your range to take this:** `^0.20.x` will not resolve it.
+
+Twenty-one new components, taking the catalogue from 45 to 66. Each ships as
+the usual `props` / `.web` / `.native` trio with tests on both leaves and a
+workbench story pairing them. No existing component changed its API.
+
+**Loading and empty states.**
+
+- `Skeleton` — a placeholder in `text`, `circle` and `rect` shapes, multi-line
+  paragraphs, and a pulse that stops under reduce-motion on both platforms.
+- `EmptyState` — `Root` / `Icon` / `Title` / `Description` / `Actions` for an
+  empty screen, table or list, in `sm` and `md`.
+- `Backdrop` — Dialog's scrim on its own, for "the app is busy" or "tap anywhere
+  to dismiss"; controlled `open`, optional `onDismiss`, `invisible` still blocks
+  interaction.
+
+**Lists and data.**
+
+- `List` — `Root` / `Item` / `Leading` / `Trailing` / `Text` / `Subheader` /
+  `Divider`: rows that are pressable, links or static, with `dense` and `inset`
+  layouts and a selected state.
+- `DataGrid` — a column definition and a row array in, a sortable, selectable,
+  paginated table out. No virtualising, resizing or editing; the native leaf is
+  a horizontally scrolling row list.
+- `TreeView` — `Root` / `Item`: branches expand and collapse, one item selects,
+  the full APG keyboard grammar on web; on native "select" and "expand" are two
+  touch targets.
+- `TransferList` — two lists and four move buttons for choosing a subset;
+  checkboxes, not drag; `horizontal` / `vertical`.
+- `Pagination` — page navigation for a table or list, with sibling and boundary
+  counts, optional first/last buttons, and two sizes.
+- `Timeline` — `Root` / `Item` / `Marker` / `Connector` / `Content` /
+  `Opposite`: a vertical event list with `right` / `left` / `alternate`
+  positions and intent-coloured markers; the trailing connector hides itself.
+- `ImageList` — `Root` / `Item` / `ItemBar`: a grid of square image tiles with
+  an optional overlay caption bar and a `quilted` variant for spanning tiles
+  (native cannot span rows).
+- `Masonry` — packs children of varying height into columns; one shared
+  distribution function keeps item order identical on web and native
+  (round-robin, or `sequential`).
+
+**Form controls.**
+
+- `NumberInput` — a numeric field with increment/decrement steppers,
+  `min` / `max` / `step` clamped on blur, and a `number | null` value.
+- `PinInput` — a one-time-code field: one box per character, auto-advance,
+  paste distribution; on native a single hidden input so OS SMS autofill works.
+- `PasswordInput` — a password field with a show/hide toggle,
+  `current-password` / `new-password` autocomplete, composes with `Field`.
+- `Rating` — a star input with hover preview on web, press-to-set and
+  press-again-to-clear on both, the radio-group keyboard grammar, `readOnly`,
+  `disabled`, three sizes.
+- `ButtonGroup` — `Root` / `Item`: related action buttons joined into one
+  control, `horizontal` / `vertical`, `attached` or spaced, at Button's sizes
+  and `primary` / `secondary` / `ghost` intents.
+- `Stepper` — `Root` / `Step`: progress through a multi-step flow, horizontal
+  or vertical, `linear` by default, `interactive` steps call back.
+
+**Page furniture.**
+
+- `Link` — an anchor on web and `Linking.openURL` on native, with `tone`,
+  `underline`, `external` and `disabled`; no opinion about routers.
+- `BottomNav` — `Root` / `Item`: three to five destinations pinned to the
+  bottom of a phone screen, `showLabels`, `fixed`, `insetBottom` for the home
+  indicator.
+- `Stack` — a flex container that spaces children with the spacing tokens on
+  both platforms and interleaves an optional `divider`.
+- `VisuallyHidden` — assistive-tech-only content: an icon-only control's name,
+  a table caption, or a `focusable` skip link on web.
+
+**Interaction craft on existing leaves**, from a review against the vendored
+Web Interface Guidelines checklist (no visual change at rest):
+
+- Every transition and animation on a web leaf now has a `motion-reduce:`
+  variant; `Spinner` slows to 3s rather than stopping.
+- `Dialog`, `AlertDialog` and `Drawer` panels carry `overscroll-contain`, so
+  scrolling to the end of a panel no longer scrolls the page behind it.
+- Every pressable web leaf carries `touch-manipulation`, removing the
+  double-tap zoom delay on touch.
+- Every new web leaf exposes its visual state as `data-state` (and `data-*`
+  siblings), so a consumer can style by state from a `className` alone.
+
+Four of the new components — number field, tree view, transfer list, data grid
+— were on this package's "desktop-first, not ported" list until now. Each came
+off it by getting a touch-first native leaf rather than a port of the desktop
+one; the README's "How it got here" records what each gives up there.
+
+[#29](https://github.com/insolvia-ai/design-system/pull/29)
+
 ## 0.20.0 — minor
 
 **Widen your range to take this:** `^0.19.x` will not resolve it.

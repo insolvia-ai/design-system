@@ -87,6 +87,7 @@ const ToastViewport = React.forwardRef<HTMLDivElement, ToastViewportProps>(
               className={cn(
                 'shrink-0 cursor-pointer rounded-sm px-xs font-body text-sm leading-none text-muted',
                 focusRing,
+                'touch-manipulation',
                 disabledStyles,
               )}
             >
