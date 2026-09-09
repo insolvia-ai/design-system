@@ -80,6 +80,14 @@ exactly as it did on 0.21.0.
   stack**, used verbatim. The family has to be registered in your own app
   bundle first — this package ships no font file.
 
+- **`NumberInput` and `PinInput` (native) type their `style` as a `ViewStyle`.**
+  Both inherited `TextInputProps['style']` — a `TextStyle` — and handed it to
+  the `View`/`Pressable` around the field. That typechecks in this package's
+  own programs and fails in a consumer whose program augments `TextStyle`
+  (react-native-web's typings do), as a hard error in source this package
+  published. No runtime change; a caller passing text-only style keys to the
+  outer box now gets told so.
+
 [#31](https://github.com/insolvia-ai/design-system/pull/31)
 
 ## 0.21.0 — minor

@@ -28,6 +28,8 @@ import {
   TextInput,
   View,
   type TextInputProps,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 
 import { spacing } from '@insolvia-ai/tokens';
@@ -45,8 +47,18 @@ import {
 
 export interface PinInputProps
   extends
-    Omit<TextInputProps, 'value' | 'defaultValue' | 'onChangeText' | 'maxLength' | 'editable'>,
-    PinInputOwnProps {}
+    Omit<
+      TextInputProps,
+      'value' | 'defaultValue' | 'onChangeText' | 'maxLength' | 'editable' | 'style'
+    >,
+    PinInputOwnProps {
+  /**
+   * Styles the row of boxes, which is a `Pressable`, so a `ViewStyle` — see
+   * `NumberInputProps.style` for why the inherited `TextStyle` cannot stand
+   * in for it in every consumer's program.
+   */
+  style?: StyleProp<ViewStyle> | undefined;
+}
 
 export const PinInput = ({
   length = 6,
