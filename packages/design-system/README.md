@@ -251,7 +251,7 @@ import { ThemeProvider } from '@insolvia-ai/design-system';
     light: { primary: '#155E63' },
     dark: { primary: '#7FD1D9' },
     radii: { md: 8 },
-    fonts: { heading: 'Spectral_600SemiBold' },
+    fonts: { heading: 'Spectral_600SemiBold', body: 'Inter_400Regular' },
   }}
 >
   <App />
@@ -274,9 +274,13 @@ only colours. Two rules worth knowing:
   pinned.** The leaves that use `pill` are drawing a shape — a switch capsule,
   an avatar circle, a progress track — not rounding a corner.
 - **`fonts` takes one registered family name per role, never a CSS stack**, and
-  uses it verbatim rather than mapping it per platform. `heading` and `mono`
-  only: the native leaves set no family for body copy, so the platform's own
-  sans renders, which is what `--font-body`'s stack asks for anyway.
+  uses it verbatim rather than mapping it per platform. Three roles: `heading`,
+  `body` and `mono`. `body` reaches every text a native leaf renders that is
+  not a heading or mono — labels, inputs, cells, descriptions — and has no
+  default of its own: leave it out and the leaves set no body family, so the
+  platform's own sans renders, which is what `--font-body`'s stack asks for
+  anyway. A glyph drawn in a fixed box (a dismiss ×, a chevron, a tick) keeps
+  the platform face regardless.
 
 ## No build step — the package publishes source
 

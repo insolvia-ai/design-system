@@ -84,6 +84,8 @@ export function Rating({
         {items.map((n) => {
           const filled = n <= (state.value ?? 0);
           return (
+            // No body family: a ★/☆ glyph in a fixed box, not body copy, so
+            // it keeps the platform face when a ThemeProvider names one.
             <Text
               key={n}
               accessible={false}
@@ -175,6 +177,7 @@ function RatingItem({
         focus.ringStyle,
       ]}
     >
+      {/* No body family: a ★/☆ glyph in a fixed box, same as the readOnly branch. */}
       <Text style={{ fontSize: box, lineHeight: box, color: filled ? c.primary : c.line }}>
         {filled ? '★' : '☆'}
       </Text>

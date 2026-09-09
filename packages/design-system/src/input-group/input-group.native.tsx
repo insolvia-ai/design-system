@@ -17,7 +17,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { CONTROL_HEIGHT_PX } from '../input/input.props';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import { InputGroupContext, type InputGroupRootOwnProps } from './input-group.props';
 
 export interface InputGroupRootProps extends ViewProps, InputGroupRootOwnProps {
@@ -63,9 +63,10 @@ export interface InputGroupTextProps extends ViewProps {
 
 const InputGroupText = ({ style, children, ...props }: InputGroupTextProps) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <View style={[styles.addon, { backgroundColor: c.surfaceAlt }, style]} {...props}>
-      <Text style={[styles.addonLabel, { color: c.muted }]}>{children}</Text>
+      <Text style={[styles.addonLabel, { fontFamily: body }, { color: c.muted }]}>{children}</Text>
     </View>
   );
 };

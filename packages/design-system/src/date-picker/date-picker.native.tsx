@@ -15,7 +15,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import { Wheel } from '../wheel/wheel.native';
 import {
   useDatePickerState,
@@ -64,6 +64,7 @@ export const DatePicker = ({
   const field = React.useContext(FieldContext);
   const c = useNativeColors();
   const r = useNativeRadii();
+  const body = useNativeBodyFamily();
   const state = useDatePickerState({
     mode,
     value,
@@ -109,7 +110,10 @@ export const DatePicker = ({
           says the whole thing — visibly, which confirms the composition at a
           glance, and as a live region, which is the only way a screen-reader
           user hears anything but "March, selected". */}
-      <Text {...({ 'aria-live': 'polite' } as object)} style={[styles.summary, { color: c.ink }]}>
+      <Text
+        {...({ 'aria-live': 'polite' } as object)}
+        style={[styles.summary, { fontFamily: body }, { color: c.ink }]}
+      >
         {summary}
       </Text>
 

@@ -19,7 +19,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily, useNativeHeadingFamily } from '../lib/native-typography';
 import {
   PopoverContext,
   usePopoverContext,
@@ -50,6 +50,7 @@ export interface PopoverTriggerProps {
 const PopoverTrigger = ({ children }: PopoverTriggerProps) => {
   const { open, setOpen, contentId } = usePopoverContext('Trigger');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
 
   const webAria = {
     'aria-haspopup': 'dialog',
@@ -64,7 +65,7 @@ const PopoverTrigger = ({ children }: PopoverTriggerProps) => {
       onPress={() => setOpen(!open)}
       style={styles.trigger}
     >
-      <Text style={[styles.triggerLabel, { color: c.ink }]}>{children}</Text>
+      <Text style={[styles.triggerLabel, { fontFamily: body }, { color: c.ink }]}>{children}</Text>
     </Pressable>
   );
 };
@@ -146,9 +147,10 @@ const PopoverTitle = ({ children }: { children?: React.ReactNode }) => {
 const PopoverClose = ({ children }: { children?: React.ReactNode }) => {
   const { setOpen } = usePopoverContext('Close');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <Pressable accessibilityRole="button" onPress={() => setOpen(false)} style={styles.close}>
-      <Text style={[styles.closeLabel, { color: c.ink }]}>{children}</Text>
+      <Text style={[styles.closeLabel, { fontFamily: body }, { color: c.ink }]}>{children}</Text>
     </Pressable>
   );
 };

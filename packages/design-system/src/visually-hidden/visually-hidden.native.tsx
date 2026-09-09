@@ -9,6 +9,7 @@
 import * as React from 'react';
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
+import { useNativeBodyFamily } from '../lib/native-typography';
 import type { VisuallyHiddenOwnProps } from './visually-hidden.props';
 
 export interface VisuallyHiddenProps extends Omit<TextProps, 'children'>, VisuallyHiddenOwnProps {}
@@ -19,12 +20,16 @@ export function VisuallyHidden({
   children,
   ...props
 }: VisuallyHiddenProps) {
+  // Nothing is seen here, but the text is still body copy — a consumer's
+  // `fonts.body` reaches it like every other Text, so nothing about this leaf
+  // has to be special-cased if it is ever revealed.
+  const body = useNativeBodyFamily();
   // `focusable` is accepted for API symmetry with the web leaf and ignored:
   // native has no focus-driven visibility to opt into (nothing here is
   // keyboard-focusable the way a web skip link is), so there is no native
   // reading of "reveal on focus" to implement.
   return (
-    <Text style={[styles.hidden, style]} {...props}>
+    <Text style={[styles.hidden, { fontFamily: body }, style]} {...props}>
       {children}
     </Text>
   );

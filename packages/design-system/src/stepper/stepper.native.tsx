@@ -12,7 +12,7 @@ import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   DEFAULT_STEPPER_LABEL,
   StepperItemContext,
@@ -84,10 +84,15 @@ function IndicatorGlyph({
   icon: React.ReactNode | undefined;
   color: string;
 }) {
+  // Called before the early returns — a hook, so its order cannot vary.
+  const body = useNativeBodyFamily();
+  // No body family on ✓ and !: glyphs in a fixed box, not body copy, so they
+  // keep the platform face when a ThemeProvider names one. The step NUMBER is
+  // a numeral, and follows the family the way Avatar's overflow count does.
   if (status === 'completed') return <Text style={[styles.glyph, { color }]}>{'✓'}</Text>;
   if (status === 'error') return <Text style={[styles.glyph, { color }]}>{'!'}</Text>;
   if (icon !== undefined) return <>{icon}</>;
-  return <Text style={[styles.glyph, { color }]}>{index + 1}</Text>;
+  return <Text style={[styles.glyph, { fontFamily: body, color }]}>{index + 1}</Text>;
 }
 
 export interface StepProps extends Omit<ViewProps, 'children'>, StepOwnProps {}
@@ -110,6 +115,7 @@ const Step = ({
   const horizontal = orientation === 'horizontal';
   const c = useNativeColors();
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
   const a11yLabel = stepAccessibilityLabel(index, label, status);
 
   // Ring vs. fill, the same four states the web leaf's `stepIndicatorClass`
@@ -146,11 +152,19 @@ const Step = ({
 
   const labelBlock = (
     <View style={horizontal ? styles.labelBlockHorizontal : styles.labelBlockVertical}>
-      <Text style={[textScale.sm, { color: labelColor, fontWeight: active ? '500' : '400' }]}>
+      <Text
+        style={[
+          textScale.sm,
+          { fontFamily: body, color: labelColor, fontWeight: active ? '500' : '400' },
+        ]}
+      >
         {label}
+        {/* Nested in the label's Text, so it inherits the family. */}
         {optional ? <Text style={[textScale.xs, { color: c.muted }]}> (Optional)</Text> : null}
       </Text>
-      {description ? <Text style={[textScale.xs, { color: c.muted }]}>{description}</Text> : null}
+      {description ? (
+        <Text style={[textScale.xs, { fontFamily: body, color: c.muted }]}>{description}</Text>
+      ) : null}
     </View>
   );
 

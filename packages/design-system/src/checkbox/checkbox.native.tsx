@@ -116,6 +116,9 @@ const CheckboxIndicator = ({ children }: { children?: React.ReactNode }) => {
   // Only string/number children are wrapped. An icon element passed here keeps
   // owning its own colour, exactly as it would on the web leaf, where the
   // inherited `color` is likewise irrelevant to an <svg fill="...">.
+  //
+  // No body family here either: the tick is a glyph in a fixed box, not body
+  // copy, so it keeps the platform face when a ThemeProvider names one.
   const isGlyph = typeof children === 'string' || typeof children === 'number';
   return (
     <View style={styles.indicator}>

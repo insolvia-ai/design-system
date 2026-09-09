@@ -12,7 +12,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View, type ViewProps } from 'r
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily, useNativeHeadingFamily } from '../lib/native-typography';
 import {
   DEFAULT_NAV_LABEL,
   SidebarContext,
@@ -109,6 +109,7 @@ const SidebarToggle = ({ children }: { children?: React.ReactNode }) => {
       onPress={toggle}
       style={[styles.toggle, { borderRadius: r.md }]}
     >
+      {/* A glyph in a fixed box, not body copy — it keeps the platform face on purpose. */}
       <Text style={[styles.toggleGlyph, { color: c.muted }]}>
         {children ?? (collapsed ? '»' : '«')}
       </Text>
@@ -144,6 +145,7 @@ export interface SidebarSectionProps extends ViewProps {
 const SidebarSection = ({ title, style, children, ...props }: SidebarSectionProps) => {
   const { collapsed } = useSidebarContext('Section');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <View
       // A labelled group, not a second landmark — same as the web leaf. RN's
@@ -154,7 +156,9 @@ const SidebarSection = ({ title, style, children, ...props }: SidebarSectionProp
       {...props}
     >
       {title !== undefined && !collapsed ? (
-        <Text style={[styles.sectionTitle, { color: c.muted }]}>{title.toUpperCase()}</Text>
+        <Text style={[styles.sectionTitle, { fontFamily: body }, { color: c.muted }]}>
+          {title.toUpperCase()}
+        </Text>
       ) : null}
       {children}
     </View>
@@ -170,6 +174,7 @@ const SidebarItem = ({ label, active = false, icon, onPress }: SidebarItemProps)
   const { collapsed } = useSidebarContext('Item');
   const c = useNativeColors();
   const r = useNativeRadii();
+  const body = useNativeBodyFamily();
 
   // `aria-current` is web-only and outside RN's types; omitted rather than set
   // to undefined when this is not the current page.
@@ -193,6 +198,7 @@ const SidebarItem = ({ label, active = false, icon, onPress }: SidebarItemProps)
       {icon === undefined ? null : (
         <View accessible={false} style={styles.itemIcon}>
           {typeof icon === 'string' ? (
+            // A glyph in a fixed box, not body copy — it keeps the platform face on purpose.
             <Text style={{ color: active ? c.ink : c.muted }}>{icon}</Text>
           ) : (
             icon
@@ -204,6 +210,7 @@ const SidebarItem = ({ label, active = false, icon, onPress }: SidebarItemProps)
           numberOfLines={1}
           style={[
             styles.itemLabel,
+            { fontFamily: body },
             { color: active ? c.ink : c.muted },
             active && styles.itemActive,
           ]}

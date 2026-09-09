@@ -94,7 +94,7 @@ export interface ThemeOverrides {
    */
   readonly radii?: Readonly<Record<string, number>> | undefined;
   /**
-   * Type families, by role (`heading`, `mono`).
+   * Type families, by role (`heading`, `body`, `mono`).
    *
    * ONE family name, never a CSS stack: React Native resolves a single
    * registered family and silently falls back to the system sans for anything
@@ -103,10 +103,15 @@ export interface ThemeOverrides {
    * this package ships no font file and cannot (see
    * `lib/native-typography.native.ts`).
    *
-   * `body` is deliberately absent. The native leaves have never set a family
-   * for body copy — the platform's own sans renders, which is what
-   * `--font-body`'s stack asks for too — so accepting one here would be a
-   * visual change to every existing native surface rather than a seam.
+   * `body` reaches every text a leaf renders that is not a heading or mono —
+   * Button and Chip labels, Field labels, descriptions and errors, Table
+   * cells, the text inside Input, Textarea, Combobox and DateInput, Tabs,
+   * Toast, Tooltip, and so on. It has no default of its own: with no override
+   * the native leaves set no body family at all, so the platform's own sans
+   * renders — which is what `--font-body`'s stack asks for, and exactly what
+   * every surface rendered before this seam existed. The one carve-out is a
+   * glyph drawn in a fixed box (a dismiss ×, a chevron, a tick), which keeps
+   * the platform face.
    */
   readonly fonts?: Readonly<Record<string, string>> | undefined;
 }
@@ -122,7 +127,7 @@ const ThemeContext = React.createContext<ThemeOverrides>({});
  *     light: { primary: '#155E63' },
  *     dark: { primary: '#7FD1D9' },
  *     radii: { md: 8 },
- *     fonts: { heading: 'Spectral_600SemiBold' },
+ *     fonts: { heading: 'Spectral_600SemiBold', body: 'Inter_400Regular' },
  *   }}
  * >
  *   <App />

@@ -35,7 +35,7 @@ import { spacing } from '@insolvia-ai/tokens';
 import { FieldContext } from '../field/field.props';
 import { CONTROL_HEIGHT_PX } from '../input/input.props';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { useNativeMonoFamily } from '../lib/native-typography';
+import { useNativeBodyFamily, useNativeMonoFamily } from '../lib/native-typography';
 import {
   acceptChar,
   normalizeChar,
@@ -70,6 +70,10 @@ export const PinInput = ({
   const c = useNativeColors();
   const r = useNativeRadii();
   const mono = useNativeMonoFamily();
+  // The boxes draw in mono, so the family a consumer's `fonts.body` names
+  // reaches only the hidden input that owns the value — invisible, but still
+  // the one TextInput here, and treated like every other.
+  const body = useNativeBodyFamily();
   const [value, setValue] = usePinInputState({
     length,
     value: valueProp,
@@ -174,7 +178,7 @@ export const PinInput = ({
           setFocused(false);
           onBlur?.(event);
         }}
-        style={styles.hiddenInput}
+        style={[styles.hiddenInput, { fontFamily: body }]}
         {...props}
       />
     </Pressable>

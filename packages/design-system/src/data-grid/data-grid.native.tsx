@@ -36,7 +36,7 @@ import {
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import { rowHeight } from '../table/table.props';
 import {
   cellContent,
@@ -83,6 +83,7 @@ export function DataGrid<Row>({
   ...props
 }: DataGridProps<Row>) {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   const state = useDataGridState({
     columns,
     rows,
@@ -104,7 +105,7 @@ export function DataGrid<Row>({
   return (
     <View style={[styles.root, style]} {...props}>
       {caption === undefined ? null : (
-        <Text style={[styles.caption, { color: c.muted }]}>{caption}</Text>
+        <Text style={[styles.caption, { fontFamily: body, color: c.muted }]}>{caption}</Text>
       )}
 
       <ScrollView
@@ -151,7 +152,9 @@ export function DataGrid<Row>({
                 style={[styles.row, { minHeight: cellHeight, borderBottomColor: c.line }]}
               >
                 <View role="cell" style={styles.emptyCell}>
-                  <Text style={[styles.emptyText, { color: c.muted }]}>{emptyMessage}</Text>
+                  <Text style={[styles.emptyText, { fontFamily: body, color: c.muted }]}>
+                    {emptyMessage}
+                  </Text>
                 </View>
               </View>
             ) : (
@@ -181,7 +184,9 @@ export function DataGrid<Row>({
 
       {pageSize > 0 ? (
         <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: c.muted }]}>{state.rangeText}</Text>
+          <Text style={[styles.footerText, { fontFamily: body, color: c.muted }]}>
+            {state.rangeText}
+          </Text>
           <View style={styles.footerButtons}>
             <FooterButton
               label="Previous"
@@ -210,10 +215,15 @@ function HeaderCell<Row>({
   onSort: () => void;
 }) {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   const alignEnd = column.align === 'end';
   const content = (
     <Text
-      style={[styles.headerText, { color: c.muted }, alignEnd ? styles.textEnd : null]}
+      style={[
+        styles.headerText,
+        { fontFamily: body, color: c.muted },
+        alignEnd ? styles.textEnd : null,
+      ]}
       numberOfLines={1}
     >
       {column.header}
@@ -261,6 +271,7 @@ function DataRow<Row>({
   isLast: boolean;
 }) {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
 
   // Joins every cell's plain text into the row's `accessibilityLabel` — a
   // valid attribute on `role="row"` — so VoiceOver/TalkBack can still read
@@ -303,7 +314,7 @@ function DataRow<Row>({
               <Text
                 style={[
                   styles.cellText,
-                  { color: c.ink },
+                  { fontFamily: body, color: c.ink },
                   column.align === 'end' ? styles.textEnd : null,
                 ]}
                 numberOfLines={1}
@@ -351,6 +362,8 @@ function SelectAllCheckbox({
         },
       ]}
     >
+      {/* No body family: ✓ and – are glyphs in a fixed box, not body copy —
+          the same carve-out as Checkbox's tick. */}
       {checked || state === 'some' ? (
         <Text style={[styles.checkboxGlyph, { color: c.primaryText }]}>
           {state === 'some' ? '–' : '✓'}
@@ -389,6 +402,7 @@ function RowCheckbox({
         },
       ]}
     >
+      {/* A glyph in a fixed box, not body copy — keeps the platform face. */}
       {checked ? <Text style={[styles.checkboxGlyph, { color: c.primaryText }]}>✓</Text> : null}
     </Pressable>
   );
@@ -405,6 +419,7 @@ function FooterButton({
 }) {
   const c = useNativeColors();
   const r = useNativeRadii();
+  const body = useNativeBodyFamily();
   return (
     <Pressable
       accessibilityRole="button"
@@ -417,7 +432,7 @@ function FooterButton({
         { borderRadius: r.md, borderColor: c.line, opacity: disabled ? 0.5 : 1 },
       ]}
     >
-      <Text style={[styles.footerButtonText, { color: c.ink }]}>{label}</Text>
+      <Text style={[styles.footerButtonText, { fontFamily: body, color: c.ink }]}>{label}</Text>
     </Pressable>
   );
 }

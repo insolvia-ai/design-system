@@ -24,6 +24,7 @@ import { FieldContext } from '../field/field.props';
 import { CONTROL_HEIGHT_PX, keyboardTypeFor } from '../input/input.props';
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
+import { useNativeBodyFamily } from '../lib/native-typography';
 import {
   DEFAULT_DECREMENT_LABEL,
   DEFAULT_INCREMENT_LABEL,
@@ -66,6 +67,7 @@ export const NumberInput = ({
   const c = useNativeColors();
   const r = useNativeRadii();
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
   const state = useNumberInputState({ value, defaultValue, onValueChange, min, max, step });
 
   const isInvalid = invalid || (field?.invalid ?? false);
@@ -139,7 +141,7 @@ export const NumberInput = ({
           state.commit();
           onBlur?.(event);
         }}
-        style={[styles.input, { color: disabled ? c.muted : c.ink }]}
+        style={[styles.input, { fontFamily: body }, { color: disabled ? c.muted : c.ink }]}
         {...props}
       />
       <NumberInputStepper
@@ -203,6 +205,7 @@ function NumberInputStepper({
         focus.ringStyle,
       ]}
     >
+      {/* No body family: −/+ is a glyph in a fixed box, not body copy — it keeps the platform face. */}
       <Text style={[styles.stepperGlyph, { color: disabled ? c.muted : c.ink }]}>{glyph}</Text>
     </Pressable>
   );

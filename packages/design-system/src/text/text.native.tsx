@@ -19,7 +19,12 @@ import * as React from 'react';
 import { StyleSheet, Text as RNText, type TextProps as RNTextProps } from 'react-native';
 
 import { useNativeColors } from '../lib/native-theme';
-import { textScale, useNativeHeadingFamily, useNativeMonoFamily } from '../lib/native-typography';
+import {
+  textScale,
+  useNativeBodyFamily,
+  useNativeHeadingFamily,
+  useNativeMonoFamily,
+} from '../lib/native-typography';
 import {
   isHeadingVariant,
   variantFamily,
@@ -59,11 +64,13 @@ const weightValue: Record<TextWeight, '400' | '500' | '600'> = {
  * platform's own face — the web leaf's `font-heading`/`font-body`/`font-mono`
  * in this leaf's dialect.
  *
- * `body` is `undefined` ON PURPOSE, and it is not a gap: React Native has no
- * `font-body` to name, so body copy has always rendered the platform's own
- * sans here — which is what `--font-body`'s stack asks for anyway. Setting one
- * would change every existing native surface, which giving `Text` a family
- * control is not licence to do. See native-typography.native.ts.
+ * `body` is `undefined` unless a `ThemeProvider` names one, and that is not a
+ * gap: React Native has no `font-body` to name, so body copy has always
+ * rendered the platform's own sans here — which is what `--font-body`'s stack
+ * asks for anyway. A default would have changed every existing native surface;
+ * `useNativeBodyFamily` returns nothing by default and the consumer's choice
+ * otherwise, which is the seam without the change. See
+ * native-typography.native.ts.
  *
  * A FUNCTION of the resolved families rather than a module-level constant.
  * `Platform.select` resolves at module load and a family does not follow the
@@ -71,9 +78,13 @@ const weightValue: Record<TextWeight, '400' | '500' | '600'> = {
  * `fonts` override arrives through context, which a module-level map cannot
  * see.
  */
-const familyFont = (heading: string, mono: string): Record<TextFamily, string | undefined> => ({
+const familyFont = (
+  heading: string,
+  body: string | undefined,
+  mono: string,
+): Record<TextFamily, string | undefined> => ({
   heading,
-  body: undefined,
+  body,
   mono,
 });
 
@@ -89,6 +100,7 @@ export const Text = ({
 }: TextProps) => {
   const c = useNativeColors();
   const heading = useNativeHeadingFamily();
+  const body = useNativeBodyFamily();
   const mono = useNativeMonoFamily();
   // Three tones, for the contrast reason text.props.ts measures out.
   const toneColor: Record<TextTone, string> = {
@@ -114,7 +126,7 @@ export const Text = ({
           // override REPLACES the variant's family instead of layering over
           // it — the same reason the web leaf resolves it before building its
           // class list.
-          fontFamily: familyFont(heading, mono)[family ?? variantFamily[variant]],
+          fontFamily: familyFont(heading, body, mono)[family ?? variantFamily[variant]],
         },
         style,
       ]}

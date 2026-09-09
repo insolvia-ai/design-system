@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { colors } from '@insolvia-ai/tokens';
 
 import { rgb, setPrefersColorScheme } from '../../vitest.native.setup';
+import { ThemeProvider } from '../lib/theme';
 import { List } from './list';
 
 describe('List (native leaf)', () => {
@@ -114,5 +115,41 @@ describe('List (native leaf)', () => {
 
     const text = screen.getByText('Inbox');
     expect(rgb(text.style.color)).toEqual(rgb(colors.dark.ink));
+  });
+
+  // The body-family seam on a leaf with THREE texts of its own — the primary
+  // and secondary lines and the section subheader — so one provider reaches
+  // all of them, or none. The default stays the absence of a family: with no
+  // provider every row renders in the platform sans exactly as it did.
+  it('sets no body family on its texts with no provider', () => {
+    render(
+      <List.Root>
+        <List.Subheader>Today</List.Subheader>
+        <List.Item>
+          <List.Text primary="Inbox" secondary="3 unread" />
+        </List.Item>
+      </List.Root>,
+    );
+
+    expect(screen.getByText('Today').style.fontFamily).toBe('');
+    expect(screen.getByText('Inbox').style.fontFamily).toBe('');
+    expect(screen.getByText('3 unread').style.fontFamily).toBe('');
+  });
+
+  it('takes the body family a ThemeProvider names on every text it renders', () => {
+    render(
+      <ThemeProvider theme={{ fonts: { body: 'BrandSans' } }}>
+        <List.Root>
+          <List.Subheader>Today</List.Subheader>
+          <List.Item>
+            <List.Text primary="Inbox" secondary="3 unread" />
+          </List.Item>
+        </List.Root>
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText('Today').style.fontFamily).toBe('BrandSans');
+    expect(screen.getByText('Inbox').style.fontFamily).toBe('BrandSans');
+    expect(screen.getByText('3 unread').style.fontFamily).toBe('BrandSans');
   });
 });

@@ -18,6 +18,70 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.22.0 — minor
+
+**Widen your range to take this:** `^0.21.x` will not resolve it.
+
+React Native only. No web leaf changed, and no default moved: an app with no
+`ThemeProvider`, or one whose `fonts` names only `heading` or `mono`, renders
+exactly as it did on 0.21.0.
+
+- **`ThemeProvider`'s `fonts` takes `body` now — and it reaches every control.**
+  0.20.0 refused it on the grounds that the native leaves had never set a body
+  family, so accepting one would restyle every surface. That reasoning held
+  for a *default* and not for a *seam*: with no override the leaves still set
+  no family, so the platform's own sans renders exactly as before, and with
+  one they follow it. What the refusal cost was the mixed page — a React
+  Native consumer that brands its body face could set it on its own text and
+  on nothing this package rendered, so every Button, Badge, Field label,
+  Input, Select, Tabs, Table cell, Toast and Tooltip sat in the platform sans
+  beside copy in the brand face.
+
+  ```tsx
+  <ThemeProvider theme={{ fonts: { body: 'Inter_400Regular' } }}>
+  ```
+
+- **What `body` reaches**: every text a native leaf renders that is not a
+  heading or mono — 49 leaves, the twenty-one 0.21.0 added included. Before
+  this release only 10 of the ~52 text-bearing native leaves set any family
+  at all, and only on their headings. Now the label, description and error
+  of `Field`; the labels of `Button`, `ButtonGroup.Item`, `Chip`, `Toggle`,
+  `Badge`, `Ribbon`, `Tabs`, `Breadcrumbs`, `BottomNav.Item` and `Link`; the
+  text inside `Input`, `Textarea`, `Combobox`, `DateInput`, `NumberInput`,
+  `PasswordInput` (and its Show/Hide toggle) and `PinInput`'s hidden input —
+  and the control `Field.Control` wires; `Select`'s trigger and options;
+  `Table`'s caption, header and body cells, and `DataGrid`'s caption, header
+  and body cells, empty message, range and Previous/Next; `List.Text`'s
+  primary and secondary lines and `List.Subheader`; `TreeView.Item`'s label;
+  `TransferList`'s column headings and row labels; `Pagination`'s page
+  numbers; `Stepper.Step`'s label, description and step number;
+  `Timeline.Opposite`; `ImageList.ItemBar`'s title and subtitle;
+  `EmptyState.Description`; `Card.Body` and an image caption; `Accordion`
+  and `Collapsible` triggers; the non-heading texts of `Dialog`,
+  `AlertDialog`, `Drawer`, `Popover`, `Alert` and `Toast`; `Dropdown`,
+  `NavBar.Link`, `Footer.Link` and `Footer.Note`, `Sidebar`'s section titles
+  and items, `Tooltip`, `Calendar`'s month, weekdays and days,
+  `DatePicker`'s summary, `Wheel`'s rows, `InputGroup.Text`, `Avatar`'s
+  fallback initials and overflow count, and `VisuallyHidden`. `Text`'s
+  `family="body"` resolves to it too.
+
+- **What it does not reach, on purpose**: a glyph drawn in a fixed box — the
+  dismiss × on `Alert` and `Toast`, `Select`'s chevron, `Checkbox`'s tick and
+  the ticks `DataGrid` and `TransferList` draw, `Calendar`'s pager arrows,
+  `Pagination`'s «‹›» and its ellipsis, `TransferList`'s move arrows,
+  `NumberInput`'s − and + steppers, `Stepper`'s ✓ and !, `TreeView`'s chevron
+  and string icons, `List.Leading`'s string icon, `Rating`'s stars,
+  `Sidebar`'s toggle and string icons, and the glyph inside `IconButton`.
+  Those keep the platform face, so a tick or an arrow never depends on the
+  brand face having that character. Headings keep `fonts.heading`; mono keeps
+  `fonts.mono` — which is also what `PinInput`'s boxes draw in.
+
+- **Same rule as the other two roles: ONE registered family name, never a CSS
+  stack**, used verbatim. The family has to be registered in your own app
+  bundle first — this package ships no font file.
+
+[#31](https://github.com/insolvia-ai/design-system/pull/31)
+
 ## 0.21.0 — minor
 
 **Widen your range to take this:** `^0.20.x` will not resolve it.

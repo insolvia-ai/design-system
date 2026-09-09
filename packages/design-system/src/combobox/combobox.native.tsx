@@ -27,7 +27,7 @@ import { spacing } from '@insolvia-ai/tokens';
 import { FieldContext } from '../field/field.props';
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import { getListboxId, getOptionId } from '../select/select.props';
 import {
   comboboxKeyIntent,
@@ -59,6 +59,7 @@ export const Combobox = ({
   const c = useNativeColors();
   const r = useNativeRadii();
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
   const state = useComboboxState({ options, value, defaultValue, onValueChange });
   const { query, setQuery, visible, open, setOpen, active, setActive, commit, revert, rootId } =
     state;
@@ -147,6 +148,7 @@ export const Combobox = ({
             backgroundColor: disabled ? c.surfaceAlt : c.card,
             color: disabled ? c.muted : c.ink,
           },
+          { fontFamily: body },
           focus.ringStyle,
         ]}
       />
@@ -199,6 +201,7 @@ export const Combobox = ({
                   <Text
                     style={[
                       styles.optionLabel,
+                      { fontFamily: body },
                       { color: option.disabled ? c.muted : c.ink },
                       isSelected ? styles.optionSelected : null,
                     ]}
@@ -223,7 +226,9 @@ export const Combobox = ({
             { borderColor: c.line, backgroundColor: c.card },
           ]}
         >
-          <Text style={[styles.emptyLabel, { color: c.muted }]}>{emptyMessage}</Text>
+          <Text style={[styles.emptyLabel, { fontFamily: body }, { color: c.muted }]}>
+            {emptyMessage}
+          </Text>
         </View>
       )}
     </View>

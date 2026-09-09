@@ -16,7 +16,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   DEFAULT_TOAST_DISMISS_LABEL,
   DEFAULT_VIEWPORT_LABEL,
@@ -50,6 +50,7 @@ const ToastViewport = ({
   const { toasts, api } = useToastList();
   const c = useNativeColors();
   const r = useNativeRadii();
+  const body = useNativeBodyFamily();
 
   const stripeColor: Record<ToastIntent, string> = {
     info: c.primary,
@@ -82,9 +83,13 @@ const ToastViewport = ({
           ]}
         >
           <View style={styles.body}>
-            <Text style={[styles.title, { color: c.ink }]}>{toast.title}</Text>
+            <Text style={[styles.title, { fontFamily: body }, { color: c.ink }]}>
+              {toast.title}
+            </Text>
             {toast.description === undefined ? null : (
-              <Text style={[styles.description, { color: c.muted }]}>{toast.description}</Text>
+              <Text style={[styles.description, { fontFamily: body }, { color: c.muted }]}>
+                {toast.description}
+              </Text>
             )}
           </View>
           <Pressable
@@ -93,6 +98,7 @@ const ToastViewport = ({
             onPress={() => api.remove(toast.id)}
             style={styles.dismiss}
           >
+            {/* A glyph in a fixed box, not body copy — it keeps the platform face on purpose. */}
             <Text style={[styles.dismissGlyph, { color: c.muted }]}>&#215;</Text>
           </Pressable>
         </View>

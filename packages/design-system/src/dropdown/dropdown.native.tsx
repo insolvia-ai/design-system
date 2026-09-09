@@ -16,7 +16,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   DropdownContext,
   useDropdownContext,
@@ -45,6 +45,7 @@ export interface DropdownTriggerProps {
 const DropdownTrigger = ({ children }: DropdownTriggerProps) => {
   const { open, setOpen, menuId, triggerId } = useDropdownContext('Trigger');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
 
   const webAria = {
     'aria-haspopup': 'menu',
@@ -60,7 +61,7 @@ const DropdownTrigger = ({ children }: DropdownTriggerProps) => {
       onPress={() => setOpen(!open)}
       style={styles.trigger}
     >
-      <Text style={[styles.triggerLabel, { color: c.ink }]}>{children}</Text>
+      <Text style={[styles.triggerLabel, { fontFamily: body }, { color: c.ink }]}>{children}</Text>
     </Pressable>
   );
 };
@@ -105,6 +106,7 @@ export interface DropdownItemProps extends DropdownItemOwnProps {
 const DropdownItem = ({ disabled = false, onSelect, children }: DropdownItemProps) => {
   const { setOpen } = useDropdownContext('Item');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <Pressable
       role="menuitem"
@@ -122,7 +124,9 @@ const DropdownItem = ({ disabled = false, onSelect, children }: DropdownItemProp
         pressed && !disabled ? { backgroundColor: c.surfaceAlt } : null,
       ]}
     >
-      <Text style={[styles.itemLabel, { color: disabled ? c.muted : c.ink }]}>{children}</Text>
+      <Text style={[styles.itemLabel, { fontFamily: body }, { color: disabled ? c.muted : c.ink }]}>
+        {children}
+      </Text>
     </Pressable>
   );
 };
@@ -134,9 +138,10 @@ const DropdownItem = ({ disabled = false, onSelect, children }: DropdownItemProp
  */
 const DropdownLabel = ({ children }: { children?: React.ReactNode }) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <View accessible={false} style={styles.label}>
-      <Text style={[styles.labelText, { color: c.muted }]}>{children}</Text>
+      <Text style={[styles.labelText, { fontFamily: body }, { color: c.muted }]}>{children}</Text>
     </View>
   );
 };

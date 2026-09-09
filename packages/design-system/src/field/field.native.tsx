@@ -19,7 +19,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   FieldContext,
   composeDescribedBy,
@@ -85,8 +85,9 @@ const FieldRoot = ({ name, invalid = false, children, style, ...props }: FieldRo
 const FieldLabel = ({ children }: { children?: React.ReactNode }) => {
   const { labelId } = useFieldContext('Label');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
-    <Text nativeID={labelId} style={[styles.label, { color: c.ink }]}>
+    <Text nativeID={labelId} style={[styles.label, { fontFamily: body }, { color: c.ink }]}>
       {children}
     </Text>
   );
@@ -115,6 +116,7 @@ const FieldControl = ({ render, style }: FieldControlProps) => {
   const { labelId, controlId, describedBy, invalid } = useFieldContext('Control');
   const c = useNativeColors();
   const r = useNativeRadii();
+  const body = useNativeBodyFamily();
 
   // React Native has no `:focus` selector, so the focused state is held in a
   // hook and the ring applied as a style — the web leaf gets the same thing
@@ -188,6 +190,9 @@ const FieldControl = ({ render, style }: FieldControlProps) => {
       // A control nobody can edit should not advertise a focus ring either.
       // The web leaf gets that free — a disabled <input> cannot take focus at
       // all — while react-native-web's readonly TextInput still can.
+      // The wired control's text follows the body seam like every other text
+      // this package renders, and the caller's own style below still wins.
+      { fontFamily: body },
       readOnly ? null : focus.ringStyle,
       child.style,
       style,
@@ -198,8 +203,12 @@ const FieldControl = ({ render, style }: FieldControlProps) => {
 const FieldDescription = ({ children }: { children?: React.ReactNode }) => {
   const { descriptionId } = useFieldContext('Description');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
-    <Text nativeID={descriptionId} style={[styles.description, { color: c.muted }]}>
+    <Text
+      nativeID={descriptionId}
+      style={[styles.description, { fontFamily: body }, { color: c.muted }]}
+    >
       {children}
     </Text>
   );
@@ -208,8 +217,9 @@ const FieldDescription = ({ children }: { children?: React.ReactNode }) => {
 const FieldError = ({ children }: { children?: React.ReactNode; match?: boolean }) => {
   const { errorId } = useFieldContext('Error');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
-    <Text nativeID={errorId} style={[styles.error, { color: c.danger }]}>
+    <Text nativeID={errorId} style={[styles.error, { fontFamily: body }, { color: c.danger }]}>
       {children}
     </Text>
   );

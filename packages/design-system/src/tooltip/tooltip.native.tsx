@@ -15,7 +15,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   TooltipContext,
   useTooltipContext,
@@ -45,6 +45,7 @@ export interface TooltipTriggerProps {
 const TooltipTrigger = ({ children, 'aria-label': ariaLabel }: TooltipTriggerProps) => {
   const { open, setOpen, tooltipId } = useTooltipContext('Trigger');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
 
   // `aria-describedby` is web-only and outside RN's AccessibilityProps;
   // react-native-web forwards it to the DOM. OMITTED while closed so it never
@@ -64,7 +65,7 @@ const TooltipTrigger = ({ children, 'aria-label': ariaLabel }: TooltipTriggerPro
       onHoverOut={() => setOpen(false)}
       style={styles.trigger}
     >
-      <Text style={[styles.triggerLabel, { color: c.ink }]}>{children}</Text>
+      <Text style={[styles.triggerLabel, { fontFamily: body }, { color: c.ink }]}>{children}</Text>
     </Pressable>
   );
 };
@@ -77,6 +78,7 @@ const TooltipContent = ({ children, style, ...props }: TooltipContentProps) => {
   const { open, tooltipId } = useTooltipContext('Content');
   const c = useNativeColors();
   const r = useNativeRadii();
+  const body = useNativeBodyFamily();
   if (!open) return null;
   return (
     // TWO VIEWS, and the outer one is the fix — the same shape, and the same
@@ -100,7 +102,7 @@ const TooltipContent = ({ children, style, ...props }: TooltipContentProps) => {
         style={[styles.bubble, { borderRadius: r.md }, { backgroundColor: c.ink }, style]}
         {...props}
       >
-        <Text style={[styles.bubbleLabel, { color: c.bg }]}>{children}</Text>
+        <Text style={[styles.bubbleLabel, { fontFamily: body }, { color: c.bg }]}>{children}</Text>
       </View>
     </View>
   );

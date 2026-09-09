@@ -25,7 +25,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   BottomNavRootContext,
   useBottomNavRootContext,
@@ -112,6 +112,7 @@ const BottomNavItem = ({
   const showLabel = showLabels === 'always' || selected;
   const c = useNativeColors();
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
 
   // `aria-current` is web-only and outside RN's types; react-native-web
   // forwards it to the DOM regardless — the same shape
@@ -148,7 +149,9 @@ const BottomNavItem = ({
           above, never the icon. */}
       <View accessible={false}>{icon}</View>
       {showLabel ? (
-        <Text style={[styles.label, { color: selected ? c.primary : c.muted }]}>{label}</Text>
+        <Text style={[styles.label, { fontFamily: body, color: selected ? c.primary : c.muted }]}>
+          {label}
+        </Text>
       ) : null}
     </Pressable>
   );

@@ -19,7 +19,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   resolveLabels,
   useTransferListState,
@@ -128,6 +128,9 @@ function Column({
 }) {
   const c = useNativeColors();
   const r = useNativeRadii();
+  // The column heading is a legend, not a display heading — body family,
+  // the same call Table's header cells make.
+  const body = useNativeBodyFamily();
   const checkedCount = options.reduce((n, option) => n + (checked.has(option.value) ? 1 : 0), 0);
 
   const heading = `${label} (${checkedCount} selected / ${options.length})`;
@@ -141,7 +144,10 @@ function Column({
     // each need, at the cost of the name being announced once for the group
     // and once more as its first line of content.
     <View role="group" aria-label={heading} style={styles.column}>
-      <Text accessibilityRole="header" style={[styles.header, textScale.sm, { color: c.ink }]}>
+      <Text
+        accessibilityRole="header"
+        style={[styles.header, textScale.sm, { fontFamily: body, color: c.ink }]}
+      >
         {heading}
       </Text>
       <ScrollView
@@ -178,6 +184,7 @@ function Row({
   const c = useNativeColors();
   const r = useNativeRadii();
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
   const rowDisabled = disabled || (option.disabled ?? false);
 
   return (
@@ -215,13 +222,20 @@ function Row({
         ]}
       >
         {/* See checkbox.native.tsx's Indicator comment: colour does not
-            inherit through a View, so the glyph owns it directly. */}
+            inherit through a View, so the glyph owns it directly. No body
+            family, for the same reason as Checkbox's tick: a glyph in a fixed
+            box keeps the platform face. */}
         {checked ? <Text style={[styles.glyph, { color: c.primaryText }]}>✓</Text> : null}
       </View>
       <Text
         accessible={false}
         numberOfLines={1}
-        style={[styles.label, textScale.sm, { color: rowDisabled ? c.muted : c.ink }]}
+        style={[
+          styles.label,
+          textScale.sm,
+          { fontFamily: body },
+          { color: rowDisabled ? c.muted : c.ink },
+        ]}
       >
         {option.label}
       </Text>
@@ -259,7 +273,8 @@ function MoveButton({
         focus.ringStyle,
       ]}
     >
-      {/* Decorative — the Pressable above already carries the accessible name. */}
+      {/* Decorative — the Pressable above already carries the accessible name.
+          No body family: «‹›» is a glyph in a fixed box, not body copy. */}
       <Text accessible={false} style={[styles.moveButtonGlyph, { color: c.ink }]}>
         {glyph}
       </Text>

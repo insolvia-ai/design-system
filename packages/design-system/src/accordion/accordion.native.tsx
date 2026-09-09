@@ -9,7 +9,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   AccordionItemContext,
   AccordionRootContext,
@@ -64,6 +64,7 @@ const AccordionTrigger = ({ children }: { children?: React.ReactNode }) => {
   const { toggle } = useAccordionRootContext('Trigger');
   const { value, open } = useAccordionItemContext('Trigger');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <Pressable
       accessibilityRole="button"
@@ -80,7 +81,7 @@ const AccordionTrigger = ({ children }: { children?: React.ReactNode }) => {
       onPress={() => toggle(value)}
       style={styles.trigger}
     >
-      <Text style={[styles.triggerLabel, { color: c.ink }]}>{children}</Text>
+      <Text style={[styles.triggerLabel, { fontFamily: body }, { color: c.ink }]}>{children}</Text>
     </Pressable>
   );
 };

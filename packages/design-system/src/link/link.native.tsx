@@ -15,6 +15,7 @@ import { Linking, StyleSheet, Text, type TextProps } from 'react-native';
 
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
+import { useNativeBodyFamily } from '../lib/native-typography';
 import type { LinkTone, LinkUnderline } from './link.props';
 
 export interface LinkProps extends Omit<TextProps, 'onPress'> {
@@ -72,6 +73,7 @@ export const Link = ({
 }: LinkProps) => {
   const c = useNativeColors();
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
   const toneColor: Record<LinkTone, string> = { primary: c.primary, ink: c.ink, muted: c.muted };
 
   // `onFocus`/`onBlur` are OUTSIDE RN's real `Text` type — Text.d.ts declares
@@ -110,6 +112,9 @@ export const Link = ({
         // difference; `'hover'` has nothing to defer to without a pointer, so
         // it draws the same as `'always'`.
         underline === 'none' ? styles.noUnderline : styles.underline,
+        // Before the caller's `style`, so a link nested in a paragraph can
+        // still be handed that paragraph's family explicitly.
+        { fontFamily: body },
         { color: toneColor[tone] },
         disabled ? styles.disabled : null,
         focus.ringStyle,

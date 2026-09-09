@@ -43,7 +43,7 @@ import { FieldContext } from '../field/field.props';
 import { CONTROL_HEIGHT_PX, useInputState } from '../input/input.props';
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   DEFAULT_AUTO_COMPLETE,
   DEFAULT_HIDE_LABEL,
@@ -90,6 +90,7 @@ export const PasswordInput = ({
   const c = useNativeColors();
   const r = useNativeRadii();
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
   const [text, setText] = useInputState({ value, defaultValue, onValueChange });
   const [isRevealed, setRevealed] = useRevealedState({
     revealed,
@@ -174,7 +175,7 @@ export const PasswordInput = ({
           focus.blur();
           onBlur?.(event);
         }}
-        style={[styles.input, { color: disabled ? c.muted : c.ink }, style]}
+        style={[styles.input, { fontFamily: body }, { color: disabled ? c.muted : c.ink }, style]}
         {...props}
       />
       <Pressable
@@ -185,7 +186,10 @@ export const PasswordInput = ({
         onPress={() => setRevealed(!isRevealed)}
         style={styles.toggle}
       >
-        <Text style={[styles.toggleLabel, { color: c.muted }]}>{isRevealed ? 'Hide' : 'Show'}</Text>
+        {/* A word, not a glyph — "Show"/"Hide" is body copy and follows the family. */}
+        <Text style={[styles.toggleLabel, { fontFamily: body, color: c.muted }]}>
+          {isRevealed ? 'Hide' : 'Show'}
+        </Text>
       </Pressable>
     </View>
   );

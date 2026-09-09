@@ -14,7 +14,7 @@ import { StyleSheet, Text, View, type ViewProps } from 'react-native';
 import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   TIMELINE_PART_NAMES,
   TimelineItemContext,
@@ -193,9 +193,12 @@ export interface TimelineOppositeProps extends Omit<ViewProps, 'children'> {
 // leaf to wrap it in a `Text` itself rather than crash.
 const TimelineOpposite = ({ style, children, ...props }: TimelineOppositeProps) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <View style={[styles.opposite, style]} {...props}>
-      <Text style={[textScale.sm, { color: c.muted, textAlign: 'right' }]}>{children}</Text>
+      <Text style={[textScale.sm, { fontFamily: body, color: c.muted, textAlign: 'right' }]}>
+        {children}
+      </Text>
     </View>
   );
 };

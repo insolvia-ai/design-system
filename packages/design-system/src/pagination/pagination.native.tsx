@@ -21,7 +21,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   FIRST_LABEL,
   LAST_LABEL,
@@ -143,6 +143,7 @@ function PageButton({ page, active, size, disabled, onPress }: PageButtonProps) 
   const c = useNativeColors();
   const r = useNativeRadii();
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
   const box = sizeBox[size];
   // Cast for the same reason icon-button.native.tsx casts its toggle props:
   // core React Native's PressableProps type has no `aria-current`.
@@ -171,7 +172,14 @@ function PageButton({ page, active, size, disabled, onPress }: PageButtonProps) 
         focus.ringStyle,
       ]}
     >
-      <Text style={[textScale.sm, styles.label, { color: active ? c.primaryText : c.ink }]}>
+      <Text
+        style={[
+          textScale.sm,
+          styles.label,
+          { fontFamily: body },
+          { color: active ? c.primaryText : c.ink },
+        ]}
+      >
         {page}
       </Text>
     </Pressable>
@@ -186,7 +194,9 @@ interface NavButtonProps {
   onPress: () => void;
 }
 
-/** Previous/Next/First/Last — a glyph, never a number, so no `aria-current`. */
+/** Previous/Next/First/Last — a glyph, never a number, so no `aria-current`
+ * and no body family either: «‹›» sit in a fixed box, not in body copy, and
+ * keep the platform face when a ThemeProvider names one. */
 function NavButton({ glyph, label, size, disabled, onPress }: NavButtonProps) {
   const c = useNativeColors();
   const r = useNativeRadii();
@@ -216,7 +226,8 @@ function NavButton({ glyph, label, size, disabled, onPress }: NavButtonProps) {
   );
 }
 
-/** Decorative, exactly as the web leaf's `aria-hidden` `<li>`. */
+/** Decorative, exactly as the web leaf's `aria-hidden` `<li>`. A glyph in a
+ * fixed box, so no body family — same carve-out as the nav buttons. */
 function Ellipsis({ size }: { size: PaginationSize }) {
   const c = useNativeColors();
   const box = sizeBox[size];

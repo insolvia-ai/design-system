@@ -19,7 +19,7 @@ import { ScrollView, StyleSheet, Text, View, type ViewProps } from 'react-native
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   isLastRow,
   isStripedRow,
@@ -67,12 +67,13 @@ const TableRoot = ({
   ...props
 }: TableRootProps) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   const ctx = React.useMemo(() => ({ striped, dense }), [striped, dense]);
   return (
     <TableContext.Provider value={ctx}>
       <View style={styles.wrapper}>
         {caption === undefined ? null : (
-          <Text style={[styles.caption, { color: c.muted }]}>{caption}</Text>
+          <Text style={[styles.caption, { fontFamily: body }, { color: c.muted }]}>{caption}</Text>
         )}
         {/* Horizontal scroll, matching the web leaf's `overflow-x-auto`: a
             table wider than its column must scroll itself rather than take
@@ -163,19 +164,21 @@ export interface TableCellProps extends ViewProps {
 
 const TableHeaderCell = ({ style, width, children, ...props }: TableCellProps) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <View
       {...webRole('columnheader')}
       style={[styles.cell, width === undefined ? styles.flexCell : { width }, style]}
       {...props}
     >
-      <Text style={[styles.headerText, { color: c.muted }]}>{children}</Text>
+      <Text style={[styles.headerText, { fontFamily: body }, { color: c.muted }]}>{children}</Text>
     </View>
   );
 };
 
 const TableCell = ({ style, width, children, ...props }: TableCellProps) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <View
       {...webRole('cell')}
@@ -186,7 +189,7 @@ const TableCell = ({ style, width, children, ...props }: TableCellProps) => {
           else is passed through, because a cell may hold a Badge or a Button
           that owns its own colour. */}
       {typeof children === 'string' || typeof children === 'number' ? (
-        <Text style={[styles.cellText, { color: c.ink }]}>{children}</Text>
+        <Text style={[styles.cellText, { fontFamily: body }, { color: c.ink }]}>{children}</Text>
       ) : (
         children
       )}

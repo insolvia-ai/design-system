@@ -8,7 +8,7 @@ import { Image, StyleSheet, Text, View, type ViewProps } from 'react-native';
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily, useNativeHeadingFamily } from '../lib/native-typography';
 import { CARD_IMAGE_HEIGHT, type CardElevation, type CardImageOwnProps } from './card.props';
 
 export interface CardProps extends ViewProps {
@@ -47,7 +47,8 @@ const CardTitle = ({ children }: { children?: React.ReactNode }) => {
 
 const CardBody = ({ children }: { children?: React.ReactNode }) => {
   const c = useNativeColors();
-  return <Text style={[styles.body, { color: c.muted }]}>{children}</Text>;
+  const body = useNativeBodyFamily();
+  return <Text style={[styles.body, { fontFamily: body }, { color: c.muted }]}>{children}</Text>;
 };
 
 const CardFooter = ({ style, ...props }: ViewProps) => (
@@ -69,6 +70,7 @@ const CardFooter = ({ style, ...props }: ViewProps) => (
 const CardImage = ({ src, alt, caption, height = CARD_IMAGE_HEIGHT }: CardImageOwnProps) => {
   const c = useNativeColors();
   const r = useNativeRadii();
+  const body = useNativeBodyFamily();
   const decorative = alt === '';
 
   return (
@@ -112,7 +114,7 @@ const CardImage = ({ src, alt, caption, height = CARD_IMAGE_HEIGHT }: CardImageO
         />
       </View>
       {caption === undefined ? null : (
-        <Text style={[styles.caption, { color: c.muted }]}>{caption}</Text>
+        <Text style={[styles.caption, { fontFamily: body }, { color: c.muted }]}>{caption}</Text>
       )}
     </View>
   );
