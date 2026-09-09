@@ -40,7 +40,7 @@ import { spacing } from '@insolvia-ai/tokens';
 import { FieldContext } from '../field/field.props';
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   OverlayPortal,
   overlayPortalEnabled,
@@ -88,6 +88,7 @@ export const Select = ({
   const c = useNativeColors();
   const r = useNativeRadii();
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
   const state = useSelectState({ options, value, defaultValue, onValueChange });
   const { open, setOpen, active, setActive, commit, selected, rootId } = state;
 
@@ -248,6 +249,7 @@ export const Select = ({
               <Text
                 style={[
                   styles.optionLabel,
+                  { fontFamily: body },
                   { color: option.disabled ? c.muted : c.ink },
                   isSelected && styles.optionLabelSelected,
                 ]}
@@ -317,10 +319,15 @@ export const Select = ({
       >
         <Text
           numberOfLines={1}
-          style={[styles.triggerLabel, { color: selected && !disabled ? c.ink : c.muted }]}
+          style={[
+            styles.triggerLabel,
+            { fontFamily: body },
+            { color: selected && !disabled ? c.ink : c.muted },
+          ]}
         >
           {selected?.label ?? placeholder}
         </Text>
+        {/* A glyph in a fixed box, not body copy — it keeps the platform face on purpose. */}
         <Text aria-hidden style={[styles.chevron, { color: c.muted }]}>
           ▾
         </Text>

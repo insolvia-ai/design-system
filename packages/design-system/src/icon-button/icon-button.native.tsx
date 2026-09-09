@@ -137,7 +137,10 @@ export function IconButton({
           does: it is the only RN primitive that passes a colour down. An icon
           FONT glyph inherits `color` from here; a react-native-svg icon names
           its own colour and is unaffected, which is the caller's call to make
-          — this package ships no icons. */}
+          — this package ships no icons.
+
+          No body family either: this is a glyph in a fixed box, not body copy,
+          so it keeps the platform face when a ThemeProvider names one. */}
       <Text style={[styles.icon, { fontSize: iconText[size], color: intentFg[intent] }]}>
         {children}
       </Text>

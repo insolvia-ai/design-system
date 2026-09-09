@@ -23,7 +23,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   DIVIDER_INSET_PX,
   ListRootContext,
@@ -157,6 +157,7 @@ const ListLeading = ({
     // JSDoc on `ListLeading` there for what a meaningful icon should do
     // instead (nothing this leaf can enforce).
     <View accessible={false} style={[styles.slot, style]}>
+      {/* A string here is a glyph in a fixed slot, not body copy — no body family. */}
       {typeof children === 'string' ? <Text style={{ color: c.muted }}>{children}</Text> : children}
     </View>
   );
@@ -184,13 +185,14 @@ export interface ListTextProps {
 // this leaf never imports (see the web leaf's header note on the same name).
 const ListTextPart = ({ primary, secondary }: ListTextProps) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <View style={styles.textWrap}>
-      <Text numberOfLines={1} style={[textScale.sm, { color: c.ink }]}>
+      <Text numberOfLines={1} style={[textScale.sm, { fontFamily: body, color: c.ink }]}>
         {primary}
       </Text>
       {secondary !== undefined ? (
-        <Text numberOfLines={1} style={[textScale.xs, { color: c.muted }]}>
+        <Text numberOfLines={1} style={[textScale.xs, { fontFamily: body, color: c.muted }]}>
           {secondary}
         </Text>
       ) : null}
@@ -200,13 +202,16 @@ const ListTextPart = ({ primary, secondary }: ListTextProps) => {
 
 const ListSubheader = ({ style, children, ...props }: TextProps) => {
   const c = useNativeColors();
+  // A section label in small caps, not a display heading — it follows the
+  // body family, the way Sidebar's section titles and Table's header cells do.
+  const body = useNativeBodyFamily();
   return (
     // See `ListItem`'s comment above — every direct child of `Root` needs
     // the same `listitem` wrapper, headings included.
     <View role="listitem">
       <Text
         accessibilityRole="header"
-        style={[styles.subheader, { color: c.muted }, style]}
+        style={[styles.subheader, { fontFamily: body, color: c.muted }, style]}
         {...props}
       >
         {children}

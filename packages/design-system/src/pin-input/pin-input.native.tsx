@@ -28,6 +28,8 @@ import {
   TextInput,
   View,
   type TextInputProps,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 
 import { spacing } from '@insolvia-ai/tokens';
@@ -35,7 +37,7 @@ import { spacing } from '@insolvia-ai/tokens';
 import { FieldContext } from '../field/field.props';
 import { CONTROL_HEIGHT_PX } from '../input/input.props';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { useNativeMonoFamily } from '../lib/native-typography';
+import { useNativeBodyFamily, useNativeMonoFamily } from '../lib/native-typography';
 import {
   acceptChar,
   normalizeChar,
@@ -45,8 +47,18 @@ import {
 
 export interface PinInputProps
   extends
-    Omit<TextInputProps, 'value' | 'defaultValue' | 'onChangeText' | 'maxLength' | 'editable'>,
-    PinInputOwnProps {}
+    Omit<
+      TextInputProps,
+      'value' | 'defaultValue' | 'onChangeText' | 'maxLength' | 'editable' | 'style'
+    >,
+    PinInputOwnProps {
+  /**
+   * Styles the row of boxes, which is a `Pressable`, so a `ViewStyle` — see
+   * `NumberInputProps.style` for why the inherited `TextStyle` cannot stand
+   * in for it in every consumer's program.
+   */
+  style?: StyleProp<ViewStyle> | undefined;
+}
 
 export const PinInput = ({
   length = 6,
@@ -70,6 +82,10 @@ export const PinInput = ({
   const c = useNativeColors();
   const r = useNativeRadii();
   const mono = useNativeMonoFamily();
+  // The boxes draw in mono, so the family a consumer's `fonts.body` names
+  // reaches only the hidden input that owns the value — invisible, but still
+  // the one TextInput here, and treated like every other.
+  const body = useNativeBodyFamily();
   const [value, setValue] = usePinInputState({
     length,
     value: valueProp,
@@ -174,7 +190,7 @@ export const PinInput = ({
           setFocused(false);
           onBlur?.(event);
         }}
-        style={styles.hiddenInput}
+        style={[styles.hiddenInput, { fontFamily: body }]}
         {...props}
       />
     </Pressable>

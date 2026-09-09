@@ -103,4 +103,27 @@ describe('Button (native leaf)', () => {
       alignSelf: 'flex-start',
     });
   });
+
+  // The RENDERED proof for the body-family seam, on the control a consumer
+  // sees most. Before 0.22.0 this label set no family at all and
+  // `ThemeProvider` refused `fonts.body`, so a React Native consumer branding
+  // its body face got every Button in the platform sans beside its own copy
+  // in the brand face. The default has to stay the absence of a family —
+  // that is the first assertion — or the seam would restyle every app that
+  // never asked.
+  it('sets no body family on its label with no provider', () => {
+    render(<Button>Join the waitlist</Button>);
+
+    expect(screen.getByText('Join the waitlist').style.fontFamily).toBe('');
+  });
+
+  it('takes its label family from a ThemeProvider above it', () => {
+    render(
+      <ThemeProvider theme={{ fonts: { body: 'BrandSans' } }}>
+        <Button>Join the waitlist</Button>
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText('Join the waitlist').style.fontFamily).toBe('BrandSans');
+  });
 });

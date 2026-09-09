@@ -25,7 +25,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   ButtonGroupContext,
   ButtonGroupPositionContext,
@@ -122,6 +122,7 @@ const ButtonGroupItem = ({
   const c = useNativeColors();
   const r = useNativeRadii();
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
 
   const intentBg: Record<ButtonGroupIntent, string> = {
     primary: c.primary,
@@ -214,7 +215,14 @@ const ButtonGroupItem = ({
       ]}
       {...props}
     >
-      <Text style={[styles.label, sizeText[ctx.size], { color: intentText[ctx.intent] }]}>
+      <Text
+        style={[
+          styles.label,
+          sizeText[ctx.size],
+          { fontFamily: body },
+          { color: intentText[ctx.intent] },
+        ]}
+      >
         {children}
       </Text>
     </Pressable>

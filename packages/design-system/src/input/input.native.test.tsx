@@ -13,6 +13,7 @@ import { colors } from '@insolvia-ai/tokens';
 
 import { rgb, setPrefersColorScheme } from '../../vitest.native.setup';
 import { Field } from '../field/field';
+import { ThemeProvider } from '../lib/theme';
 import { Input } from './input';
 
 describe('Input (native leaf)', () => {
@@ -106,5 +107,25 @@ describe('Input (native leaf)', () => {
     act(() => input.focus());
 
     expect(rgb(getComputedStyle(input).outlineColor)).toEqual(rgb(colors.dark.accent));
+  });
+
+  // The body-family seam on a TextInput, which is the path a Text does not
+  // exercise: the family lands on the <input> itself rather than on a text
+  // node. The default stays the absence of a family, so an app with no
+  // provider types in the platform sans exactly as it did before 0.22.0.
+  it('sets no body family with no provider', () => {
+    render(<Input aria-label="Callsign" />);
+
+    expect(screen.getByRole('textbox', { name: 'Callsign' }).style.fontFamily).toBe('');
+  });
+
+  it('types in the body family a ThemeProvider names', () => {
+    render(
+      <ThemeProvider theme={{ fonts: { body: 'BrandSans' } }}>
+        <Input aria-label="Callsign" />
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByRole('textbox', { name: 'Callsign' }).style.fontFamily).toBe('BrandSans');
   });
 });

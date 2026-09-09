@@ -13,7 +13,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   TabsRootContext,
   useTabsRootContext,
@@ -59,6 +59,7 @@ const Tab = ({ value, children }: TabProps) => {
   const { value: activeValue, setValue } = useTabsRootContext('Tab');
   const active = activeValue === value;
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <Pressable
       accessibilityRole="tab"
@@ -74,7 +75,9 @@ const Tab = ({ value, children }: TabProps) => {
       onPress={() => setValue(value)}
       style={[styles.tab, { borderBottomColor: active ? c.primary : 'transparent' }]}
     >
-      <Text style={[styles.tabLabel, { color: active ? c.ink : c.muted }]}>{children}</Text>
+      <Text style={[styles.tabLabel, { fontFamily: body }, { color: active ? c.ink : c.muted }]}>
+        {children}
+      </Text>
     </Pressable>
   );
 };

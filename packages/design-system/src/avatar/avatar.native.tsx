@@ -10,6 +10,7 @@ import { Image, StyleSheet, Text, View, type ImageProps, type ViewProps } from '
 import { radii } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
+import { useNativeBodyFamily } from '../lib/native-typography';
 import {
   AVATAR_GROUP_OVERLAP_PX,
   AvatarGroupContext,
@@ -93,13 +94,16 @@ export interface AvatarFallbackProps {
 const AvatarFallback = ({ children, style }: AvatarFallbackProps) => {
   const { imageStatus } = useAvatarRootContext('Fallback');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   if (imageStatus === 'loaded') return null;
 
   return (
     <View
       style={[styles.fallback, { backgroundColor: c.surfaceAlt, borderRadius: radii.pill }, style]}
     >
-      <Text style={[styles.fallbackText, { color: c.muted }]}>{children}</Text>
+      <Text style={[styles.fallbackText, { fontFamily: body }, { color: c.muted }]}>
+        {children}
+      </Text>
     </View>
   );
 };
@@ -110,6 +114,7 @@ export interface AvatarGroupProps extends Omit<ViewProps, 'children'>, AvatarGro
 
 const AvatarGroup = ({ size = 'md', max, label, style, children, ...props }: AvatarGroupProps) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   const items = React.Children.toArray(children).filter(React.isValidElement);
   const { visible, overflow } = splitGroup(items, max);
   const px = avatarSizePx[size];
@@ -156,7 +161,9 @@ const AvatarGroup = ({ size = 'md', max, label, style, children, ...props }: Ava
               },
             ]}
           >
-            <Text style={[styles.overflowText, { color: c.muted }]}>{`+${overflow}`}</Text>
+            <Text
+              style={[styles.overflowText, { fontFamily: body }, { color: c.muted }]}
+            >{`+${overflow}`}</Text>
           </View>
         ) : null}
       </AvatarGroupContext.Provider>

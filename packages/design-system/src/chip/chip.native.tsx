@@ -8,7 +8,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import type { ChipSize } from './chip.props';
 
 // `children` is Omit-ed because PressableProps types it as a render function
@@ -59,6 +59,7 @@ export function Chip({
   // lib/native-focus.native.ts. A chip ROW is tabbed through end to end, so the
   // wrong ring showed up here more often than anywhere else.
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
 
   // Reported BOTH ways, the split toggle.native.tsx and icon-button.native.tsx
   // document: `accessibilityState` for the real native platforms, and
@@ -103,7 +104,13 @@ export function Chip({
       ]}
       {...props}
     >
-      <Text style={[styles.label, { color: pressed === true ? c.primaryText : c.muted }]}>
+      <Text
+        style={[
+          styles.label,
+          { fontFamily: body },
+          { color: pressed === true ? c.primaryText : c.muted },
+        ]}
+      >
         {children}
       </Text>
     </Pressable>

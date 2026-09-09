@@ -27,7 +27,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import { useToggleState, type ToggleOwnProps, type ToggleSize } from './toggle.props';
 
 // The web leaf's `toggleSizeStyles` / `toggleIconSizeStyles` in this leaf's
@@ -93,6 +93,7 @@ export function Toggle({
   // lib/native-focus.native.ts. The web leaf has always drawn the package ring;
   // until now the two panes disagreed on nothing but focus.
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
 
   // Web-only ARIA attribute, not in react-native's PressableProps type but
   // forwarded verbatim by react-native-web — see the file header.
@@ -132,7 +133,13 @@ export function Toggle({
       ]}
       {...props}
     >
-      <Text style={[styles.label, { color: state.pressed ? c.primaryText : c.ink }]}>
+      <Text
+        style={[
+          styles.label,
+          { fontFamily: body },
+          { color: state.pressed ? c.primaryText : c.ink },
+        ]}
+      >
         {children}
       </Text>
     </Pressable>

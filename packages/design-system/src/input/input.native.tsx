@@ -13,6 +13,7 @@ import { FieldContext } from '../field/field.props';
 import { useInputGroup } from '../input-group/input-group.props';
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
+import { useNativeBodyFamily } from '../lib/native-typography';
 import {
   CONTROL_HEIGHT_PX,
   isSecureType,
@@ -54,6 +55,7 @@ export const Input = ({
   const c = useNativeColors();
   const r = useNativeRadii();
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
   const [text, setText] = useInputState({ value, defaultValue, onValueChange });
 
   const isInvalid = invalid || (field?.invalid ?? false);
@@ -110,6 +112,7 @@ export const Input = ({
                 backgroundColor: disabled ? c.surfaceAlt : c.card,
               },
             ],
+        { fontFamily: body },
         focus.ringStyle,
         style,
       ]}

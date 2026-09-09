@@ -8,7 +8,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily, useNativeHeadingFamily } from '../lib/native-typography';
 import type { NavBarLinkOwnProps } from './nav-bar.props';
 
 const NavBarRoot = ({ style, ...props }: ViewProps) => {
@@ -41,11 +41,13 @@ interface NativeLinkProps extends NavBarLinkOwnProps {
 
 const NavBarLink = ({ active = false, children, onPress }: NativeLinkProps) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <Pressable accessibilityRole="link" onPress={onPress}>
       <Text
         style={[
           styles.link,
+          { fontFamily: body },
           { color: active ? c.ink : c.muted },
           active ? styles.linkActive : null,
         ]}

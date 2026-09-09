@@ -16,7 +16,16 @@
 // nested `accessibilityValue` object entirely, so without the trio the WEB
 // build of a React Native consumer announces a spinner with no position.
 import * as React from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type StyleProp,
+  type TextInputProps,
+  type ViewStyle,
+} from 'react-native';
 
 import { spacing } from '@insolvia-ai/tokens';
 
@@ -24,6 +33,7 @@ import { FieldContext } from '../field/field.props';
 import { CONTROL_HEIGHT_PX, keyboardTypeFor } from '../input/input.props';
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
+import { useNativeBodyFamily } from '../lib/native-typography';
 import {
   DEFAULT_DECREMENT_LABEL,
   DEFAULT_INCREMENT_LABEL,
@@ -34,10 +44,23 @@ import {
 
 export interface NumberInputProps
   extends
-    Omit<TextInputProps, 'value' | 'defaultValue' | 'onChangeText' | 'editable' | 'keyboardType'>,
+    Omit<
+      TextInputProps,
+      'value' | 'defaultValue' | 'onChangeText' | 'editable' | 'keyboardType' | 'style'
+    >,
     NumberInputOwnProps {
   /** Names the control when it is not inside a `<Field.Root>`. */
   'aria-label'?: string | undefined;
+  /**
+   * Styles the OUTER box — the row holding the field and its steppers — and
+   * so is a `ViewStyle`, not the `TextStyle` a `TextInput`'s own `style` is.
+   * Inheriting `TextInputProps['style']` and handing it to a `View` typechecks
+   * here only because this package's programs see `TextStyle` as a superset
+   * of `ViewStyle`; a consumer whose program augments `TextStyle` (react-native-web's
+   * typings widen `cursor`, for one) gets a hard error in its own build from
+   * source this package published. Stating the truth keeps both compiling.
+   */
+  style?: StyleProp<ViewStyle> | undefined;
 }
 
 export const NumberInput = ({
@@ -66,6 +89,7 @@ export const NumberInput = ({
   const c = useNativeColors();
   const r = useNativeRadii();
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
   const state = useNumberInputState({ value, defaultValue, onValueChange, min, max, step });
 
   const isInvalid = invalid || (field?.invalid ?? false);
@@ -139,7 +163,7 @@ export const NumberInput = ({
           state.commit();
           onBlur?.(event);
         }}
-        style={[styles.input, { color: disabled ? c.muted : c.ink }]}
+        style={[styles.input, { fontFamily: body }, { color: disabled ? c.muted : c.ink }]}
         {...props}
       />
       <NumberInputStepper
@@ -203,6 +227,7 @@ function NumberInputStepper({
         focus.ringStyle,
       ]}
     >
+      {/* No body family: −/+ is a glyph in a fixed box, not body copy — it keeps the platform face. */}
       <Text style={[styles.stepperGlyph, { color: disabled ? c.muted : c.ink }]}>{glyph}</Text>
     </Pressable>
   );

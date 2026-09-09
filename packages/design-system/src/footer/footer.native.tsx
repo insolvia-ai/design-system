@@ -6,7 +6,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily, useNativeHeadingFamily } from '../lib/native-typography';
 import type { FooterGroupOwnProps } from './footer.props';
 
 const FooterRoot = ({ style, ...props }: ViewProps) => {
@@ -42,16 +42,22 @@ const FooterLink = ({
   onPress?: () => void;
 }) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <Pressable accessibilityRole="link" onPress={onPress}>
-      <Text style={[styles.link, { color: c.muted }]}>{children}</Text>
+      <Text style={[styles.link, { fontFamily: body }, { color: c.muted }]}>{children}</Text>
     </Pressable>
   );
 };
 
 const FooterNote = ({ children }: { children?: React.ReactNode }) => {
   const c = useNativeColors();
-  return <Text style={[styles.note, { borderTopColor: c.line, color: c.muted }]}>{children}</Text>;
+  const body = useNativeBodyFamily();
+  return (
+    <Text style={[styles.note, { fontFamily: body }, { borderTopColor: c.line, color: c.muted }]}>
+      {children}
+    </Text>
+  );
 };
 
 export const Footer = {

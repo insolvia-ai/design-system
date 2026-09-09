@@ -12,7 +12,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   CollapsibleRootContext,
   useCollapsibleRootContext,
@@ -44,6 +44,7 @@ const CollapsibleRoot = ({
 const CollapsibleTrigger = ({ children }: { children?: React.ReactNode }) => {
   const { toggle, open, disabled } = useCollapsibleRootContext('Trigger');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <Pressable
       accessibilityRole="button"
@@ -58,7 +59,11 @@ const CollapsibleTrigger = ({ children }: { children?: React.ReactNode }) => {
       onPress={toggle}
       style={styles.trigger}
     >
-      <Text style={[styles.triggerLabel, { color: disabled ? c.muted : c.ink }]}>{children}</Text>
+      <Text
+        style={[styles.triggerLabel, { fontFamily: body }, { color: disabled ? c.muted : c.ink }]}
+      >
+        {children}
+      </Text>
     </Pressable>
   );
 };

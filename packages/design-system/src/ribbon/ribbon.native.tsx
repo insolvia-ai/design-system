@@ -12,7 +12,7 @@ import { StyleSheet, Text, View, type ViewProps } from 'react-native';
 import { spacing, type Radii } from '@insolvia-ai/tokens';
 
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import { positionOffsets, type RibbonPosition, type RibbonTone } from './ribbon.props';
 
 export interface RibbonProps extends ViewProps {
@@ -45,6 +45,7 @@ export const Ribbon = ({
 }: RibbonProps) => {
   const c = useNativeColors();
   const r = useNativeRadii();
+  const body = useNativeBodyFamily();
   const background = tone === 'primary' ? c.primary : c.surfaceAlt;
   const foreground = tone === 'primary' ? c.primaryText : c.ink;
 
@@ -59,7 +60,7 @@ export const Ribbon = ({
       ]}
       {...props}
     >
-      <Text style={[styles.label, { color: foreground }]}>{children}</Text>
+      <Text style={[styles.label, { fontFamily: body }, { color: foreground }]}>{children}</Text>
     </View>
   );
 };

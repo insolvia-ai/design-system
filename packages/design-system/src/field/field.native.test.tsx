@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { colors } from '@insolvia-ai/tokens';
 
 import { rgb, setPrefersColorScheme } from '../../vitest.native.setup';
+import { ThemeProvider } from '../lib/theme';
 import { Field } from './field';
 
 describe('Field (native leaf)', () => {
@@ -85,5 +86,43 @@ describe('Field (native leaf)', () => {
     const style = getComputedStyle(control);
     expect(rgb(style.backgroundColor)).toEqual(rgb(colors.light.surfaceAlt));
     expect(rgb(style.color)).toEqual(rgb(colors.light.muted));
+  });
+
+  // The body-family seam, on the three texts a Field renders itself and on the
+  // control it wires. Before 0.22.0 none of them set a family, so a React
+  // Native consumer branding its body face got a label in the platform sans
+  // above an input in the platform sans, both beside copy in the brand face.
+  it('sets no body family with no provider', () => {
+    render(
+      <Field.Root>
+        <Field.Label>Work email</Field.Label>
+        <Field.Control render={<TextInput />} />
+        <Field.Description>We only use this to send your invite.</Field.Description>
+      </Field.Root>,
+    );
+
+    expect(screen.getByText('Work email').style.fontFamily).toBe('');
+    expect(screen.getByText('We only use this to send your invite.').style.fontFamily).toBe('');
+    expect(screen.getByLabelText('Work email').style.fontFamily).toBe('');
+  });
+
+  it('takes the body family from a ThemeProvider for its label, texts and control', () => {
+    render(
+      <ThemeProvider theme={{ fonts: { body: 'BrandSans' } }}>
+        <Field.Root invalid>
+          <Field.Label>Work email</Field.Label>
+          <Field.Control render={<TextInput />} />
+          <Field.Description>We only use this to send your invite.</Field.Description>
+          <Field.Error>Enter your work email.</Field.Error>
+        </Field.Root>
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText('Work email').style.fontFamily).toBe('BrandSans');
+    expect(screen.getByText('We only use this to send your invite.').style.fontFamily).toBe(
+      'BrandSans',
+    );
+    expect(screen.getByText('Enter your work email.').style.fontFamily).toBe('BrandSans');
+    expect(screen.getByLabelText('Work email').style.fontFamily).toBe('BrandSans');
   });
 });

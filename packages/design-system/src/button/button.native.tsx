@@ -8,7 +8,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import type { ButtonIntent, ButtonSize } from './button.props';
 
 export interface ButtonProps extends PressableProps {
@@ -61,6 +61,10 @@ export function Button({
   // runs once at module load, so a corner baked in there could never follow a
   // `ThemeProvider`.
   const r = useNativeRadii();
+  // The body family, when a `ThemeProvider` names one; `undefined` otherwise,
+  // which React Native ignores — so the label stays on the platform sans by
+  // default and follows the consumer's face when they set it.
+  const body = useNativeBodyFamily();
   // Without this a focused Button falls through to the BROWSER's default focus
   // ring under react-native-web — blue, hard against the control — while the
   // web leaf draws this package's own. The migration that introduced
@@ -125,6 +129,7 @@ export function Button({
           // stop. Applying it unconditionally would let every existing button's
           // label start wrapping inside a fixed height, and clip.
           wrap ? styles.labelWrapped : null,
+          { fontFamily: body },
           { color: intentText[intent] },
         ]}
       >

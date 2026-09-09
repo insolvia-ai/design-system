@@ -50,17 +50,27 @@ Repo-level rules and the publishing flow: [`../../CLAUDE.md`](../../CLAUDE.md).
   scheme-independent layout, because it runs once at module load. The
   `.native.` infix is what exempts that file from the ESLint renderer ban:
   it is a platform leaf, unreachable by any web resolver.
-- **The same rule now covers RADII and the heading/mono FAMILY, for a different
+- **The same rule now covers RADII and the type FAMILY, for a different
   reason.** Neither follows the colour scheme, so freezing them at module load
   looked safe — and it was, until `ThemeProvider` grew `radii` and `fonts` in
   0.20.0. A value baked into `StyleSheet.create` cannot see a React context any
   more than it can see the OS scheme, so a corner in there is un-themeable.
   Use `useNativeRadii()` (`src/lib/native-theme.native.ts`) and
-  `useNativeHeadingFamily()` / `useNativeMonoFamily()`
+  `useNativeHeadingFamily()` / `useNativeBodyFamily()` / `useNativeMonoFamily()`
   (`src/lib/native-typography.native.ts`), and apply the value in the leaf's
   render-time style array. `radii.pill` is the deliberate exception: a pill is
   a shape, not a corner, so the leaves that draw one read the token directly
   and `nativeRadiiWith` refuses to move it.
+- **Every `Text` and `TextInput` a native leaf renders applies the body family
+  unless it is a heading, mono, or a glyph in a fixed box.** `{ fontFamily:
+  useNativeBodyFamily() }` in the render-time style array, placed before the
+  caller's `style` so it can still be overridden. The hook returns `undefined`
+  with no `ThemeProvider` — React Native ignores that — so the default is the
+  platform sans it always was; what changed in 0.22.0 is that a consumer's
+  `fonts.body` now reaches every control instead of none of them. A glyph
+  drawn in a fixed box (a dismiss ×, a chevron, a tick, a pager arrow) is the
+  carve-out and says so in a one-line comment; a `Text` nested inside another
+  `Text` inherits and needs nothing.
 - **No build step, ever.** The package publishes `src/` as-is; a tsup/tsc
   emit would collapse the leaf pairs and break resolution in the consumer's
   bundler. `package.json`'s comment block owns the full reasoning.

@@ -6,7 +6,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   AlertContext,
   alertRole,
@@ -70,6 +70,7 @@ const AlertRoot = ({
             onPress={onDismiss}
             style={styles.dismiss}
           >
+            {/* A glyph in a fixed box, not body copy — it keeps the platform face on purpose. */}
             <Text style={[styles.dismissGlyph, { color: c.muted }]}>&#215;</Text>
           </Pressable>
         ) : null}
@@ -80,21 +81,26 @@ const AlertRoot = ({
 
 const AlertTitle = ({ children }: { children?: React.ReactNode }) => {
   const c = useNativeColors();
-  return <Text style={[styles.title, { color: c.ink }]}>{children}</Text>;
+  const body = useNativeBodyFamily();
+  return <Text style={[styles.title, { fontFamily: body }, { color: c.ink }]}>{children}</Text>;
 };
 
 const AlertDescription = ({ children }: { children?: React.ReactNode }) => {
   const c = useNativeColors();
-  return <Text style={[styles.description, { color: c.muted }]}>{children}</Text>;
+  const body = useNativeBodyFamily();
+  return (
+    <Text style={[styles.description, { fontFamily: body }, { color: c.muted }]}>{children}</Text>
+  );
 };
 
 const AlertClose = ({ children }: { children?: React.ReactNode }) => {
   const { onDismiss } = useAlertContext('Close');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   if (!onDismiss) return null;
   return (
     <Pressable accessibilityRole="button" onPress={onDismiss} style={styles.close}>
-      <Text style={[styles.closeLabel, { color: c.ink }]}>{children}</Text>
+      <Text style={[styles.closeLabel, { fontFamily: body }, { color: c.ink }]}>{children}</Text>
     </Pressable>
   );
 };

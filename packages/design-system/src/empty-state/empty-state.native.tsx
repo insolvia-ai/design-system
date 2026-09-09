@@ -18,7 +18,7 @@ import { StyleSheet, Text, View, type TextProps, type ViewProps } from 'react-na
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily, useNativeHeadingFamily } from '../lib/native-typography';
 import {
   EmptyStateRootContext,
   useEmptyStateRootContext,
@@ -87,8 +87,12 @@ export interface EmptyStateDescriptionProps extends TextProps {
 
 const EmptyStateDescription = ({ style, children, ...props }: EmptyStateDescriptionProps) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
-    <Text style={[styles.description, textScale.sm, { color: c.muted }, style]} {...props}>
+    <Text
+      style={[styles.description, textScale.sm, { fontFamily: body, color: c.muted }, style]}
+      {...props}
+    >
       {children}
     </Text>
   );

@@ -15,7 +15,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   DEFAULT_BREADCRUMBS_LABEL,
   DEFAULT_SEPARATOR,
@@ -36,6 +36,7 @@ const BreadcrumbsRoot = ({
   ...props
 }: BreadcrumbsRootProps) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   const items = React.Children.toArray(children).filter(React.isValidElement);
 
   return (
@@ -43,7 +44,10 @@ const BreadcrumbsRoot = ({
       {items.map((item, index) => (
         <React.Fragment key={item.key ?? index}>
           {index > 0 ? (
-            <Text accessible={false} style={[styles.separator, { color: c.muted }]}>
+            <Text
+              accessible={false}
+              style={[styles.separator, { fontFamily: body }, { color: c.muted }]}
+            >
               {separator}
             </Text>
           ) : null}
@@ -61,6 +65,7 @@ export interface BreadcrumbsItemProps extends BreadcrumbsItemOwnProps {
 
 const BreadcrumbsItem = ({ current = false, onPress, children }: BreadcrumbsItemProps) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
 
   if (current || !onPress) {
     // `aria-current` is web-only and outside RN's types; react-native-web
@@ -69,7 +74,7 @@ const BreadcrumbsItem = ({ current = false, onPress, children }: BreadcrumbsItem
     // uses for its web-only ARIA.
     const webAria = (current ? { 'aria-current': 'page' } : {}) as object;
     return (
-      <Text {...webAria} style={[styles.current, { color: c.ink }]}>
+      <Text {...webAria} style={[styles.current, { fontFamily: body }, { color: c.ink }]}>
         {children}
       </Text>
     );
@@ -77,7 +82,7 @@ const BreadcrumbsItem = ({ current = false, onPress, children }: BreadcrumbsItem
 
   return (
     <Pressable accessibilityRole="link" onPress={onPress}>
-      <Text style={[styles.link, { color: c.muted }]}>{children}</Text>
+      <Text style={[styles.link, { fontFamily: body }, { color: c.muted }]}>{children}</Text>
     </Pressable>
   );
 };

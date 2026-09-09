@@ -23,7 +23,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   TreeViewItemContext,
   TreeViewRootContext,
@@ -94,6 +94,7 @@ const TreeViewItem = ({
   // distinct stops, and each needs its own visible focus state.
   const rowFocus = useNativeFocusRing();
   const chevronFocus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
 
   const disabled = root.disabled || itemDisabled;
   const isBranch = children !== undefined && children !== null;
@@ -142,6 +143,7 @@ const TreeViewItem = ({
               onBlur={chevronFocus.blur}
               style={[styles.chevron, chevronFocus.ringStyle]}
             >
+              {/* No body family: a chevron in a fixed box keeps the platform face. */}
               <Text
                 aria-hidden
                 style={[
@@ -197,11 +199,12 @@ const TreeViewItem = ({
           >
             {icon !== undefined ? (
               <View accessible={false} style={styles.icon}>
+                {/* A string icon is a glyph in a fixed 16dp box, not body copy — no family. */}
                 {typeof icon === 'string' ? <Text style={{ color: c.muted }}>{icon}</Text> : icon}
               </View>
             ) : null}
             {isTextLabel ? (
-              <Text numberOfLines={1} style={[styles.label, { color: c.ink }]}>
+              <Text numberOfLines={1} style={[styles.label, { fontFamily: body, color: c.ink }]}>
                 {label}
               </Text>
             ) : (

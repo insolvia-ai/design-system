@@ -17,7 +17,7 @@ import { Image, StyleSheet, Text, View, type ViewProps } from 'react-native';
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   DEFAULT_COLUMNS,
   ImageListContext,
@@ -170,6 +170,7 @@ const ImageListItemBar = ({
   ...props
 }: ImageListItemBarProps) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <View
       style={[
@@ -181,11 +182,14 @@ const ImageListItemBar = ({
       {...props}
     >
       <View style={styles.barText}>
-        <Text numberOfLines={1} style={[styles.title, { color: c.overlayInk }]}>
+        <Text numberOfLines={1} style={[styles.title, { fontFamily: body, color: c.overlayInk }]}>
           {title}
         </Text>
         {subtitle === undefined ? null : (
-          <Text numberOfLines={1} style={[styles.subtitle, { color: c.overlayMuted }]}>
+          <Text
+            numberOfLines={1}
+            style={[styles.subtitle, { fontFamily: body, color: c.overlayMuted }]}
+          >
             {subtitle}
           </Text>
         )}

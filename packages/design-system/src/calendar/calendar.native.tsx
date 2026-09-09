@@ -16,7 +16,7 @@ import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native'
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import { isOutOfRange } from '../lib/date';
 import {
   calendarKeyIntent,
@@ -48,6 +48,7 @@ export const Calendar = ({
 }: CalendarProps) => {
   const c = useNativeColors();
   const r = useNativeRadii();
+  const body = useNativeBodyFamily();
   const state = useCalendarState({
     value,
     defaultValue,
@@ -89,6 +90,7 @@ export const Calendar = ({
           onPress={() => setViewMonth(shiftMonths(viewMonth, -1))}
           style={styles.pager}
         >
+          {/* Both pager glyphs sit in a fixed box, not body copy — they keep the platform face. */}
           <Text style={[styles.pagerGlyph, { color: c.muted }]}>&#8249;</Text>
         </Pressable>
         {/* `aria-live="polite"` matches the web leaf: paging must announce the
@@ -96,7 +98,7 @@ export const Calendar = ({
         <Text
           nativeID={labelId}
           {...({ 'aria-live': 'polite' } as object)}
-          style={[styles.monthLabel, { color: c.ink }]}
+          style={[styles.monthLabel, { fontFamily: body }, { color: c.ink }]}
         >
           {monthLabel(viewMonth)}
         </Text>
@@ -114,7 +116,9 @@ export const Calendar = ({
         <View {...webRole('row')} style={styles.week}>
           {WEEKDAYS.map((weekday) => (
             <View key={weekday} {...webRole('columnheader')} style={styles.cell}>
-              <Text style={[styles.weekday, { color: c.muted }]}>{weekday}</Text>
+              <Text style={[styles.weekday, { fontFamily: body }, { color: c.muted }]}>
+                {weekday}
+              </Text>
             </View>
           ))}
         </View>
@@ -155,6 +159,7 @@ export const Calendar = ({
                     <Text
                       style={[
                         styles.dayLabel,
+                        { fontFamily: body },
                         {
                           color: selected ? c.primaryText : day.inMonth ? c.ink : c.muted,
                         },

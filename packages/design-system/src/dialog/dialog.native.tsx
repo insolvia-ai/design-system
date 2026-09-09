@@ -13,7 +13,7 @@ import { Modal, Pressable, StyleSheet, Text, View, type ViewProps } from 'react-
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale, useNativeHeadingFamily } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily, useNativeHeadingFamily } from '../lib/native-typography';
 import {
   DialogRootContext,
   useDialogRootContext,
@@ -34,6 +34,7 @@ const DialogRoot = ({ open, defaultOpen, onOpenChange, children }: DialogRootPro
 const DialogTrigger = ({ children }: { children?: React.ReactNode }) => {
   const { open, setOpen } = useDialogRootContext('Trigger');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <Pressable
       accessibilityRole="button"
@@ -41,7 +42,7 @@ const DialogTrigger = ({ children }: { children?: React.ReactNode }) => {
       onPress={() => setOpen(true)}
       style={styles.trigger}
     >
-      <Text style={[styles.triggerLabel, { color: c.ink }]}>{children}</Text>
+      <Text style={[styles.triggerLabel, { fontFamily: body }, { color: c.ink }]}>{children}</Text>
     </Pressable>
   );
 };
@@ -127,8 +128,12 @@ const DialogTitle = ({ children }: { children?: React.ReactNode }) => {
 const DialogDescription = ({ children }: { children?: React.ReactNode }) => {
   const { descriptionId } = useDialogRootContext('Description');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
-    <Text nativeID={descriptionId} style={[styles.description, { color: c.muted }]}>
+    <Text
+      nativeID={descriptionId}
+      style={[styles.description, { fontFamily: body }, { color: c.muted }]}
+    >
       {children}
     </Text>
   );
@@ -137,9 +142,10 @@ const DialogDescription = ({ children }: { children?: React.ReactNode }) => {
 const DialogClose = ({ children }: { children?: React.ReactNode }) => {
   const { setOpen } = useDialogRootContext('Close');
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   return (
     <Pressable accessibilityRole="button" onPress={() => setOpen(false)} style={styles.close}>
-      <Text style={[styles.closeLabel, { color: c.ink }]}>{children}</Text>
+      <Text style={[styles.closeLabel, { fontFamily: body }, { color: c.ink }]}>{children}</Text>
     </Pressable>
   );
 };

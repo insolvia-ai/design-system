@@ -152,4 +152,48 @@ describe('Text (native leaf) — the fonts seam', () => {
     expect(screen.getByText('npm ci').style.fontFamily).toBe('IBMPlexMono');
     expect(monoFamily).not.toBe('IBMPlexMono');
   });
+
+  // The body seam. Until 0.22.0 `fonts.body` was refused — the native leaves
+  // had never set a body family and a default would have moved every surface
+  // — so a React Native consumer branding its body face could set it on its
+  // own text and on nothing this package rendered. The seam resolves to
+  // nothing by default (the test above this block pins that) and to the
+  // consumer's family otherwise.
+  it('sets no body family with no provider', () => {
+    render(<Text>Ship it</Text>);
+
+    expect(screen.getByText('Ship it').style.fontFamily).toBe('');
+  });
+
+  it('takes a body family from a ThemeProvider above it', () => {
+    render(
+      <ThemeProvider theme={{ fonts: { body: 'BrandSans' } }}>
+        <Text>Ship it</Text>
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText('Ship it').style.fontFamily).toBe('BrandSans');
+  });
+
+  it('applies the body family through family="body" on a heading variant', () => {
+    render(
+      <ThemeProvider theme={{ fonts: { body: 'BrandSans' } }}>
+        <Text variant="display" family="body">
+          Big, in the brand sans
+        </Text>
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText('Big, in the brand sans').style.fontFamily).toBe('BrandSans');
+  });
+
+  it('leaves headings on the heading family when only body is overridden', () => {
+    render(
+      <ThemeProvider theme={{ fonts: { body: 'BrandSans' } }}>
+        <Text variant="heading">Ship it</Text>
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText('Ship it').style.fontFamily).toBe(headingFamily);
+  });
 });

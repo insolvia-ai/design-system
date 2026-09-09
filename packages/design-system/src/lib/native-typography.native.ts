@@ -101,11 +101,13 @@ export const headingFamily: string = Platform.select(headingFamilyByPlatform);
  * platform's mono — rather than a second opinion, and neither needs a font
  * file shipped from here (see WHY NO FONT FILE IS SHIPPED, above).
  *
- * There is no `bodyFamilyByPlatform`. `body` is the absence of a family: the
- * native leaves have never set one for body copy, so the platform's own sans
- * renders — which is what `--font-body`'s stack asks for too. Adding one would
- * be a visual change to every existing native surface, not part of giving
- * `Text` a family control.
+ * There is no `bodyFamilyByPlatform`, and that is deliberate. The native
+ * leaves have never set a family for body copy, so the platform's own sans
+ * renders — which is what `--font-body`'s stack asks for too — and a default
+ * here would move every existing native surface. The body seam is
+ * `useNativeBodyFamily` below, which resolves to `undefined` unless a
+ * `ThemeProvider` names one: that is what keeps the default exactly where it
+ * was while still letting a consumer choose.
  */
 export const monoFamilyByPlatform = {
   ios: 'Menlo',
@@ -141,4 +143,31 @@ export function useNativeHeadingFamily(): string {
  */
 export function useNativeMonoFamily(): string {
   return useThemeOverrides().fonts?.mono ?? monoFamily;
+}
+
+/**
+ * The body family in scope — the third seam, and the one that reaches the
+ * most text: every `Text` and `TextInput` a leaf renders that is not a
+ * heading or mono (a Button label, a Field label, a Table cell, an Input's
+ * own text, …).
+ *
+ * `undefined` with no override, and that is the whole design. There is no
+ * platform default to fall back to — see the note on `monoFamilyByPlatform` —
+ * because a default would have moved every existing native surface, which is
+ * the reason `body` used to be refused outright. React Native ignores
+ * `fontFamily: undefined`, so a leaf applies this unconditionally and an app
+ * with no provider renders exactly what it did.
+ *
+ * What refusing it cost: a React Native consumer that brands its body face
+ * could set it on its own text and on nothing this package renders, because
+ * only the heading and mono seams existed. Every control then sat in the
+ * platform sans beside copy in the brand face — one page, two body faces.
+ *
+ * One registered family name, never a stack, exactly as `heading` and `mono`:
+ * React Native matches a single family and falls back to the system sans for
+ * anything else, silently. Only on web (react-native-web) is a stack fine,
+ * because there it is CSS and the browser resolves it.
+ */
+export function useNativeBodyFamily(): string | undefined {
+  return useThemeOverrides().fonts?.body;
 }

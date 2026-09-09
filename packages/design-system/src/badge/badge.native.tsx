@@ -6,7 +6,7 @@ import { StyleSheet, Text, View, type ViewProps } from 'react-native';
 import { radii, spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import { dotSizePx, hasDot, type BadgeIntent, type BadgeSize } from './badge.props';
 
 export interface BadgeProps extends ViewProps {
@@ -26,6 +26,7 @@ export const Badge = ({
   ...props
 }: BadgeProps) => {
   const c = useNativeColors();
+  const body = useNativeBodyFamily();
   const dotColor: Record<Exclude<BadgeIntent, 'neutral'>, string> = {
     primary: c.primary,
     success: c.success,
@@ -60,7 +61,7 @@ export const Badge = ({
           }}
         />
       ) : null}
-      <Text style={[styles.label, { color: c.ink }]}>{children}</Text>
+      <Text style={[styles.label, { fontFamily: body }, { color: c.ink }]}>{children}</Text>
     </View>
   );
 };

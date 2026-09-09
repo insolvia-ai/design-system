@@ -41,7 +41,7 @@ import {
 import { spacing } from '@insolvia-ai/tokens';
 
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
-import { textScale } from '../lib/native-typography';
+import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   ITEM_HEIGHT,
   offsetForIndex,
@@ -91,6 +91,7 @@ export const Wheel = ({
 }: WheelProps) => {
   const c = useNativeColors();
   const r = useNativeRadii();
+  const body = useNativeBodyFamily();
   const state = useWheelState({ items, value, defaultValue, onValueChange });
   const {
     value: current,
@@ -235,6 +236,7 @@ export const Wheel = ({
               <Text
                 style={[
                   styles.rowLabel,
+                  { fontFamily: body },
                   { color: c.ink },
                   selected ? styles.rowSelected : null,
                   // A line rather than another opacity step: fading further

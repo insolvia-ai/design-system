@@ -25,6 +25,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { colors } from '@insolvia-ai/tokens';
 
 import { rgb, setPrefersColorScheme } from '../../vitest.native.setup';
+import { ThemeProvider } from '../lib/theme';
 import { NumberInput } from './number-input';
 
 describe('NumberInput (native leaf)', () => {
@@ -80,5 +81,29 @@ describe('NumberInput (native leaf)', () => {
     render(<NumberInput aria-label="Quantity" defaultValue={5} />);
 
     expect(rgb(getComputedStyle(screen.getByText('+')).color)).toEqual(rgb(colors.dark.ink));
+  });
+
+  // The body-family seam on this leaf's TextInput — the same path
+  // input.native.test.tsx pins, on a control whose field sits BESIDE two glyph
+  // buttons. The default stays the absence of a family, so an app with no
+  // provider types in the platform sans exactly as it did.
+  it('sets no body family with no provider', () => {
+    render(<NumberInput aria-label="Quantity" defaultValue={5} />);
+
+    expect(screen.getByRole('spinbutton', { name: 'Quantity' }).style.fontFamily).toBe('');
+  });
+
+  it('types in the body family a ThemeProvider names, and leaves the steppers alone', () => {
+    render(
+      <ThemeProvider theme={{ fonts: { body: 'BrandSans' } }}>
+        <NumberInput aria-label="Quantity" defaultValue={5} />
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByRole('spinbutton', { name: 'Quantity' }).style.fontFamily).toBe('BrandSans');
+    // −/+ are glyphs in a fixed box: they keep the platform face on purpose,
+    // so a brand face missing either character never blanks a stepper.
+    expect(screen.getByText('+').style.fontFamily).toBe('');
+    expect(screen.getByText('−').style.fontFamily).toBe('');
   });
 });

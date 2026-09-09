@@ -33,6 +33,7 @@ import { spacing } from '@insolvia-ai/tokens';
 import { FieldContext } from '../field/field.props';
 import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
+import { useNativeBodyFamily } from '../lib/native-typography';
 // Explicit `.native`, mirroring the `.web` imports in the sibling leaf.
 import { Calendar } from '../calendar/calendar.native';
 import { DatePicker } from '../date-picker/date-picker.native';
@@ -92,6 +93,7 @@ export const DateInput = ({
   const c = useNativeColors();
   const r = useNativeRadii();
   const focus = useNativeFocusRing();
+  const body = useNativeBodyFamily();
   const state = useDateInputState({
     mode,
     format,
@@ -255,6 +257,7 @@ export const DateInput = ({
             backgroundColor: disabled ? c.surfaceAlt : c.card,
             color: disabled ? c.muted : c.ink,
           },
+          { fontFamily: body },
           focus.ringStyle,
           style,
         ]}
