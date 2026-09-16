@@ -10,48 +10,48 @@ describe('Avatar', () => {
   it('shows the fallback before the image has resolved', () => {
     render(
       <Avatar.Root>
-        <Avatar.Image src="https://example.com/andreas.jpg" alt="Andreas Savva" />
-        <Avatar.Fallback>AS</Avatar.Fallback>
+        <Avatar.Image src="https://example.com/avatar.jpg" alt="Ada Lovelace" />
+        <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>,
     );
 
-    expect(screen.getByText('AS')).toBeVisible();
+    expect(screen.getByText('AL')).toBeVisible();
   });
 
   it('hides the fallback once the image reports it loaded', () => {
     render(
       <Avatar.Root>
-        <Avatar.Image src="https://example.com/andreas.jpg" alt="Andreas Savva" />
-        <Avatar.Fallback>AS</Avatar.Fallback>
+        <Avatar.Image src="https://example.com/avatar.jpg" alt="Ada Lovelace" />
+        <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>,
     );
 
-    fireEvent.load(screen.getByAltText('Andreas Savva'));
+    fireEvent.load(screen.getByAltText('Ada Lovelace'));
 
-    expect(screen.queryByText('AS')).not.toBeInTheDocument();
+    expect(screen.queryByText('AL')).not.toBeInTheDocument();
   });
 
   it('keeps showing the fallback when the image fails to load', () => {
     render(
       <Avatar.Root>
-        <Avatar.Image src="https://example.com/broken.jpg" alt="Andreas Savva" />
-        <Avatar.Fallback>AS</Avatar.Fallback>
+        <Avatar.Image src="https://example.com/broken.jpg" alt="Ada Lovelace" />
+        <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>,
     );
 
-    fireEvent.error(screen.getByAltText('Andreas Savva'));
+    fireEvent.error(screen.getByAltText('Ada Lovelace'));
 
-    expect(screen.getByText('AS')).toBeVisible();
+    expect(screen.getByText('AL')).toBeVisible();
   });
 
   it('shows the fallback when there is no image at all', () => {
     render(
       <Avatar.Root>
-        <Avatar.Fallback>AS</Avatar.Fallback>
+        <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>,
     );
 
-    expect(screen.getByText('AS')).toBeVisible();
+    expect(screen.getByText('AL')).toBeVisible();
   });
 
   it('stacks a group, names it, and counts the overflow', () => {
