@@ -18,6 +18,13 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.23.1 — patch
+
+Nothing to take. The only change is fixture data in the Avatar tests, which
+the tarball does not include; every shipped file is byte-identical to 0.23.0.
+
+[#33](https://github.com/insolvia-ai/design-system/pull/33)
+
 ## 0.23.0 — minor
 
 **Widen your range to take this:** `^0.22.x` will not resolve it.

@@ -19,22 +19,22 @@ describe('Avatar (native leaf)', () => {
   it('shows the fallback when there is no image', () => {
     render(
       <Avatar.Root>
-        <Avatar.Fallback>AS</Avatar.Fallback>
+        <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>,
     );
 
-    expect(screen.getByText('AS')).toBeVisible();
+    expect(screen.getByText('AL')).toBeVisible();
   });
 
   it('shows the fallback while the image has not yet resolved', () => {
     render(
       <Avatar.Root>
-        <Avatar.Image source={{ uri: 'https://example.com/andreas.jpg' }} alt="Andreas Savva" />
-        <Avatar.Fallback>AS</Avatar.Fallback>
+        <Avatar.Image source={{ uri: 'https://example.com/avatar.jpg' }} alt="Ada Lovelace" />
+        <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>,
     );
 
-    expect(screen.getByText('AS')).toBeVisible();
+    expect(screen.getByText('AL')).toBeVisible();
   });
 
   // The 0.8.3 regression, found by workbench/avatar.stories.tsx.
@@ -52,12 +52,12 @@ describe('Avatar (native leaf)', () => {
   it('names the image from `alt`, the way the web leaf does', () => {
     render(
       <Avatar.Root>
-        <Avatar.Image source={{ uri: 'https://example.com/andreas.jpg' }} alt="Andreas Savva" />
-        <Avatar.Fallback>AS</Avatar.Fallback>
+        <Avatar.Image source={{ uri: 'https://example.com/avatar.jpg' }} alt="Ada Lovelace" />
+        <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>,
     );
 
-    expect(screen.getByAltText('Andreas Savva')).toBeInTheDocument();
+    expect(screen.getByAltText('Ada Lovelace')).toBeInTheDocument();
   });
 
   // The 0.2.1 regression: every native leaf baked in `colors.light` at module
@@ -68,11 +68,11 @@ describe('Avatar (native leaf)', () => {
 
     render(
       <Avatar.Root>
-        <Avatar.Fallback>AS</Avatar.Fallback>
+        <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>,
     );
 
-    const fallback = screen.getByText('AS').parentElement;
+    const fallback = screen.getByText('AL').parentElement;
     expect(fallback).not.toBeNull();
     expect(rgb((fallback as HTMLElement).style.backgroundColor)).toEqual(
       rgb(colors.dark.surfaceAlt),
