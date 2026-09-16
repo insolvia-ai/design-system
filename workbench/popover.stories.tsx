@@ -1,6 +1,6 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, userEvent } from 'storybook/test';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
 
 import { Popover as PopoverWeb } from '@design-system/popover/popover.web.tsx';
 import { Popover as PopoverNative } from '@design-system/popover/popover.native.tsx';
@@ -110,6 +110,79 @@ export const Basic: Story = {
       await expect(surface).toHaveAccessibleName(args.title);
       await expect(surface).not.toHaveAttribute('aria-modal');
       await expect(native.getByRole('dialog')).toBeInTheDocument();
+    });
+  },
+};
+
+/**
+ * `openOnHover`: the popover opens when the pointer rests on the trigger, or
+ * when focus lands on it — the focus half is what keeps a hover surface
+ * reachable by keyboard (WCAG 1.4.13) — and closes once BOTH the pointer and
+ * focus have left the trigger and the surface together. Crossing from the
+ * trigger into the surface is not a leave; a short grace period covers the
+ * gap between them. A press opens it and does not close it, so a touch
+ * screen, whose tap arrives as a hover first, is not cancelled by itself.
+ *
+ * In this workbench both panes answer the pointer, because react-native-web
+ * gives the native leaf one. On a device the native pane opens by press.
+ *
+ * Ends with the WEB surface open. Both cannot end open here: the pointer
+ * can only rest on one trigger, and leaving the other closes it — which is
+ * the behaviour under test. The native surface's markup is audited by `Basic`.
+ */
+export const OpenOnHover: Story = {
+  args: {
+    trigger: 'Jump drive',
+    title: 'Jump drive',
+    body: 'Charges for 30 seconds before engaging. Rated for this route.',
+    closeLabel: 'Got it',
+  },
+  render: (args) => (
+    <LeafPair
+      note="Rest the pointer on either trigger, or Tab to it. Move into the card and it stays; leave both and it goes."
+      web={
+        <PopoverWeb.Root openOnHover onOpenChange={args.onOpenChange}>
+          <PopoverWeb.Trigger>{args.trigger}</PopoverWeb.Trigger>
+          <PopoverWeb.Content>
+            <PopoverWeb.Title>{args.title}</PopoverWeb.Title>
+            <p style={{ fontSize: 14, margin: 0 }}>{args.body}</p>
+            <PopoverWeb.Close>{args.closeLabel}</PopoverWeb.Close>
+          </PopoverWeb.Content>
+        </PopoverWeb.Root>
+      }
+      native={
+        <PopoverNative.Root openOnHover onOpenChange={args.onOpenChange}>
+          <PopoverNative.Trigger>{args.trigger}</PopoverNative.Trigger>
+          <PopoverNative.Content>
+            <PopoverNative.Title>{args.title}</PopoverNative.Title>
+            <InkText style={{ fontSize: 14 }}>{args.body}</InkText>
+            <PopoverNative.Close>{args.closeLabel}</PopoverNative.Close>
+          </PopoverNative.Content>
+        </PopoverNative.Root>
+      }
+    />
+  ),
+  play: async ({ canvasElement, args, step }) => {
+    const { web, native } = pair(canvasElement);
+
+    await step('native leaf: hover opens, leaving closes after the grace period', async () => {
+      const trigger = native.getByRole('button', { name: args.trigger });
+      await userEvent.hover(trigger);
+      await expect(native.getByRole('dialog')).toHaveAccessibleName(args.title);
+      await userEvent.unhover(trigger);
+      await waitFor(() => expect(native.queryByRole('dialog')).not.toBeInTheDocument());
+    });
+
+    await step('web leaf: hover opens it, and a press does not close it', async () => {
+      // Focus-opens is asserted in popover.test.tsx, not here: a headless
+      // window that does not itself hold focus updates `activeElement` on
+      // `.focus()` without dispatching the focus event React listens for.
+      const trigger = web.getByRole('button', { name: args.trigger });
+      await userEvent.hover(trigger);
+      await expect(web.getByRole('dialog')).toHaveAccessibleName(args.title);
+      await userEvent.click(trigger);
+      await expect(web.getByRole('dialog')).toBeInTheDocument();
+      await expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
   },
 };

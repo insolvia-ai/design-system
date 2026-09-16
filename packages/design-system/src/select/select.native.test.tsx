@@ -5,7 +5,7 @@
 // unreachable in the product if it lived only there.
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Platform, View } from 'react-native';
+import { Modal, Platform, View } from 'react-native';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { colors } from '@insolvia-ai/tokens';
@@ -230,6 +230,32 @@ describe('Select (native leaf)', () => {
       expect(screen.getByTestId('select-root').className).not.toMatch(/r-zIndex-/);
     });
 
+    // Reported from a real browser too: a Select inside a Drawer opened its
+    // list to document.body, and the Drawer — react-native-web's Modal, a
+    // fixed container at z-index 9999 — painted over it. The trigger looked
+    // cut off and offered nothing. jsdom cannot see paint order, so this pins
+    // the number against the one react-native-web ships.
+    it('lifts the portaled list above react-native-web Modal (a Drawer or Dialog)', async () => {
+      const user = userEvent.setup();
+      render(
+        <Modal visible transparent>
+          <Select options={DISTRICTS} aria-label="District" />
+        </Modal>,
+      );
+
+      await user.click(screen.getByRole('combobox'));
+      const list = screen.getByRole('listbox');
+      // react-native-web's Modal is a fixed container at the top of the
+      // document with the 9999 on it (ModalAnimation.js); the dialog element
+      // sits inside it. Found from the body down, since its depth is RNW's.
+      const host = [...document.body.children].find((child) =>
+        child.contains(screen.getByRole('dialog')),
+      )!;
+      const modalZ = Number(getComputedStyle(host.firstElementChild!).zIndex);
+      expect(modalZ).toBe(9999);
+      expect(Number(getComputedStyle(list).zIndex)).toBeGreaterThan(modalZ);
+    });
+
     it('removes the portaled list when closed', async () => {
       const user = userEvent.setup();
       render(<Select options={DISTRICTS} aria-label="District" />);
@@ -311,5 +337,25 @@ describe('Select (native leaf)', () => {
     await user.click(screen.getByRole('combobox'));
 
     expect(screen.getByRole('listbox', { name: 'Destination system' })).toBeTruthy();
+  });
+
+  it('is a single tab stop — the open list adds none', async () => {
+    // react-native-web gives every enabled Pressable `tabIndex="0"`, so an open
+    // list was one tab stop per option, each wearing the browser's own outline
+    // as it went, where the web leaf's rows are `<li>` and focusable by
+    // nothing. Worse, the first Tab off the trigger blurred it — which closes
+    // the list — so focus landed on a row that unmounted underneath it and
+    // fell back to `<body>`. Same override, and same reasoning, as the wheel's.
+    const user = userEvent.setup();
+    render(<Select aria-label="District" options={DISTRICTS} />);
+
+    const combobox = screen.getByRole('combobox');
+    expect(combobox).not.toHaveAttribute('tabindex', '-1');
+
+    await user.click(combobox);
+
+    for (const option of screen.getAllByRole('option')) {
+      expect(option).toHaveAttribute('tabindex', '-1');
+    }
   });
 });

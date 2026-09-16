@@ -167,6 +167,8 @@ export type { WheelItem } from './wheel';
 // on purpose, so a cross-platform consumer writes one provider rather than
 // branching on platform. On web it is inert — `theme.css`'s custom properties
 // are the override seam there — and on native it is the ONLY way to change a
-// colour without forking the package. See src/lib/theme.ts.
+// colour without forking the package. Its `scheme` prop is the same story one
+// step along: on web the scheme seam is `[data-theme]`, owned by the consumer's
+// own head script, and on native there was no seam at all. See src/lib/theme.ts.
 export { ThemeProvider, useThemeOverrides } from './lib/theme';
-export type { ThemeOverrides } from './lib/theme';
+export type { ThemeInScope, ThemeOverrides, ThemeScheme } from './lib/theme';

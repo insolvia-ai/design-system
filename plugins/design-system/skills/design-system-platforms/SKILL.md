@@ -78,6 +78,13 @@ native `Popover` and `Dropdown` have no press-outside dismissal, because React
 Native has no document to listen to and the available workarounds defeat the
 point of a non-modal surface. Provide an explicit way to close on native.
 
+Two more in the same family. A `Dropdown.Sub` flies out beside its row on web
+and unfolds in place beneath it on native — a phone has no room beside the
+menu — so do not expect the nested rows at the same coordinates on both. And
+anything that opens on hover (`Tooltip`, `Popover` with `openOnHover`) opens by
+press on a device instead, because there is no pointer to hover; the web
+gesture reappears when the native leaf runs in a browser.
+
 Before filing a difference as a bug, look at the component in the workbench at
 <https://insolvia-ai.github.io/design-system/>, which renders both leaves side
 by side. If they disagree there, it is the package's problem; if they agree

@@ -20,6 +20,7 @@ import { cn } from '../lib/cn';
 import { disabledStyles, focusRing } from '../lib/styles';
 import {
   PopoverContext,
+  useHoverClose,
   usePopoverContext,
   usePopoverState,
   type PopoverRootOwnProps,
@@ -29,10 +30,17 @@ export interface PopoverRootProps extends PopoverRootOwnProps {
   children?: React.ReactNode;
 }
 
-const PopoverRoot = ({ open, defaultOpen, onOpenChange, children }: PopoverRootProps) => {
-  const ctx = usePopoverState(open, defaultOpen, onOpenChange);
+const PopoverRoot = ({
+  open,
+  defaultOpen,
+  onOpenChange,
+  openOnHover = false,
+  children,
+}: PopoverRootProps) => {
+  const ctx = usePopoverState(open, defaultOpen, onOpenChange, openOnHover);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const { open: isOpen, setOpen } = ctx;
+  const hover = useHoverClose(ctx);
 
   // Outside-press dismissal. `pointerdown` rather than `click`, so a press
   // that starts outside dismisses even if the pointer is released elsewhere,
@@ -65,6 +73,18 @@ const PopoverRoot = ({ open, defaultOpen, onOpenChange, children }: PopoverRootP
             setOpen(false);
           }
         }}
+        // The hover dismissals live on the root for the same reason Escape
+        // does: the root is the one box that holds BOTH the trigger and the
+        // surface, so "the pointer left" and "focus left" mean left the
+        // pair, and crossing from one to the other is never a leave.
+        onPointerEnter={hover.onEnter}
+        onPointerLeave={hover.onLeave}
+        onBlur={(event) => {
+          if (!openOnHover || !isOpen) return;
+          // `relatedTarget` is where focus is going; null means nowhere in
+          // the document, which is also "out".
+          if (!rootRef.current?.contains(event.relatedTarget as Node | null)) setOpen(false);
+        }}
         className="relative inline-flex"
       >
         {children}
@@ -76,8 +96,8 @@ const PopoverRoot = ({ open, defaultOpen, onOpenChange, children }: PopoverRootP
 export type PopoverTriggerProps = React.ComponentPropsWithoutRef<'button'>;
 
 const PopoverTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(
-  ({ className, onClick, ...props }, ref) => {
-    const { open, setOpen, contentId } = usePopoverContext('Trigger');
+  ({ className, onClick, onPointerEnter, onFocus, ...props }, ref) => {
+    const { open, setOpen, contentId, openOnHover } = usePopoverContext('Trigger');
     return (
       <button
         ref={ref}
@@ -88,7 +108,19 @@ const PopoverTrigger = React.forwardRef<HTMLButtonElement, PopoverTriggerProps>(
         aria-controls={open ? contentId : undefined}
         onClick={(event) => {
           onClick?.(event);
-          if (!event.defaultPrevented) setOpen(!open);
+          if (event.defaultPrevented) return;
+          // A press OPENS a hover popover and never closes it — see
+          // `openOnHover` in popover.props.ts for the tap that would
+          // otherwise cancel itself.
+          setOpen(openOnHover ? true : !open);
+        }}
+        onPointerEnter={(event) => {
+          onPointerEnter?.(event);
+          if (openOnHover && !event.defaultPrevented) setOpen(true);
+        }}
+        onFocus={(event) => {
+          onFocus?.(event);
+          if (openOnHover && !event.defaultPrevented) setOpen(true);
         }}
         className={cn('cursor-pointer', focusRing, disabledStyles, className)}
         {...props}

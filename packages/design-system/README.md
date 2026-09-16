@@ -282,6 +282,29 @@ only colours. Two rules worth knowing:
   anyway. A glyph drawn in a fixed box (a dismiss ×, a chevron, a tick) keeps
   the platform face regardless.
 
+**Which scheme is painted is a third seam, and it is native-only.** On web the
+scheme is `[data-theme='dark']` on the document element — an in-app switch
+writes it from a head script, before first paint, and every `.web` leaf
+follows. React Native has no such attribute and `useColorScheme()` reports the
+OS and nothing else, which left a consumer's own light/dark switch able to
+re-paint its surfaces and no control from this package. `ThemeProvider`'s
+`scheme` prop is that seam:
+
+```tsx
+<ThemeProvider theme={brand} scheme={chosen}>
+  <App />
+</ThemeProvider>;
+```
+
+`'light' | 'dark'`, and the scheme it names selects both the token half and the
+override half, so a `dark` patch lands on a forced dark scheme under a light
+OS. Leave it off — the default — and the leaves follow the OS exactly as
+before. Nesting follows the overrides' rule: the nearest provider wins, so an
+inner one naming no scheme hands its subtree back to the OS. **On web the prop
+is a no-op by design**: `data-theme` is the seam there, and it belongs to the
+consumer's head script rather than to a component that renders after first
+paint.
+
 ## No build step — the package publishes source
 
 `files: ["src"]`, exports point at `.ts`/`.tsx`, and there is no tsup/tsc

@@ -19,6 +19,23 @@
 // picks up the overrides at render time, through the same `useNativeColors()`
 // the leaves already call.
 //
+// ── The second asymmetry, and why `scheme` is here ───────────────────────────
+//
+// Which scheme a web consumer paints has always been theirs to say:
+// `theme.css` keys its dark values off `[data-theme='dark']`, so a switch in
+// the app writes one attribute and every `.web` leaf follows.
+//
+// The `.native` leaves had no equivalent for that either. They resolve their
+// colours from `useColorScheme()`, which reports the OS and nothing else —
+// and react-native-web 0.21, the renderer a React Native consumer's users
+// actually meet them in, ships no `Appearance.setColorScheme` to move it. So
+// an app offering an in-app light/dark switch could re-paint its own surfaces
+// and not one control from this package.
+//
+// `ThemeProvider`'s `scheme` prop is that seam, and it stops at the native
+// leaves on purpose: on web `[data-theme]` already is the seam, and it belongs
+// to the consumer's own head script, which has to run before first paint.
+//
 // ── Why overrides are a loose `Record`, not a typed `ColorScheme` ────────────
 //
 // Typing this against `@insolvia-ai/tokens`' `ColorScheme` would need an import
@@ -116,7 +133,29 @@ export interface ThemeOverrides {
   readonly fonts?: Readonly<Record<string, string>> | undefined;
 }
 
-const ThemeContext = React.createContext<ThemeOverrides>({});
+/**
+ * The two colour schemes this package paints. Narrower than React Native's
+ * `useColorScheme()`, which also returns `null` and `'unspecified'`: those mean
+ * "the OS has no opinion", and this type is a consumer stating one.
+ */
+export type ThemeScheme = 'light' | 'dark';
+
+/**
+ * What is in scope below a `ThemeProvider` — the overrides it was given, plus
+ * the scheme it forced, if any.
+ *
+ * A separate type from `ThemeOverrides` on purpose, so `scheme` has exactly ONE
+ * spelling. It is a prop of `ThemeProvider`, not a member of `theme`: the theme
+ * is a brand, chosen once and static, while the scheme is application state
+ * that changes when a user flips a switch. Were `scheme` a member of
+ * `ThemeOverrides` as well, `theme={{ scheme: 'dark' }}` would typecheck and do
+ * nothing.
+ */
+export interface ThemeInScope extends ThemeOverrides {
+  readonly scheme?: ThemeScheme | undefined;
+}
+
+const ThemeContext = React.createContext<ThemeInScope>({});
 
 /**
  * Override the theme for every design-system component below this point.
@@ -141,30 +180,68 @@ const ThemeContext = React.createContext<ThemeOverrides>({});
  */
 export function ThemeProvider({
   theme,
+  scheme,
   children,
 }: {
   theme: ThemeOverrides;
+  /**
+   * Force the colour scheme every `.native` leaf below this point resolves
+   * its colours for, instead of following the OS.
+   *
+   * Absent — the default — is byte-for-byte the behaviour that came before it:
+   * the leaves take `useColorScheme()`, the OS setting on a device and
+   * `prefers-color-scheme` when rendered on web through react-native-web.
+   *
+   * This exists so an in-app light/dark switch can reach these components at
+   * all. A React Native consumer that offers one has no other way to move
+   * them: react-native-web 0.21 ships no `Appearance.setColorScheme`, so an
+   * app could re-paint its own surfaces and leave every control from this
+   * package on the OS setting — one screen, two schemes.
+   *
+   * Nesting follows the same rule as the overrides: the NEAREST provider wins
+   * outright, so an inner provider that names no scheme returns its subtree to
+   * the OS rather than inheriting the outer one's.
+   *
+   * **A no-op on web, by design.** The `.web` leaves read no context — their
+   * override seam is CSS, and their scheme seam is `[data-theme]` on the
+   * document element, which the consumer's own SSR/head script owns because it
+   * has to run before first paint to avoid a flash. This prop deliberately
+   * does not write that attribute: a component that did would be fighting the
+   * script that already set it.
+   */
+  scheme?: ThemeScheme | undefined;
   children: React.ReactNode;
 }) {
   // Memoised on the members rather than on `theme`, so a caller passing an
   // inline object literal — which is the obvious way to write it, and the way
   // the doc comment above shows — does not re-render every themed leaf on every
   // parent render.
-  const value = React.useMemo<ThemeOverrides>(
-    () => ({ light: theme.light, dark: theme.dark, radii: theme.radii, fonts: theme.fonts }),
-    [theme.light, theme.dark, theme.radii, theme.fonts],
+  const value = React.useMemo<ThemeInScope>(
+    () => ({
+      light: theme.light,
+      dark: theme.dark,
+      radii: theme.radii,
+      fonts: theme.fonts,
+      scheme,
+    }),
+    [theme.light, theme.dark, theme.radii, theme.fonts, scheme],
   );
 
   return React.createElement(ThemeContext.Provider, { value }, children);
 }
 
 /**
- * The overrides in scope. Empty when no `ThemeProvider` is present, which is
- * the default and means "use the package's own tokens".
+ * The overrides in scope, and the scheme forced over them if a provider named
+ * one. Empty when no `ThemeProvider` is present, which is the default and means
+ * "use the package's own tokens, in the OS's scheme".
+ *
+ * The forced scheme rides on this hook rather than one of its own so that a
+ * leaf reads the whole theme in scope in a single context — one subscription,
+ * and no way for the two halves to disagree about which provider is nearest.
  *
  * Components should not call this directly — `useNativeColors()` composes it
  * with the defaults and is what the `.native` leaves use.
  */
-export function useThemeOverrides(): ThemeOverrides {
+export function useThemeOverrides(): ThemeInScope {
   return React.useContext(ThemeContext);
 }

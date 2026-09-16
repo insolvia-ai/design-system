@@ -13,6 +13,13 @@
 // trigger again, or through `Popover.Close` — which is why `Close` is a part
 // rather than an optional flourish. Give a native popover a Close; a web-only
 // one can rely on the outside press.
+//
+// `openOnHover` is the same story as Tooltip's native leaf: a device has no
+// pointer to hover, so there a hover popover opens by press exactly as a
+// plain one does (and no longer closes by it — popover.props.ts says why).
+// react-native-web gives a React Native consumer a real pointer in a browser,
+// and there `onHoverIn` on the trigger and `onPointerLeave` on the root give
+// the web gesture. Focus opens it too, through the trigger's `onFocus`.
 import * as React from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native';
 
@@ -22,6 +29,7 @@ import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale, useNativeBodyFamily, useNativeHeadingFamily } from '../lib/native-typography';
 import {
   PopoverContext,
+  useHoverClose,
   usePopoverContext,
   usePopoverState,
   type PopoverRootOwnProps,
@@ -31,14 +39,27 @@ export interface PopoverRootProps extends PopoverRootOwnProps {
   children?: React.ReactNode;
 }
 
-const PopoverRoot = ({ open, defaultOpen, onOpenChange, children }: PopoverRootProps) => {
-  const ctx = usePopoverState(open, defaultOpen, onOpenChange);
+const PopoverRoot = ({
+  open,
+  defaultOpen,
+  onOpenChange,
+  openOnHover = false,
+  children,
+}: PopoverRootProps) => {
+  const ctx = usePopoverState(open, defaultOpen, onOpenChange, openOnHover);
+  const hover = useHoverClose(ctx);
   return (
     <PopoverContext.Provider value={ctx}>
       {/* Elevation only while open, so a closed popover creates no stacking
           context of its own — the rule field.props.ts's `controlOpen` note
           establishes. */}
-      <View style={[styles.root, ctx.open && styles.rootOpen]}>{children}</View>
+      <View
+        onPointerEnter={hover.onEnter}
+        onPointerLeave={hover.onLeave}
+        style={[styles.root, ctx.open && styles.rootOpen]}
+      >
+        {children}
+      </View>
     </PopoverContext.Provider>
   );
 };
@@ -48,7 +69,7 @@ export interface PopoverTriggerProps {
 }
 
 const PopoverTrigger = ({ children }: PopoverTriggerProps) => {
-  const { open, setOpen, contentId } = usePopoverContext('Trigger');
+  const { open, setOpen, contentId, openOnHover } = usePopoverContext('Trigger');
   const c = useNativeColors();
   const body = useNativeBodyFamily();
 
@@ -60,9 +81,14 @@ const PopoverTrigger = ({ children }: PopoverTriggerProps) => {
   return (
     <Pressable
       accessibilityRole="button"
+      // Both spellings — accordion.native.tsx has the reasoning: a device
+      // reads the nested state, react-native-web only the flat prop.
       accessibilityState={{ expanded: open }}
+      aria-expanded={open}
       {...webAria}
-      onPress={() => setOpen(!open)}
+      onPress={() => setOpen(openOnHover ? true : !open)}
+      onHoverIn={openOnHover ? () => setOpen(true) : undefined}
+      onFocus={openOnHover ? () => setOpen(true) : undefined}
       style={styles.trigger}
     >
       <Text style={[styles.triggerLabel, { fontFamily: body }, { color: c.ink }]}>{children}</Text>

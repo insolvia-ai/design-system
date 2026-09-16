@@ -187,6 +187,10 @@ for (const packageDir of PACKAGES) {
   for (const entry of entries) {
     if (entry.body === '') {
       problems.push(`${file}:${entry.line}: the ${entry.version} entry is empty.`);
+    } else if (/\bTODO\b/.test(entry.body)) {
+      // The stub scripts/bump.ts writes. A placeholder is worse than an empty
+      // entry: it passes every other check here and ships in the tarball.
+      problems.push(`${file}:${entry.line}: the ${entry.version} entry still has a TODO in it.`);
     }
   }
 

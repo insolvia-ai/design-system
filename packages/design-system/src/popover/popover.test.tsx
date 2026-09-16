@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
@@ -137,6 +137,85 @@ describe('Popover', () => {
     await user.click(screen.getByRole('button', { name: 'Filters' }));
     await user.click(screen.getByRole('button', { name: 'Done' }));
 
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+function HoverExample() {
+  return (
+    <div>
+      <Popover.Root openOnHover>
+        <Popover.Trigger>Jump drive</Popover.Trigger>
+        <Popover.Content label="About the jump drive">
+          <p>Charges for 30 seconds before engaging.</p>
+          <Popover.Close>Got it</Popover.Close>
+        </Popover.Content>
+      </Popover.Root>
+      <button type="button">Outside</button>
+    </div>
+  );
+}
+
+describe('Popover with openOnHover', () => {
+  it('opens on hover and closes once the pointer has left trigger and surface', async () => {
+    const user = userEvent.setup();
+    render(<HoverExample />);
+
+    await user.hover(screen.getByRole('button', { name: 'Jump drive' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await user.unhover(screen.getByRole('button', { name: 'Jump drive' }));
+    // Not at once: the pointer gets a moment to cross into the surface.
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('is hoverable: moving into the surface keeps it open', async () => {
+    const user = userEvent.setup();
+    render(<HoverExample />);
+
+    await user.hover(screen.getByRole('button', { name: 'Jump drive' }));
+    await user.hover(screen.getByRole('dialog'));
+    // Longer than the close delay, and it is still here.
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('opens on focus, so the keyboard reaches it, and closes when focus leaves', async () => {
+    const user = userEvent.setup();
+    render(<HoverExample />);
+
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Jump drive' })).toHaveFocus();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    // Into the surface is not "leaving".
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Got it' })).toHaveFocus();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Outside' })).toHaveFocus();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('a press opens it and does not close it', async () => {
+    const user = userEvent.setup();
+    render(<HoverExample />);
+
+    // A tap arrives as hover-then-click; the click must not undo the hover.
+    await user.click(screen.getByRole('button', { name: 'Jump drive' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Jump drive' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('still closes on Escape', async () => {
+    const user = userEvent.setup();
+    render(<HoverExample />);
+
+    await user.tab();
+    await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

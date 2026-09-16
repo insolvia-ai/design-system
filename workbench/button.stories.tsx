@@ -9,7 +9,7 @@ import type { ButtonIntent, ButtonSize } from '@design-system/button/button.prop
 
 import { LeafPair, pair } from './leaf-pair.tsx';
 
-// The four intents that EXIST — `danger` joined them once tokens 0.4.0 shipped
+// The four intents that EXIST — `danger` joined them once tokens 0.5.0 shipped
 // a measured `danger-text`; button.props.ts has the rows.
 //
 // This list said `danger` ONCE BEFORE, in 0.8.3, when the intent did not exist:

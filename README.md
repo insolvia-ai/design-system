@@ -95,6 +95,29 @@ One asymmetry worth knowing: on native the derived states (`primaryHover`,
 **not** move them — override them explicitly if they matter. On web they
 follow, because there they really are live blends.
 
+### Which scheme is painted
+
+Web reads `[data-theme='dark']` on the document element, so an in-app switch
+writes that attribute — from a script in the head, before first paint — and
+every `.web` leaf follows.
+
+React Native has no such attribute, and `useColorScheme()` reports the OS and
+nothing else. `ThemeProvider`'s `scheme` prop is the seam: pass one and every
+`.native` leaf below resolves its colours for it, overrides included.
+
+```tsx
+const [scheme, setScheme] = useStoredScheme(); // 'light' | 'dark' | undefined
+
+<ThemeProvider theme={brand} scheme={scheme}>
+  <App />
+</ThemeProvider>;
+```
+
+Leave it off and the leaves follow the OS, exactly as they always have. **On
+web the prop is a no-op** — `data-theme` is the seam there, and it belongs to
+the consumer's own head script rather than to a component that renders after
+the first paint. Radii and fonts take no scheme on either platform.
+
 ## Making a change
 
 1. Branch off `main`.

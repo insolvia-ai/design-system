@@ -64,8 +64,12 @@ export function nativeColorsWith(
 
 /**
  * The semantic colors for the ACTIVE scheme, honouring any `ThemeProvider`
- * above this component — the OS setting on native, `prefers-color-scheme` when
- * rendered on web through react-native-web.
+ * above this component.
+ *
+ * The active scheme is the one a `ThemeProvider` forced with `scheme`, and
+ * otherwise the OS setting — `prefers-color-scheme` when rendered on web
+ * through react-native-web. This is the ONLY place in the package that decides
+ * that, which is what makes one prop reach every leaf.
  *
  * This is the seam that makes the native leaves themeable at all. Before it,
  * they read the token defaults directly and a consumer could not change a
@@ -73,7 +77,24 @@ export function nativeColorsWith(
  * re-theme via CSS custom properties all along.
  */
 export function useNativeColors(): ColorScheme {
-  return nativeColorsWith(useColorScheme(), useThemeOverrides());
+  const overrides = useThemeOverrides();
+
+  // Called unconditionally, and its result discarded when a scheme is forced.
+  // A hook cannot sit behind a branch, and reading it costs nothing: under
+  // react-native-web it is a subscription to a MediaQueryList that Appearance
+  // holds open for the whole app anyway.
+  const osScheme = useColorScheme();
+
+  // `??`, not `||`: the forced scheme is the narrow `'light' | 'dark'`, so
+  // there is no empty string to fall through, and an explicit `'light'` under
+  // a dark OS must win rather than be treated as absent.
+  //
+  // The scheme chosen here also selects which half of the overrides applies —
+  // `nativeColorsWith` reads `overrides[name]` — so a `dark` patch lands on a
+  // forced dark scheme even where the OS is light. That is the whole point:
+  // the override and the scheme it belongs to must not come from two different
+  // sources.
+  return nativeColorsWith(overrides.scheme ?? osScheme, overrides);
 }
 
 /**

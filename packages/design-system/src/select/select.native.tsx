@@ -223,6 +223,17 @@ export const Select = ({
               aria-selected={isSelected}
               aria-disabled={option.disabled ?? false}
               disabled={option.disabled ?? false}
+              // Web-only. react-native-web gives every enabled Pressable
+              // `tabIndex="0"`, so an open list was N extra tab stops the web
+              // leaf does not have — its rows are `<li>`, focusable by nothing
+              // — each wearing the browser's own outline as it went. Worse,
+              // the first Tab off the trigger blurred it, which closes the
+              // list, so focus landed on a row that unmounted underneath it
+              // and fell back to `<body>`. The list is reached with the arrow
+              // keys and named by the trigger's `aria-activedescendant`, on
+              // both leaves; the same line in wheel.native.tsx carries the
+              // rest of the reasoning.
+              {...({ tabIndex: -1 } as object)}
               onPress={() => {
                 if (!option.disabled) commit(option.value);
               }}

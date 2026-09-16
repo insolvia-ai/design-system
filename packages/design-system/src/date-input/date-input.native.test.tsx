@@ -67,6 +67,70 @@ describe('DateInput (native leaf)', () => {
     expect(screen.getByTestId('consumer-wrapper')).not.toContainElement(dialog);
   });
 
+  // Both of these were reachable in a browser and only there, which is where a
+  // React Native consumer's users actually meet this leaf: the picker had no
+  // press-outside dismissal at all, and Escape was bound to the TEXT FIELD, so
+  // the picker you opened with the button — focus on the button — could not be
+  // dismissed by the keyboard either. The two together left the button the only
+  // way out of an open picker.
+  it('closes on a press outside', async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <DateInput aria-label="Date" today="2026-03-11" />
+        <button type="button">Elsewhere</button>
+      </>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Choose a date' }));
+    expect(screen.getByRole('dialog')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Elsewhere' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('keeps the picker open for a press on the PORTALED surface', async () => {
+    // The regression the outside listener could so easily have been: the
+    // surface is a child of document.body, not of the root, so a root-only
+    // `contains` check reads every press on the wheels as a press outside and
+    // closes the picker before the pick lands.
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<DateInput aria-label="Date" today="2026-03-11" onValueChange={onValueChange} />);
+
+    await user.click(screen.getByRole('button', { name: 'Choose a date' }));
+    const picker = within(screen.getByRole('dialog'));
+    await user.click(
+      within(picker.getByRole('listbox', { name: 'Day' })).getByRole('option', { name: '19' }),
+    );
+
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(onValueChange).toHaveBeenLastCalledWith('2026-03-19', 'valid');
+  });
+
+  it('closes on Escape from the BUTTON, which is what opened it', async () => {
+    const user = userEvent.setup();
+    render(<DateInput aria-label="Date" today="2026-03-11" />);
+
+    const button = screen.getByRole('button', { name: 'Choose a date' });
+    await user.click(button);
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(document.activeElement).toBe(button);
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('closes on Escape from the text field too', async () => {
+    const user = userEvent.setup();
+    render(<DateInput aria-label="Date" today="2026-03-11" />);
+
+    await user.click(screen.getByRole('button', { name: 'Choose a date' }));
+    act(() => screen.getByRole('textbox').focus());
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
   it('tells an enclosing Field its picker is open, so the Field can elevate itself', async () => {
     // React Native gives every View its own stacking context, so this leaf's
     // own zIndex can only order it against ITS siblings — never past the Field
@@ -130,5 +194,55 @@ describe('DateInput (native leaf)', () => {
     const style = getComputedStyle(field);
     expect(style.outlineWidth).toBe('2px');
     expect(rgb(style.outlineColor)).toEqual(rgb(colors.light.accent));
+  });
+
+  // 0.23.0 and 0.23.0 both, on one control: the picker button carried no
+  // `useNativeFocusRing` at all, so a keyboard user tabbing off the field got
+  // the BROWSER's ring on it under react-native-web — `outline-style: auto`,
+  // in the colour the host OS picked, while the web leaf's button drew this
+  // package's own. Two controls, two rings, because a hook instance holds a
+  // single boolean.
+  describe('the picker button draws the design system’s OWN focus ring', () => {
+    it('rings the button, in the active scheme’s accent', () => {
+      setPrefersColorScheme('light');
+      render(<DateInput aria-label="Date" />);
+
+      const button = screen.getByRole('button', { name: 'Choose a date' });
+      expect(getComputedStyle(button).outlineWidth).not.toBe('2px');
+
+      act(() => button.focus());
+
+      const style = getComputedStyle(button);
+      expect(style.outlineStyle).toBe('solid');
+      expect(style.outlineWidth).toBe('2px');
+      expect(style.outlineOffset).toBe('2px');
+      expect(rgb(style.outlineColor)).toEqual(rgb(colors.light.accent));
+    });
+
+    it('resolves the ring colour from the active scheme', () => {
+      setPrefersColorScheme('dark');
+      render(<DateInput aria-label="Date" />);
+
+      const button = screen.getByRole('button', { name: 'Choose a date' });
+      act(() => button.focus());
+
+      expect(rgb(getComputedStyle(button).outlineColor)).toEqual(rgb(colors.dark.accent));
+    });
+
+    it('rings only the control that has focus, never both', () => {
+      setPrefersColorScheme('light');
+      render(<DateInput aria-label="Date" />);
+
+      const field = screen.getByRole('textbox', { name: 'Date' });
+      const button = screen.getByRole('button', { name: 'Choose a date' });
+
+      act(() => button.focus());
+      expect(getComputedStyle(button).outlineWidth).toBe('2px');
+      expect(getComputedStyle(field).outlineWidth).not.toBe('2px');
+
+      act(() => field.focus());
+      expect(getComputedStyle(field).outlineWidth).toBe('2px');
+      expect(getComputedStyle(button).outlineWidth).not.toBe('2px');
+    });
   });
 });

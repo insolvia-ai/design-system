@@ -4,7 +4,11 @@ import { View } from 'react-native';
 
 import { Skeleton as SkeletonWeb } from '@design-system/skeleton/skeleton.web.tsx';
 import { Skeleton as SkeletonNative } from '@design-system/skeleton/skeleton.native.tsx';
-import type { SkeletonAnimation, SkeletonVariant } from '@design-system/skeleton/skeleton.props.ts';
+import {
+  DEFAULT_CIRCLE_SIZE,
+  type SkeletonAnimation,
+  type SkeletonVariant,
+} from '@design-system/skeleton/skeleton.props.ts';
 
 import { LeafPair } from './leaf-pair.tsx';
 
@@ -64,22 +68,70 @@ type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {};
 
-/** All three shapes at once — a single `text` line, a `circle` avatar, and a
- * `rect` media block, each at its own default size. */
+/**
+ * All three shapes at once — a single `text` line, a `circle` avatar, and a
+ * `rect` media block, laid out in a row.
+ *
+ * EVERY ITEM IN THIS ROW CARRIES AN EXPLICIT WIDTH, and that is the story's
+ * doing rather than the component's. `text` and `rect` both default to
+ * `width: '100%'` (see `defaultWidth` in `skeleton.props.ts`), which is the
+ * right default — a skeleton standing in for a paragraph or a media block
+ * should fill whatever box a consumer puts it in. It is only a ROW of them
+ * that makes three `100%` items fight over one line, and the two platforms
+ * resolve that fight differently: web flexbox shrinks a `width: 100%` item to
+ * fit (`flex-shrink: 1` is the CSS default), React Native's does not
+ * (`flexShrink: 0` is its default), so on native the text bar took the whole
+ * container and pushed the circle and the rect off the visible pane. Same
+ * component, same props, two panes that disagreed — which is the one thing a
+ * `LeafPair` story exists to catch, and here it was the composition lying.
+ *
+ * Sizing the items is the fix rather than `flexShrink: 1` on the native row's
+ * children, because a shrunk-to-fit item is sized by whatever the pane happens
+ * to be wide, and this story is a comparison of SHAPES: each variant wants a
+ * width it reads well at, identical in both panes, at any canvas width. `rect`
+ * keeps its default 120 height so it still reads as a media block.
+ *
+ * The row TOP-ALIGNS rather than centres, for a related reason on the other
+ * axis. The native leaf gives `circle` — and only `circle` — an
+ * `alignSelf: 'flex-start'` (see `styles.circle` in `skeleton.native.tsx`),
+ * the sizing seam that lets a circle hug its own box instead of stretching to
+ * a parent the way `text` and `rect` are meant to. `alignSelf` beats a
+ * parent's `alignItems`, so an `alignItems: 'center'` row centres all three
+ * items on web and centres two of three on native, leaving the circle riding
+ * the top of the row in one pane only. `flex-start` is the alignment BOTH
+ * platforms can actually honour, which makes the panes agree by construction
+ * rather than by luck.
+ */
+const VARIANT_WIDTH: Record<SkeletonVariant, number> = {
+  text: 100,
+  circle: DEFAULT_CIRCLE_SIZE,
+  rect: 80,
+};
+
 export const Variants: Story = {
   render: (args) => (
     <LeafPair
       web={
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
           {VARIANTS.map((variant) => (
-            <SkeletonWeb key={variant} variant={variant} animation={args.animation} />
+            <SkeletonWeb
+              key={variant}
+              variant={variant}
+              width={VARIANT_WIDTH[variant]}
+              animation={args.animation}
+            />
           ))}
         </div>
       }
       native={
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 16 }}>
           {VARIANTS.map((variant) => (
-            <SkeletonNative key={variant} variant={variant} animation={args.animation} />
+            <SkeletonNative
+              key={variant}
+              variant={variant}
+              width={VARIANT_WIDTH[variant]}
+              animation={args.animation}
+            />
           ))}
         </View>
       }

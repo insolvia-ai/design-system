@@ -1,6 +1,6 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, userEvent } from 'storybook/test';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
 
 import { PasswordInput as PasswordInputWeb } from '@design-system/password-input/password-input.web.tsx';
 import { PasswordInput as PasswordInputNative } from '@design-system/password-input/password-input.native.tsx';
@@ -131,6 +131,46 @@ export const Basic: Story = {
       await expect(args.onRevealedChange).toHaveBeenCalledTimes(2);
       await expect(args.onRevealedChange).toHaveBeenLastCalledWith(true);
       await expect(native.getByLabelText('Password')).toHaveAttribute('type', 'text');
+    });
+  },
+};
+
+/**
+ * PERMANENT REGRESSION STORY — 0.23.0. The native row draws the design
+ * system's own focus ring; the `TextInput` inside it was also painting
+ * CHROME's, `outline: auto 1px`, nested within it — a browser default in a
+ * colour this package does not own.
+ *
+ * Not to be confused with the row's two rings by design (the field and, on
+ * PasswordInput, the toggle each own one, 0.23.0). The invariant here is about
+ * a single FOCUSED element: it paints one ring, and that ring is ours.
+ *
+ * Look at the native pane's field with the caret in it. The play pins it — see
+ * `suppressPlatformFocusRing` in `lib/native-focus.native.ts` for why only a
+ * real click can measure this.
+ */
+export const NoBrowserFocusRing: Story = {
+  name: 'No browser focus ring',
+  args: { defaultValue: 'hunter2' },
+  play: async ({ canvasElement, step }) => {
+    const { native } = pair(canvasElement);
+
+    await step('native leaf: the row rings, the input inside it does not', async () => {
+      const input = native.getByLabelText('Password');
+      // A REAL click, never `input.focus()`: Chrome's `:focus-visible`
+      // heuristic is what paints the default ring, and a programmatic focus
+      // does not engage it — measured as `outline-style: none`, which would
+      // make this assertion pass against the bug it exists to catch.
+      await userEvent.click(input);
+
+      // The row's own ring, applied through `focus.ringStyle`. Asserted FIRST
+      // and awaited, because it is what proves focus actually landed — without
+      // it the check below passes vacuously.
+      const row = input.parentElement as HTMLElement;
+      await waitFor(() => expect(getComputedStyle(row).outlineStyle).toBe('solid'));
+
+      // `auto` here is Chrome's. Nothing at all is the fix.
+      await expect(getComputedStyle(input).outlineStyle).toBe('none');
     });
   },
 };

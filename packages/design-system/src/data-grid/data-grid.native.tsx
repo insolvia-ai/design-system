@@ -21,6 +21,17 @@
 // the old `list`/`header`/`none` roles that put non-listitem children
 // (buttons, headings, plain cells) directly under a `role="list"` root and
 // failed axe's `list` rule on every story.
+//
+// EVERY PRESSABLE HERE DRAWS THE DESIGN SYSTEM'S OWN FOCUS RING. The four
+// focusable controls in this leaf — a sortable column header, the select-all
+// checkbox, each row checkbox, each footer button — are separate private
+// components, and each calls `useNativeFocusRing()` for itself. One instance
+// holds a single boolean, so there is no ring to share: a grid is tabbed
+// through end to end, and a shared instance would light up every checkbox at
+// once. Without the hook a Pressable falls through to what react-native-web
+// paints on its own — Chrome's blue `outline-style: auto`, nothing to do with
+// this design system — which is the 0.18.0 bug, unfixed here until now. See
+// lib/native-focus.native.ts.
 import * as React from 'react';
 import {
   Pressable,
@@ -35,6 +46,7 @@ import {
 
 import { spacing } from '@insolvia-ai/tokens';
 
+import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import { rowHeight } from '../table/table.props';
@@ -216,6 +228,7 @@ function HeaderCell<Row>({
 }) {
   const c = useNativeColors();
   const body = useNativeBodyFamily();
+  const focus = useNativeFocusRing();
   const alignEnd = column.align === 'end';
   const content = (
     <Text
@@ -238,7 +251,9 @@ function HeaderCell<Row>({
           role="button"
           accessibilityLabel={sortAccessibilityLabel(column.header, direction)}
           onPress={onSort}
-          style={styles.headerButton}
+          onFocus={focus.focus}
+          onBlur={focus.blur}
+          style={[styles.headerButton, focus.ringStyle]}
         >
           {content}
         </Pressable>
@@ -340,6 +355,7 @@ function SelectAllCheckbox({
 }) {
   const c = useNativeColors();
   const r = useNativeRadii();
+  const focus = useNativeFocusRing();
   const checked = state === 'all';
   return (
     <Pressable
@@ -353,6 +369,8 @@ function SelectAllCheckbox({
       // own tests) with no observable checked state.
       aria-checked={state === 'some' ? 'mixed' : checked}
       onPress={() => onToggle(!checked)}
+      onFocus={focus.focus}
+      onBlur={focus.blur}
       style={[
         styles.checkbox,
         { borderRadius: r.sm },
@@ -360,6 +378,7 @@ function SelectAllCheckbox({
           borderColor: checked || state === 'some' ? c.primary : c.line,
           backgroundColor: checked || state === 'some' ? c.primary : c.card,
         },
+        focus.ringStyle,
       ]}
     >
       {/* No body family: ✓ and – are glyphs in a fixed box, not body copy —
@@ -384,6 +403,7 @@ function RowCheckbox({
 }) {
   const c = useNativeColors();
   const r = useNativeRadii();
+  const focus = useNativeFocusRing();
   return (
     <Pressable
       accessibilityRole="checkbox"
@@ -393,6 +413,8 @@ function RowCheckbox({
       // `accessibilityState` alone does not reach the DOM here.
       aria-checked={checked}
       onPress={() => onToggle(!checked)}
+      onFocus={focus.focus}
+      onBlur={focus.blur}
       style={[
         styles.checkbox,
         { borderRadius: r.sm },
@@ -400,6 +422,7 @@ function RowCheckbox({
           borderColor: checked ? c.primary : c.line,
           backgroundColor: checked ? c.primary : c.card,
         },
+        focus.ringStyle,
       ]}
     >
       {/* A glyph in a fixed box, not body copy — keeps the platform face. */}
@@ -420,6 +443,7 @@ function FooterButton({
   const c = useNativeColors();
   const r = useNativeRadii();
   const body = useNativeBodyFamily();
+  const focus = useNativeFocusRing();
   return (
     <Pressable
       accessibilityRole="button"
@@ -427,9 +451,12 @@ function FooterButton({
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
+      onFocus={focus.focus}
+      onBlur={focus.blur}
       style={[
         styles.footerButton,
         { borderRadius: r.md, borderColor: c.line, opacity: disabled ? 0.5 : 1 },
+        focus.ringStyle,
       ]}
     >
       <Text style={[styles.footerButtonText, { fontFamily: body, color: c.ink }]}>{label}</Text>

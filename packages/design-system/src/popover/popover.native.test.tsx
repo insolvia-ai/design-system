@@ -6,7 +6,7 @@
 // and the alternatives (a Modal, a full-screen sibling) would each defeat the
 // non-modal point. `Popover.Close` is the native dismissal, which is why it is
 // exercised below rather than treated as optional decoration.
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
@@ -77,6 +77,45 @@ describe('Popover (native leaf)', () => {
     await user.click(screen.getByRole('button', { name: 'Filters' }));
     await user.click(screen.getByRole('button', { name: 'Done' }));
 
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+describe('Popover with openOnHover (native leaf)', () => {
+  function HoverExample() {
+    return (
+      <Popover.Root openOnHover>
+        <Popover.Trigger>Jump drive</Popover.Trigger>
+        <Popover.Content label="About the jump drive">
+          <Popover.Close>Got it</Popover.Close>
+        </Popover.Content>
+      </Popover.Root>
+    );
+  }
+
+  it('opens on hover through react-native-web and closes after the pointer leaves', async () => {
+    const user = userEvent.setup();
+    render(<HoverExample />);
+
+    const trigger = screen.getByRole('button', { name: 'Jump drive' });
+    await user.hover(trigger);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await user.unhover(trigger);
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('a press opens it and never toggles it closed — the touch path', async () => {
+    const user = userEvent.setup();
+    render(<HoverExample />);
+
+    const trigger = screen.getByRole('button', { name: 'Jump drive' });
+    await user.click(trigger);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    await user.click(trigger);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Got it' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

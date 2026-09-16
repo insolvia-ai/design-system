@@ -10,6 +10,21 @@
 // about it — that pair is the 0.7.1 fix, and field.props.ts's `controlOpen`
 // owns the full reasoning. Getting it wrong here would reproduce the exact bug
 // a real browser found and every test in this package missed.
+//
+// THE KEYBOARD IS BOUND TO THE ROOT, IN THE CAPTURE PHASE. Not to the
+// TextInput, which is where it sat from the day this leaf was written and
+// where it did nothing at all: react-native-web's TextInput OVERWRITES
+// whatever `onKeyDown` a caller passes with its own handler
+// (`supportedProps.onKeyDown = handleKeyDown`), and that handler opens with
+// `stopPropagation` (their #612), so the keystroke reaches neither the binding
+// nor any ancestor. Every arrow,
+// Enter and Escape this leaf claims to handle was dead in a browser — which is
+// the environment a React Native consumer's users actually meet it in. Capture
+// runs top-down, before both the overwrite and the stopPropagation, so it is
+// the one phase that still hears the field. DateInput's Escape hit the same
+// trap and takes the same fix. Only a TextInput is affected: a `View` or a
+// `Pressable` forwards `onKeyDown` untouched, so Select, Wheel and Calendar
+// were never wrong.
 import * as React from 'react';
 import {
   Pressable,
@@ -79,6 +94,14 @@ export const Combobox = ({
     return () => setFieldControlOpen(false);
   }, [open, setFieldControlOpen]);
 
+  // Bound to the ROOT in the CAPTURE phase, not to the TextInput — see the
+  // header for why the obvious binding is dead. Capture is safe for the whole
+  // grammar: `comboboxKeyIntent` answers `none` for Home, End, Space and every
+  // printable character, so ordinary typing is untouched, and Tab is the one
+  // handled key it deliberately does NOT `preventDefault` on, so focus keeps
+  // going. Nothing inside the root competes for the rest: the options are
+  // `Pressable`s with no `tabIndex`, and the list's `onMouseDown` guard keeps
+  // focus in the text box, so no key event ever originates below it.
   const handleKeyDown = (event: { key: string; altKey?: boolean; preventDefault?: () => void }) => {
     const intent = comboboxKeyIntent(event.key, event.altKey ?? false, { open, visible, active });
     if (intent.kind === 'none') return;
@@ -102,11 +125,10 @@ export const Combobox = ({
   };
 
   // react-native-web forwards these to the DOM but RN's own types carry none
-  // of them: `onKeyDown` is web-only, and the aria-* below sit outside RN's
-  // AccessibilityProps. Contained here and documented — the same shape Select's
-  // and Dialog's native leaves use.
+  // of them: the aria-* below sit outside RN's AccessibilityProps. Contained
+  // here and documented — the same shape Select's and Dialog's native leaves
+  // use. `onKeyDown` is NOT among them, deliberately; it lives on the root.
   const webOnly = {
-    onKeyDown: handleKeyDown,
     role: 'combobox',
     'aria-autocomplete': 'list',
     'aria-expanded': listOpen,
@@ -119,7 +141,14 @@ export const Combobox = ({
   } as TextInputProps;
 
   return (
-    <View style={[styles.root, open && styles.rootOpen, style]} {...props}>
+    <View
+      style={[styles.root, open && styles.rootOpen, style]}
+      {...props}
+      // `onKeyDownCapture` is web-only and outside RN's own View types;
+      // react-native-web forwards it. See `handleKeyDown` for why the capture
+      // phase and why this node.
+      {...({ onKeyDownCapture: handleKeyDown } as object)}
+    >
       <TextInput
         nativeID={field?.controlId}
         aria-labelledby={field?.labelId}
