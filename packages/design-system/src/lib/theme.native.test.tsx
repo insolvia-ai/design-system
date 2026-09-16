@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 
 import { colors, radii } from '@insolvia-ai/tokens';
 
+import { setPrefersColorScheme } from '../../vitest.native.setup';
 import {
   nativeColorsWith,
   nativeRadiiWith,
@@ -92,6 +93,101 @@ describe('useNativeColors', () => {
 
     expect(screen.getByTestId('primary')).toHaveTextContent('#333333');
     expect(screen.getByTestId('bg')).toHaveTextContent(colors.light.bg);
+  });
+});
+
+describe('a forced scheme', () => {
+  // The seam an in-app light/dark switch needs. `useColorScheme()` reports the
+  // OS and nothing else, and react-native-web 0.21 ships no
+  // `Appearance.setColorScheme` to move it — so without this prop a consumer's
+  // switch could re-paint its own surfaces and leave every control here on the
+  // OS setting, one screen in two schemes.
+  it('follows the OS when no scheme is given', () => {
+    // The default, asserted in both directions: this prop must change nothing
+    // for the apps that do not pass it.
+    setPrefersColorScheme('dark');
+    const { unmount } = render(<ShowPrimary />);
+    expect(screen.getByTestId('primary')).toHaveTextContent(colors.dark.primary);
+    unmount();
+
+    setPrefersColorScheme('light');
+    render(<ShowPrimary />);
+    expect(screen.getByTestId('primary')).toHaveTextContent(colors.light.primary);
+  });
+
+  it('paints dark under a light OS', () => {
+    setPrefersColorScheme('light');
+
+    render(
+      <ThemeProvider theme={{}} scheme="dark">
+        <ShowPrimary />
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByTestId('primary')).toHaveTextContent(colors.dark.primary);
+  });
+
+  it('paints light under a dark OS', () => {
+    // The other direction, and the reason the fallback is `??` rather than
+    // `||`: an explicit 'light' must win, not read as absent.
+    setPrefersColorScheme('dark');
+
+    render(
+      <ThemeProvider theme={{}} scheme="light">
+        <ShowPrimary />
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByTestId('primary')).toHaveTextContent(colors.light.primary);
+  });
+
+  it('merges the override half belonging to the FORCED scheme', () => {
+    // The half that would be easy to get wrong: the scheme selects the colours
+    // AND which half of the overrides applies, so both must come from the same
+    // place. A leaf reading the forced scheme for one and the OS for the other
+    // would paint a dark canvas with the light brand on it.
+    setPrefersColorScheme('light');
+
+    render(
+      <ThemeProvider
+        theme={{ light: { primary: '#111111' }, dark: { primary: '#EEEEEE' } }}
+        scheme="dark"
+      >
+        <ShowBoth />
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByTestId('primary')).toHaveTextContent('#EEEEEE');
+    expect(screen.getByTestId('bg')).toHaveTextContent(colors.dark.bg);
+  });
+
+  it('lets the NEAREST provider win, and returns to the OS when it names none', () => {
+    // Same rule as the overrides, which is the point of carrying the scheme on
+    // the same context: an inner provider is the whole answer, so one that
+    // names no scheme hands its subtree back to the OS rather than inheriting.
+    setPrefersColorScheme('light');
+
+    render(
+      <ThemeProvider theme={{}} scheme="dark">
+        <span data-testid="outer">
+          <ShowPrimary />
+        </span>
+        <ThemeProvider theme={{}} scheme="light">
+          <span data-testid="forced-inner">
+            <ShowPrimary />
+          </span>
+        </ThemeProvider>
+        <ThemeProvider theme={{}}>
+          <span data-testid="unforced-inner">
+            <ShowPrimary />
+          </span>
+        </ThemeProvider>
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByTestId('outer')).toHaveTextContent(colors.dark.primary);
+    expect(screen.getByTestId('forced-inner')).toHaveTextContent(colors.light.primary);
+    expect(screen.getByTestId('unforced-inner')).toHaveTextContent(colors.light.primary);
   });
 });
 

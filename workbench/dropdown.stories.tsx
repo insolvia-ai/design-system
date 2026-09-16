@@ -134,3 +134,122 @@ export const Basic: Story = {
     });
   },
 };
+
+/**
+ * A `Dropdown.Sub` nests a second menu inside the first. THE SHAPE IS THE
+ * DIVERGENCE: the web leaf flies out to the right, opening on hover or on
+ * ArrowRight/Enter, with ArrowLeft and Escape closing one level; the native
+ * leaf unfolds in place beneath its trigger, because a phone has no room
+ * beside the menu. Both are a `menuitem` with `aria-haspopup="menu"` and
+ * `aria-expanded`, opening a second `menu` labelled by it, and choosing a row
+ * at any depth closes the whole tree.
+ *
+ * Ends with both sub-menus OPEN, so axe audits the nested menus — native
+ * first, for the reason `Basic` gives.
+ */
+export const SubMenus: Story = {
+  render: (args) => (
+    <LeafPair
+      note="Hover 'Move to' in the web pane, or arrow to it and press ArrowRight. Press it in the native pane — it unfolds in place."
+      web={
+        <DropdownWeb.Root>
+          <DropdownWeb.Trigger>{args.trigger}</DropdownWeb.Trigger>
+          <DropdownWeb.Content>
+            <DropdownWeb.Item onSelect={() => args.onSelect('Rename')}>Rename</DropdownWeb.Item>
+            <DropdownWeb.Sub>
+              <DropdownWeb.SubTrigger>Move to</DropdownWeb.SubTrigger>
+              <DropdownWeb.SubContent>
+                <DropdownWeb.Item onSelect={() => args.onSelect('Drydock')}>
+                  Drydock
+                </DropdownWeb.Item>
+                <DropdownWeb.Item onSelect={() => args.onSelect('Orbit')}>Orbit</DropdownWeb.Item>
+                <DropdownWeb.Item disabled>Deep space</DropdownWeb.Item>
+              </DropdownWeb.SubContent>
+            </DropdownWeb.Sub>
+            <DropdownWeb.Divider />
+            <DropdownWeb.Item onSelect={() => args.onSelect('Duplicate')}>
+              Duplicate
+            </DropdownWeb.Item>
+          </DropdownWeb.Content>
+        </DropdownWeb.Root>
+      }
+      native={
+        <DropdownNative.Root>
+          <DropdownNative.Trigger>{args.trigger}</DropdownNative.Trigger>
+          <DropdownNative.Content>
+            <DropdownNative.Item onSelect={() => args.onSelect('Rename')}>
+              Rename
+            </DropdownNative.Item>
+            <DropdownNative.Sub>
+              <DropdownNative.SubTrigger>Move to</DropdownNative.SubTrigger>
+              <DropdownNative.SubContent>
+                <DropdownNative.Item onSelect={() => args.onSelect('Drydock')}>
+                  Drydock
+                </DropdownNative.Item>
+                <DropdownNative.Item onSelect={() => args.onSelect('Orbit')}>
+                  Orbit
+                </DropdownNative.Item>
+                <DropdownNative.Item disabled>Deep space</DropdownNative.Item>
+              </DropdownNative.SubContent>
+            </DropdownNative.Sub>
+            <DropdownNative.Divider />
+            <DropdownNative.Item onSelect={() => args.onSelect('Duplicate')}>
+              Duplicate
+            </DropdownNative.Item>
+          </DropdownNative.Content>
+        </DropdownNative.Root>
+      }
+    />
+  ),
+  play: async ({ canvasElement, args, step }) => {
+    const { web, native } = pair(canvasElement);
+
+    await step('native leaf: the sub trigger unfolds a labelled menu in place', async () => {
+      await userEvent.click(native.getByRole('button', { name: args.trigger }));
+      const subTrigger = native.getByRole('menuitem', { name: 'Move to' });
+      await expect(subTrigger).toHaveAttribute('aria-haspopup', 'menu');
+      await userEvent.click(subTrigger);
+      await expect(subTrigger).toHaveAttribute('aria-expanded', 'true');
+      await expect(native.getByRole('menu', { name: 'Move to' })).toBeInTheDocument();
+    });
+
+    await step('native leaf: a row in the sub-menu closes the whole tree', async () => {
+      await userEvent.click(native.getByRole('menuitem', { name: 'Orbit' }));
+      await expect(args.onSelect).toHaveBeenCalledTimes(1);
+      await expect(args.onSelect).toHaveBeenLastCalledWith('Orbit');
+      await expect(native.queryByRole('menu')).not.toBeInTheDocument();
+    });
+
+    await step('web leaf: ArrowRight opens the flyout and moves focus into it', async () => {
+      await userEvent.click(web.getByRole('button', { name: args.trigger }));
+      await userEvent.keyboard('{ArrowDown}');
+      await expect(web.getByRole('menuitem', { name: 'Move to' })).toHaveFocus();
+      await userEvent.keyboard('{ArrowRight}');
+      await expect(web.getByRole('menu', { name: 'Move to' })).toBeInTheDocument();
+      await expect(web.getByRole('menuitem', { name: 'Drydock' })).toHaveFocus();
+    });
+
+    await step('web leaf: the flyout walks on its own; ArrowLeft returns', async () => {
+      await userEvent.keyboard('{End}');
+      // 'Deep space' is aria-disabled and 'Duplicate' is in the PARENT menu:
+      // End stops at the flyout's last enabled row.
+      await expect(web.getByRole('menuitem', { name: 'Orbit' })).toHaveFocus();
+      await userEvent.keyboard('{ArrowLeft}');
+      await expect(web.getByRole('menuitem', { name: 'Move to' })).toHaveFocus();
+      await expect(web.queryByRole('menu', { name: 'Move to' })).not.toBeInTheDocument();
+    });
+
+    await step('leave both sub-menus open for the a11y pass', async () => {
+      // Web first this time: it is already open, and only the pointer press
+      // on the native trigger below could close it — but the native pane is
+      // INSIDE the web root's document listener's "outside", so re-open the
+      // web flyout last, by keyboard, once the native one is up.
+      await userEvent.click(native.getByRole('button', { name: args.trigger }));
+      await userEvent.click(native.getByRole('menuitem', { name: 'Move to' }));
+      await userEvent.click(web.getByRole('button', { name: args.trigger }));
+      await userEvent.keyboard('{ArrowDown}{ArrowRight}');
+      await expect(web.getByRole('menu', { name: 'Move to' })).toBeInTheDocument();
+      await expect(native.getByRole('menu', { name: 'Move to' })).toBeInTheDocument();
+    });
+  },
+};

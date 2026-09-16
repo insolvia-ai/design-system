@@ -31,7 +31,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
 import { CONTROL_HEIGHT_PX, keyboardTypeFor } from '../input/input.props';
-import { useNativeFocusRing } from '../lib/native-focus';
+import { suppressPlatformFocusRing, useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { useNativeBodyFamily } from '../lib/native-typography';
 import {
@@ -163,7 +163,14 @@ export const NumberInput = ({
           state.commit();
           onBlur?.(event);
         }}
-        style={[styles.input, { fontFamily: body }, { color: disabled ? c.muted : c.ink }]}
+        // The ROW above carries the owned ring; this control cancels the
+        // platform's own so only one paints. See suppressPlatformFocusRing.
+        style={[
+          styles.input,
+          suppressPlatformFocusRing,
+          { fontFamily: body },
+          { color: disabled ? c.muted : c.ink },
+        ]}
         {...props}
       />
       <NumberInputStepper

@@ -33,7 +33,7 @@ import { coarseTouchTarget, disabledStyles, focusRing } from '../lib/styles';
  * would make `<Button intent="danger">` expressible before anything measured
  * said it was readable.
  *
- * `tokens` 0.4.0 measured it and shipped `danger-text`, so Button carries the
+ * `tokens` 0.5.0 measured it and shipped `danger-text`, so Button carries the
  * intent now and `danger` is no longer what makes these two sets differ.
  *
  * WHAT MAKES THEM DIFFER NOW IS `overlay`, and it is the same argument with the

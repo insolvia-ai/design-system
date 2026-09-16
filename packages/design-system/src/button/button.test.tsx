@@ -48,7 +48,7 @@ describe('Button', () => {
     expect(button).toHaveClass('h-12');
   });
 
-  // `danger` was deliberately absent until tokens 0.4.0 measured a foreground
+  // `danger` was deliberately absent until tokens 0.5.0 measured a foreground
   // for a LABEL on the danger fill — button.props.ts carries the rows.
   it('renders a danger intent on the measured danger-text foreground', () => {
     render(

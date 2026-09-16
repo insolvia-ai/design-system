@@ -18,6 +18,151 @@ the PR is why, what was rejected, and how it was verified.
 > the merge — which is why there is no 0.8.0–0.8.2, no 0.9.x, and no
 > 0.10.0–0.10.1.
 
+## 0.23.0 — minor
+
+**Widen your range to take this:** `^0.22.x` will not resolve it.
+
+Two new seams and one long run of React Native fixes. No web leaf changed its
+API, and nothing here moves a default: an app that passes no new prop renders
+exactly what it did on 0.22.0.
+
+Most of the fixes below are **react-native-web only** — the browser a React
+Native consumer's users actually meet these leaves in. On a real device they
+were never wrong: React Native paints no default focus ring and delivers no
+Tab or `keydown`, so there was no ring to replace and no keyboard to lose.
+
+- **`ThemeProvider` takes a `scheme` now, so an in-app light/dark switch
+  reaches these components.** Which scheme is painted was the one theming
+  decision a React Native consumer could not make. The native leaves resolve
+  their colours from `useColorScheme()`, which reports the OS and nothing
+  else, and react-native-web 0.21 ships no `Appearance.setColorScheme` to move
+  it — so an app offering its own switch could re-paint its own surfaces and
+  not one Button, Field, Table or Toast from here.
+
+  ```tsx
+  <ThemeProvider theme={brand} scheme={scheme}>
+    <App />
+  </ThemeProvider>;
+  ```
+
+  `'light' | 'dark'`, exported as `ThemeScheme`. Leave it off — the default —
+  and the leaves take the OS setting exactly as before. The forced scheme
+  selects the overrides as well as the tokens, so a `dark` patch lands on a
+  forced dark scheme under a light OS. Nesting follows the overrides' rule:
+  the nearest provider wins outright, so an inner one naming no scheme hands
+  its subtree back to the OS. `useThemeOverrides()` returns `ThemeInScope`,
+  also exported; the `theme` prop's type is unchanged, so `scheme` has exactly
+  one spelling and `theme={{ scheme: 'dark' }}` does not typecheck.
+
+  **On web the prop is a no-op, deliberately.** The scheme seam there is
+  `[data-theme='dark']` on the document element, and it belongs to the
+  consumer's own head script, which has to run before first paint or the page
+  flashes the wrong scheme. Radii and fonts take no scheme on either platform.
+
+- **`Dropdown` has sub-menus.** Three new parts: `Dropdown.Sub` wraps a
+  `Dropdown.SubTrigger` (a row that opens a nested menu instead of running a
+  command) and a `Dropdown.SubContent` (the nested menu, holding the same
+  `Item`, `Label`, `Divider` — and `Sub` — the top level does). Choosing a row
+  at any depth closes the whole menu, exactly as it did with one level.
+
+  ```tsx
+  <Dropdown.Sub>
+    <Dropdown.SubTrigger>Move to</Dropdown.SubTrigger>
+    <Dropdown.SubContent>
+      <Dropdown.Item onSelect={() => move('orbit')}>Orbit</Dropdown.Item>
+    </Dropdown.SubContent>
+  </Dropdown.Sub>
+  ```
+
+  On web the sub-menu flies out beside its row, opening on hover or on
+  ArrowRight/Enter/Space; ArrowLeft and Escape close one level and return
+  focus to the row. On React Native it unfolds in place beneath its row,
+  press-driven — a phone has no room beside the menu for a flyout. Both
+  platforms expose the row as a `menuitem` with `aria-haspopup="menu"` and
+  `aria-expanded`, and the nested surface as a `menu` labelled by it. `Sub`
+  takes `open` / `defaultOpen` / `onOpenChange` like `Root`.
+
+- **`Popover.Root` takes `openOnHover`.** The popover opens when the pointer
+  rests on the trigger and when focus lands on it, and closes once both have
+  left the trigger and the popover together — moving into the popover keeps it
+  open, with a short grace period for the gap. A press still opens it, so a
+  touch screen is served, but with `openOnHover` a press never closes it.
+  Escape, the outside press on web, and `Popover.Close` dismiss it as before.
+
+- **A `Select` or `DateInput` inside a `Drawer`, `Dialog` or `AlertDialog` now
+  opens above it.** The portaled list sat at `z-index: 30` under
+  react-native-web's Modal (`9999`), so the modal painted over it: the trigger
+  looked cut off and offered no options.
+
+- **`Combobox` had no working keyboard at all.** ArrowDown/ArrowUp to open,
+  the arrows to walk the filtered list, Enter to commit the highlight and
+  Escape to discard what was typed were all dead, which leaves a keyboard-only
+  user with no way to choose an option. The binding sat on the `TextInput`,
+  and react-native-web's `TextInput` overwrites a caller's `onKeyDown` with
+  its own, which then calls `stopPropagation` — so the key reached no ancestor
+  either. It is bound to the leaf's root in the capture phase now. Typing is
+  untouched, and Tab still lets focus leave without committing the highlight.
+
+- **`DateInput`'s picker could not be dismissed by anything but the button
+  that opened it.** Neither an outside press nor Escape closed it, so the
+  picker sat over the form. There was no outside-press listener in the native
+  leaf at all, and the Escape binding sat on the `TextInput` that
+  react-native-web overwrites; Escape is bound to the root in the capture
+  phase now, and the outside listener is told about the portaled surface so a
+  press on the wheels is not read as a press outside. The web leaf has closed
+  on both since 0.12.0; the two leaves now agree.
+
+- **`DateInput`'s wheel picker silently rewrote the field when it was closed
+  right after being opened.** Open the picker on a field holding `2019-02-14`,
+  close it again within about a tenth of a second, and the field became
+  `1926-02-14` — every column jumped to its first row, with nothing to say it
+  had happened. `Wheel`'s native leaf commits the row a scroll settles on, on
+  a debounce, because `onMomentumScrollEnd` never fires under
+  react-native-web; react-native-web's own `ScrollViewBase` schedules a
+  scroll-end timeout it never clears on unmount, so it called `onScroll` once
+  more into a wheel that was already gone, re-arming the debounce after the
+  cleanup that clears it. The leaf now refuses to track, arm or commit from
+  any scroll event arriving after it unmounts. `DatePicker` and any other
+  caller of `Wheel` get the same fix.
+
+- **Every remaining control in the date family draws the design system's own
+  focus ring**, plus the Show/Hide toggle inside `PasswordInput` and every
+  control in `DataGrid` — sortable column headers, the select-all and per-row
+  checkboxes, and the pagination buttons. `DateInput`'s calendar button,
+  `Calendar`'s month pagers and day cells, and each `Wheel` column each
+  previously fell through to the browser's outline while the web leaf drew
+  this package's ring on the very same control. `PasswordInput` and
+  `NumberInput` also painted two rings at once — the wrapper's own and
+  Chrome's inside it. `PasswordInput`'s toggle gains 4px of vertical inset so
+  its ring sits inside the field's border; the control's height is unchanged.
+
+- **`Calendar`'s arrow keys move the focus they claim to move.** The arrows
+  advanced the roving tabindex while keyboard focus stayed on the cell the
+  user arrived at, so a screen reader announced that first date for every
+  press after it. Where the range ends the two leaves differ, unavoidably:
+  react-native-web renders an out-of-range day as a real `<button disabled>`,
+  which cannot hold focus, so focus stops at the last day in range.
+
+- **An open `Select` no longer adds a tab stop per option.** react-native-web
+  makes every option focusable by default, so tabbing off the trigger closed
+  the list and dropped focus on the page rather than moving to the next
+  control. The list is walked with the arrow keys on both leaves, as
+  documented.
+
+- **Typecheck fix, no runtime change:** `suppressPlatformFocusRing` is typed
+  `TextStyle` rather than `ViewStyle`. Both its use sites are a `TextInput`'s
+  `style`, and react-native-web's typings widen `userSelect` to `string`,
+  which made the two types conflict rather than merely differ — a hard
+  `TS2769` in published source for anyone typechecking a React Native app that
+  renders on web.
+
+- **Repo tooling:** `npm run bump -- <package> <patch|minor>` sets a package's
+  version and renumbers this PR's changelog entry, and the changelog gate now
+  refuses an entry still carrying an unfilled placeholder. Neither reaches the
+  tarball.
+
+[#32](https://github.com/insolvia-ai/design-system/pull/32)
+
 ## 0.22.0 — minor
 
 **Widen your range to take this:** `^0.21.x` will not resolve it.

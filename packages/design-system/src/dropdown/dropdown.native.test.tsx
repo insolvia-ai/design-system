@@ -63,6 +63,39 @@ describe('Dropdown (native leaf)', () => {
     expect(screen.getByRole('menu')).toBeInTheDocument();
   });
 
+  it('unfolds a sub-menu in place and closes the whole tree from a row in it', async () => {
+    const onMove = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <Dropdown.Root>
+        <Dropdown.Trigger>Actions</Dropdown.Trigger>
+        <Dropdown.Content>
+          <Dropdown.Item>Rename</Dropdown.Item>
+          <Dropdown.Sub>
+            <Dropdown.SubTrigger>Move to</Dropdown.SubTrigger>
+            <Dropdown.SubContent>
+              <Dropdown.Item onSelect={onMove}>Drydock</Dropdown.Item>
+            </Dropdown.SubContent>
+          </Dropdown.Sub>
+        </Dropdown.Content>
+      </Dropdown.Root>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Actions' }));
+    const subTrigger = screen.getByRole('menuitem', { name: 'Move to' });
+    expect(subTrigger).toHaveAttribute('aria-haspopup', 'menu');
+    expect(subTrigger).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('menuitem', { name: 'Drydock' })).not.toBeInTheDocument();
+
+    await user.click(subTrigger);
+    expect(subTrigger).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('menu', { name: 'Move to' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('menuitem', { name: 'Drydock' }));
+    expect(onMove).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
   it('closes by pressing the trigger again — the native dismissal', async () => {
     const user = userEvent.setup();
     render(<Example />);

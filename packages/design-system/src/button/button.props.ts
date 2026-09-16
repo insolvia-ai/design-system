@@ -10,7 +10,7 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
  *
  * WHY `danger` IS HERE NOW. It used to be absent, and the reason given was
  * that "the semantic token set has no `danger-text` pair" — true when it was
- * written, and no longer true. `tokens` 0.4.0 measures and ships one:
+ * written, and no longer true. `tokens` 0.5.0 measures and ships one:
  *
  *   danger-text on danger    light 6.1:1   dark 6.2:1   ✅ (4.5:1 AA floor)
  *   a hard-coded white       light 6.1:1   dark 2.8:1   ❌ dark

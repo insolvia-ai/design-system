@@ -1,6 +1,6 @@
 # scripts
 
-Three entry points a human runs, three gates CI runs, and a deliberate refusal
+Four entry points a human runs, three gates CI runs, and a deliberate refusal
 to add more.
 
 | Script | What it does |
@@ -8,6 +8,7 @@ to add more.
 | [`dev-setup.sh`](dev-setup.sh) | Checks Node against `engines.node`, then `npm ci`. `--check` reports without changing anything. |
 | [`dev-up.sh`](dev-up.sh) | Starts the component workbench (Storybook) on `http://localhost:6006`. |
 | [`capture-stories.ts`](capture-stories.ts) | Screenshots stories from the running workbench — both leaves, both schemes. Run as `npm run screenshots`. |
+| [`bump.ts`](bump.ts) | Sets a package's version to main's plus a bump and moves this PR's changelog entry to the top, renumbered. Run as `npm run bump -- design-system patch`, after a rebase or on a fresh branch. |
 | [`check-skills.ts`](check-skills.ts) | Gates every `SKILL.md` in the repo. Run as `npm run skills:check`, part of `npm run ci`. |
 | [`check-changelog.ts`](check-changelog.ts) | Gates each package's `CHANGELOG.md`, and prints a version's entry for the release notes. Run as `npm run changelog:check`, part of `npm run ci`. |
 | [`check-artifacts.ts`](check-artifacts.ts) | Gates the packed tarballs. Run as `npm run artifacts:check`, by both CI workflows. |
@@ -16,7 +17,7 @@ None of the checks is a shortcut for anything a human types — they are checks,
 reached through `npm run` like every other one. All live here rather than
 beside what they check because all span the whole repository: `check-skills.ts`
 walks every `SKILL.md`, `.claude/skills` included, which belongs to no package;
-the other two work across both published packages. All run under plain `node`
+the others work across both published packages. All run under plain `node`
 with native type-stripping, like the token generator, and are typechecked by
 [`tsconfig.scripts.json`](../tsconfig.scripts.json).
 

@@ -62,3 +62,65 @@ export interface DropdownItemOwnProps {
    */
   onSelect?: (() => void) | undefined;
 }
+
+// ---------------------------------------------------------------------------
+// Sub-menus.
+//
+// A `Dropdown.Sub` nests inside a `Dropdown.Content` (or another Sub) and owns
+// ONE open/closed bit for its own flyout. It sits UNDER the root context
+// rather than replacing it: an item chosen three levels deep still closes the
+// whole menu through the root's `setOpen`, which is the selection contract
+// above and the reason `DropdownItem` never needs to know how deep it is.
+//
+// Here as on the root, the keyboard grammar stays in the web leaf. What the
+// two leaves share is the state, the id pair, and the roles: the sub trigger
+// is a `menuitem` that also has `aria-haspopup="menu"` and `aria-expanded`,
+// and the sub content is a second `menu` labelled by that trigger.
+
+export interface DropdownSubOwnProps {
+  open?: boolean | undefined;
+  defaultOpen?: boolean | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
+}
+
+export interface DropdownSubContextValue {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  subMenuId: string;
+  subTriggerId: string;
+  /**
+   * Set by the trigger just before it opens the flyout, read once by the
+   * flyout when it mounts: a keyboard or press open moves focus into the
+   * flyout, a hover open does not. A ref rather than state because it is a
+   * one-shot message between two commits, not something to render from.
+   */
+  focusOnOpen: React.MutableRefObject<boolean>;
+}
+
+export const DropdownSubContext = React.createContext<DropdownSubContextValue | null>(null);
+
+export function useDropdownSubContext(part: string): DropdownSubContextValue {
+  const ctx = React.useContext(DropdownSubContext);
+  if (!ctx) throw new Error(`Dropdown.${part} must be rendered inside <Dropdown.Sub>`);
+  return ctx;
+}
+
+export function useDropdownSubState(
+  open: boolean | undefined,
+  defaultOpen: boolean | undefined,
+  onOpenChange: ((open: boolean) => void) | undefined,
+): DropdownSubContextValue {
+  const [isOpen, setOpen] = useControllableState<boolean>(open, defaultOpen ?? false, onOpenChange);
+  const id = React.useId();
+  const focusOnOpen = React.useRef(false);
+  return React.useMemo(
+    () => ({
+      open: isOpen,
+      setOpen,
+      subMenuId: `${id}-submenu`,
+      subTriggerId: `${id}-subtrigger`,
+      focusOnOpen,
+    }),
+    [isOpen, setOpen, id],
+  );
+}

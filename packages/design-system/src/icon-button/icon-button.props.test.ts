@@ -40,7 +40,7 @@ describe('the icon button maps', () => {
 
   // `danger` used to be added HERE, on the grounds that the token set had no
   // measured foreground for a label on a danger fill and this control has no
-  // label. tokens 0.4.0 measured one (`danger-text`), Button took the intent,
+  // label. tokens 0.5.0 measured one (`danger-text`), Button took the intent,
   // and the two controls share one row again — which is what makes a text
   // button and an icon button that destroy the same thing read as one control.
   it('takes danger from Button, on the shared danger-text foreground', () => {

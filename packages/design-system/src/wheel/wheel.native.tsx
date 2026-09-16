@@ -23,6 +23,24 @@
 //    is idempotent — it commits only when the row differs from the current
 //    value — so being called twice costs nothing.
 //
+// 3. THE SCROLL EVENT THAT ARRIVES AFTER UNMOUNT, which is the other half of
+//    that same 100ms and is why `aliveRef` exists. ScrollViewBase schedules
+//    its scroll-end with a plain `setTimeout` and never clears it on unmount,
+//    so it calls `onScroll` one final time into a component that is already
+//    gone. Its `normalizeScrollEvent` reads the position off the DOM node
+//    through a GETTER, and a detached node reports `scrollTop` 0 — so the late
+//    event does not merely arrive late, it arrives WRONG, claiming the column
+//    is parked on its first row.
+//
+//    Unguarded, that event re-armed the settle timer AFTER the cleanup which
+//    clears it had already run, and 120ms later `settle` committed row 0.
+//    Closing DateInput's native picker within about 100ms of opening it
+//    therefore rewrote the field it was opened on: `2019-02-14` became
+//    `1926-02-14`, silently, on a date field. `aliveRef` is what makes a
+//    scroll event that outlives the leaf unable to arm a timer or commit a
+//    value; every genuine scroll a user makes happens while the leaf is
+//    mounted, so nothing real is lost.
+//
 // This leaf is what a React Native consumer renders, including in a browser
 // through react-native-web, so it is the one that has to be right.
 import * as React from 'react';
@@ -40,6 +58,7 @@ import {
 
 import { spacing } from '@insolvia-ai/tokens';
 
+import { useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
@@ -91,6 +110,9 @@ export const Wheel = ({
 }: WheelProps) => {
   const c = useNativeColors();
   const r = useNativeRadii();
+  // ONE ring for the column, on the listbox — the single tab stop the rows
+  // give up their tabindex for. The web leaf rings the same element.
+  const focus = useNativeFocusRing();
   const body = useNativeBodyFamily();
   const state = useWheelState({ items, value, defaultValue, onValueChange });
   const {
@@ -119,8 +141,12 @@ export const Wheel = ({
     scrollerRef.current?.scrollTo({ y: offsetForIndex(index), animated: false });
   }, [index]);
 
+  // Still mounted? A commit from a scroll event that outlived the leaf is a
+  // commit nothing asked for. See seam 3 in the header.
+  const aliveRef = React.useRef(true);
+
   const settle = React.useCallback(() => {
-    if (disabled) return;
+    if (disabled || !aliveRef.current) return;
     const next = valueAtOffset(items, offsetRef.current);
     if (next === null) return;
     if (next !== current) {
@@ -136,14 +162,22 @@ export const Wheel = ({
   }, [items, current, index, setValue, disabled]);
 
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  React.useEffect(
-    () => () => {
+  React.useEffect(() => {
+    // Raised on the way IN as well as lowered on the way out. StrictMode
+    // mounts, unmounts and remounts every component in development, and a flag
+    // that was only ever lowered would leave the second mount deaf to its own
+    // wheel for the rest of the session.
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
       if (timerRef.current !== null) clearTimeout(timerRef.current);
-    },
-    [],
-  );
+    };
+  }, []);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    // Nothing to track and nothing to arm once the leaf is gone; the timer
+    // cleared above is the last one there will ever be.
+    if (!aliveRef.current) return;
     const offset = event.nativeEvent.contentOffset.y;
     offsetRef.current = offset;
     trackOffset(offset);
@@ -200,7 +234,9 @@ export const Wheel = ({
         onScroll={handleScroll}
         onScrollEndDrag={settle}
         onMomentumScrollEnd={settle}
-        style={[styles.scroller, { borderRadius: r.md }, snapStyle]}
+        onFocus={focus.focus}
+        onBlur={focus.blur}
+        style={[styles.scroller, { borderRadius: r.md }, snapStyle, focus.ringStyle]}
         contentContainerStyle={styles.content}
       >
         {items.map((item, itemIndex) => {

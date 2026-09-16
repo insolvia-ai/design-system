@@ -10,6 +10,14 @@
 // Dismissal is the same limitation Popover's native leaf documents: without a
 // Modal there is no press-anywhere to listen for, so the menu closes by
 // choosing an item or pressing the trigger again.
+//
+// SUB-MENUS EXPAND IN PLACE rather than flying out to the right as the web
+// leaf's do. A flyout needs room beside the menu, and a phone has none: the
+// menu already sits at the edge of a screen a few hundred points wide. So the
+// sub trigger is a row that, when pressed, unfolds its rows directly beneath
+// it, indented — a disclosure, in the shape a touch user already knows. The
+// roles are the web leaf's exactly: a `menuitem` with `aria-haspopup="menu"`
+// and `aria-expanded`, and a second `menu` labelled by it.
 import * as React from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewProps } from 'react-native';
 
@@ -19,10 +27,14 @@ import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
   DropdownContext,
+  DropdownSubContext,
   useDropdownContext,
   useDropdownState,
+  useDropdownSubContext,
+  useDropdownSubState,
   type DropdownItemOwnProps,
   type DropdownRootOwnProps,
+  type DropdownSubOwnProps,
 } from './dropdown.props';
 
 export interface DropdownRootProps extends DropdownRootOwnProps {
@@ -56,7 +68,10 @@ const DropdownTrigger = ({ children }: DropdownTriggerProps) => {
     <Pressable
       nativeID={triggerId}
       accessibilityRole="button"
+      // Both spellings — accordion.native.tsx has the reasoning: a device
+      // reads the nested state, react-native-web only the flat prop.
       accessibilityState={{ expanded: open }}
+      aria-expanded={open}
       {...webAria}
       onPress={() => setOpen(!open)}
       style={styles.trigger}
@@ -151,6 +166,90 @@ const DropdownDivider = () => {
   return <View role="separator" style={[styles.divider, { backgroundColor: c.line }]} />;
 };
 
+// ---------------------------------------------------------------------------
+// Sub-menus.
+
+export interface DropdownSubProps extends DropdownSubOwnProps {
+  children?: React.ReactNode;
+}
+
+const DropdownSub = ({ open, defaultOpen, onOpenChange, children }: DropdownSubProps) => {
+  const ctx = useDropdownSubState(open, defaultOpen, onOpenChange);
+  return (
+    <DropdownSubContext.Provider value={ctx}>
+      {/* `accessible={false}`, the same hiding Label uses: a `menu` may own
+          items, groups, separators and menus, and this wrapper is none. */}
+      <View accessible={false}>{children}</View>
+    </DropdownSubContext.Provider>
+  );
+};
+
+export interface DropdownSubTriggerProps {
+  children?: React.ReactNode;
+}
+
+const DropdownSubTrigger = ({ children }: DropdownSubTriggerProps) => {
+  const { open, setOpen, subMenuId, subTriggerId } = useDropdownSubContext('SubTrigger');
+  const c = useNativeColors();
+  const body = useNativeBodyFamily();
+
+  const webAria = {
+    'aria-haspopup': 'menu',
+    ...(open ? { 'aria-controls': subMenuId } : {}),
+  } as object;
+
+  return (
+    <Pressable
+      nativeID={subTriggerId}
+      role="menuitem"
+      // Both spellings, as accordion.native.tsx explains: react-native-web
+      // reads the flat prop and ignores the nested state's `expanded`, and
+      // a device reads the nested state.
+      accessibilityState={{ expanded: open }}
+      aria-expanded={open}
+      {...webAria}
+      onPress={() => setOpen(!open)}
+      style={({ pressed }) => [
+        styles.item,
+        styles.subTrigger,
+        pressed ? { backgroundColor: c.surfaceAlt } : null,
+      ]}
+    >
+      <Text style={[styles.itemLabel, { fontFamily: body }, { color: c.ink }]}>{children}</Text>
+      {/* A glyph in a fixed box — the body family carve-out. Points down when
+          the rows are unfolded beneath, which is where they go here; the web
+          leaf's points right, to where its flyout goes. */}
+      <Text aria-hidden style={[styles.subGlyph, { color: c.muted }]}>
+        {open ? '⌄' : '›'}
+      </Text>
+    </Pressable>
+  );
+};
+
+export interface DropdownSubContentProps extends ViewProps {
+  children?: React.ReactNode;
+}
+
+const DropdownSubContent = ({ style, children, ...props }: DropdownSubContentProps) => {
+  const { open, subMenuId, subTriggerId } = useDropdownSubContext('SubContent');
+  const c = useNativeColors();
+  if (!open) return null;
+
+  const webAria = { 'aria-labelledby': subTriggerId } as object;
+
+  return (
+    <View
+      nativeID={subMenuId}
+      role="menu"
+      {...webAria}
+      style={[styles.subContent, { borderColor: c.line }, style]}
+      {...props}
+    >
+      {children}
+    </View>
+  );
+};
+
 export const Dropdown = {
   Root: DropdownRoot,
   Trigger: DropdownTrigger,
@@ -158,6 +257,9 @@ export const Dropdown = {
   Item: DropdownItem,
   Label: DropdownLabel,
   Divider: DropdownDivider,
+  Sub: DropdownSub,
+  SubTrigger: DropdownSubTrigger,
+  SubContent: DropdownSubContent,
 };
 
 const styles = StyleSheet.create({
@@ -187,4 +289,9 @@ const styles = StyleSheet.create({
   label: { paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
   labelText: { ...textScale.xs, fontWeight: '600' },
   divider: { height: 1, marginVertical: spacing.xs },
+  subTrigger: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  subGlyph: { ...textScale.sm, marginLeft: spacing.sm },
+  // Unfolded beneath the trigger and set in from the left by a rule, so the
+  // rows read as belonging to the trigger above rather than to the menu.
+  subContent: { marginLeft: spacing.sm, borderLeftWidth: 1 },
 });

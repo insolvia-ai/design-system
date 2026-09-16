@@ -5,7 +5,7 @@
 // `aria-pressed` attribute on a `<button>` — the native leaf can only speak
 // it through `accessibilityState.selected` under react-native-web, so that
 // direction is worth pinning here rather than inferring from the web tests.
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -64,6 +64,46 @@ describe('PasswordInput (native leaf)', () => {
     render(<PasswordInput aria-label="Password" />);
 
     expect(rgb(getComputedStyle(screen.getByText('Show')).color)).toEqual(rgb(colors.dark.muted));
+  });
+
+  // lib/native-focus.native.ts exists because an unringed native control falls
+  // through to Chrome's blue `outline-style: auto` under react-native-web. The
+  // box got the fix and the toggle beside it did not, so a keyboard user
+  // tabbing from the field to the toggle watched the package's ring turn into
+  // the browser's halfway across one control.
+  it('rings the toggle with the design system’s OWN ring, not the browser default', () => {
+    setPrefersColorScheme('light');
+    render(<PasswordInput aria-label="Password" />);
+
+    const toggle = screen.getByRole('button', { name: 'Show password' });
+    expect(getComputedStyle(toggle).outlineWidth).not.toBe('2px');
+
+    act(() => toggle.focus());
+
+    const style = getComputedStyle(toggle);
+    expect(style.outlineWidth).toBe('2px');
+    expect(style.outlineOffset).toBe('2px');
+    expect(rgb(style.outlineColor)).toEqual(rgb(colors.light.accent));
+  });
+
+  // The reason the toggle needs its OWN `useNativeFocusRing()`: one instance
+  // holds a single boolean, so sharing the field's would ring the whole box
+  // whenever the toggle took focus — two rings for one focused control.
+  it('rings ONLY the toggle — the box keeps its own, separate focus state', () => {
+    setPrefersColorScheme('light');
+    render(<PasswordInput aria-label="Password" />);
+
+    const input = screen.getByLabelText('Password');
+    const box = input.closest('div') as HTMLElement;
+    const toggle = screen.getByRole('button', { name: 'Show password' });
+
+    act(() => toggle.focus());
+    expect(getComputedStyle(toggle).outlineWidth).toBe('2px');
+    expect(getComputedStyle(box).outlineWidth).not.toBe('2px');
+
+    act(() => input.focus());
+    expect(getComputedStyle(box).outlineWidth).toBe('2px');
+    expect(getComputedStyle(toggle).outlineWidth).not.toBe('2px');
   });
 
   it('resolves the box border from the active scheme too', () => {

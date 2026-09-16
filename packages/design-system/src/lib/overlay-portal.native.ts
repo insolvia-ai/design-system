@@ -75,8 +75,14 @@ interface DomWindowLike {
   removeEventListener(type: string, listener: () => void, options?: { capture?: boolean }): void;
 }
 
+interface DomDocumentLike {
+  body: unknown;
+  addEventListener(type: string, listener: (event: { target: unknown }) => void): void;
+  removeEventListener(type: string, listener: (event: { target: unknown }) => void): void;
+}
+
 const web = globalThis as {
-  document?: { body: unknown };
+  document?: DomDocumentLike;
   window?: DomWindowLike;
 };
 
@@ -164,16 +170,74 @@ export function useOverlayAnchor(
 }
 
 /**
+ * Dismiss an open overlay when a press lands outside every node it owns.
+ *
+ * THE PORTAL IS WHY THIS TAKES A LIST. Once the surface renders as a child of
+ * `document.body` it is no longer a DOM descendant of the anchor, so the
+ * single `root.contains(target)` check a `.web` leaf gets away with would
+ * treat every press on the overlay's own contents as a press outside — and
+ * close it before the press could land. The anchor AND the surface both have
+ * to be asked.
+ *
+ * `mousedown`, not `click`, for the reason the web leaves record: a press that
+ * starts outside and ends inside should still count as leaving.
+ *
+ * ON A REAL NATIVE DEVICE this is inert — there is no document to listen to,
+ * which is the limitation Popover's native leaf documents. It is live exactly
+ * where the portal is, and that is the environment the gap was reachable in:
+ * a React Native consumer rendering through react-native-web, where every
+ * other control on the page dismisses this way and this one did not.
+ */
+export function useOverlayOutsidePress(
+  open: boolean,
+  within: ReadonlyArray<React.RefObject<View | null>>,
+  onOutside: () => void,
+): void {
+  const enabled = overlayPortalEnabled();
+  // Read through a ref rather than listed as dependencies: `within` is an
+  // array literal at every call site and `onOutside` a fresh closure, so
+  // depending on them would tear the listener down and rebuild it on every
+  // render of an open overlay. Assigned during render, as select.native.tsx
+  // does with its active-option ref.
+  const latest = React.useRef({ within, onOutside });
+  latest.current = { within, onOutside };
+
+  React.useEffect(() => {
+    if (!enabled || !open) return undefined;
+    const onMouseDown = (event: { target: unknown }) => {
+      const inside = latest.current.within.some((ref) => {
+        // A react-native-web View ref IS the DOM node; `contains` is the
+        // structural shape asked for, since the native program has no DOM lib.
+        const node = ref.current as unknown as { contains?: (other: unknown) => boolean } | null;
+        return node?.contains?.(event.target) === true;
+      });
+      if (!inside) latest.current.onOutside();
+    };
+    const doc = web.document;
+    doc?.addEventListener('mousedown', onMouseDown);
+    return () => doc?.removeEventListener('mousedown', onMouseDown);
+  }, [enabled, open]);
+}
+
+/**
  * `position: fixed` at viewport coordinates, matching what `useOverlayAnchor`
  * measures. RN's style types admit only 'absolute' | 'relative' — react-native-web
  * accepts and emits 'fixed', and the portal target (document.body) is exactly
  * where fixed and absolute-in-body agree anyway; the cast is contained here.
  *
- * zIndex 30 for the same reason the inline overlays' roots use 30: it has to
- * beat sibling page content, never a Dialog or AlertDialog, which render
- * through RN's Modal (itself portaled by react-native-web) and mount later in
- * document order.
+ * ABOVE react-native-web's Modal, not merely above page content. Dialog,
+ * AlertDialog and Drawer all render through RN's Modal, and react-native-web
+ * paints that as a `position: fixed` container at **`z-index: 9999`**
+ * (`ModalAnimation.js`). 0.23.0 and earlier used 30 here, reasoning that a
+ * Modal "mounts later in document order" — and document order is exactly what
+ * a z-index overrides. Measured in a real browser: a Select inside a Drawer
+ * opened its list to `document.body` at 30 and the Drawer painted over it,
+ * so the control looked cut off and offered no options. A Modal traps focus,
+ * so an overlay open at the same time as one is always an overlay INSIDE it;
+ * there is no case where a portaled list should sit under a Modal.
  */
+export const OVERLAY_PORTAL_Z_INDEX = 10_000;
+
 export function overlayPortalPosition(place: {
   top: number;
   left: number;
@@ -184,7 +248,7 @@ export function overlayPortalPosition(place: {
     top: place.top,
     left: place.left,
     ...(place.width === undefined ? {} : { width: place.width }),
-    zIndex: 30,
+    zIndex: OVERLAY_PORTAL_Z_INDEX,
   };
 }
 

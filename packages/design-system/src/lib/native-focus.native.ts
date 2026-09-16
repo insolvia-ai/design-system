@@ -16,6 +16,7 @@
 // The `.native.` infix is what exempts this file from the renderer ban in
 // eslint.config.js — the same rule that exempts native-theme.native.ts.
 import * as React from 'react';
+import { type TextStyle } from 'react-native';
 
 import { useNativeColors } from './native-theme';
 
@@ -34,6 +35,44 @@ export const nativeFocusRing = {
   outlineWidth: 2,
   outlineOffset: 2,
 } as const;
+
+/**
+ * Cancels the PLATFORM's own focus ring on a control an ANCESTOR rings.
+ *
+ * A leaf that spreads `ringStyle` on the focusable element itself is already
+ * done: its `outlineStyle: 'solid'` replaces whatever the platform would draw.
+ * A leaf that draws the box on a WRAPPER — PasswordInput and NumberInput, whose
+ * row holds a bare `TextInput` beside a button — is not. Under
+ * react-native-web the wrapper got the owned ring and the inner `<input>` kept
+ * Chrome's, `outline: auto 1px`, painted INSIDE it: two rings, one of them the
+ * browser's default in a colour this package does not own. Spread this on the
+ * inner control so only the wrapper's ring paints.
+ *
+ * It is measurable in a browser and nowhere else. A real click or Tab is what
+ * engages Chrome's `:focus-visible` heuristic — a programmatic `.focus()`
+ * reports `outline-style: none` and hides the bug — so no jsdom test can see
+ * this, and neither could axe, which scores contrast and names, not rings.
+ *
+ * `outlineWidth: 0` is NOT the fix: Chrome ignores width for an `auto` outline
+ * and paints its ring anyway. It has to be `outlineStyle: 'none'`, which RN
+ * 0.86's style types do not admit (`'solid' | 'dotted' | 'dashed'`) even though
+ * react-native-web forwards it to CSS verbatim — the same platform/type gap the
+ * `aria-*` casts in the leaves document. Hence the one contained cast, here
+ * rather than repeated per leaf. On a real device this is inert: React Native
+ * paints no default ring to cancel.
+ *
+ * THE CAST LANDS ON `TextStyle`, NOT `ViewStyle`, and that is not cosmetic.
+ * Both places this is spread are a `TextInput`'s `style`, which takes
+ * `StyleProp<TextStyle>`. A `ViewStyle` satisfies that in THIS repo's programs,
+ * where every extra `TextStyle` member is optional — and stops satisfying it in
+ * a consumer whose program augments `TextStyle`, which react-native-web's
+ * typings do: they widen `userSelect` to `string`, so the two types conflict on
+ * a shared member rather than merely differing by optional ones, and the
+ * assignment becomes a hard `TS2769` in source this package published. `TextStyle`
+ * is the honest type for a value only text controls use, and it stays assignable
+ * wherever a `ViewStyle` is wanted, so a future `View` use site still compiles.
+ */
+export const suppressPlatformFocusRing = { outlineStyle: 'none' } as unknown as TextStyle;
 
 export interface NativeFocusRing {
   focused: boolean;

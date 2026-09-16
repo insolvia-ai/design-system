@@ -80,6 +80,12 @@
       "consumer installing with a wildcard would otherwise pull in skills about",
       "releasing these packages."
     ],
+    "bump": [
+      "`npm run bump -- <package> <patch|minor>`: set the package's version to",
+      "main's plus the bump and move this PR's CHANGELOG.md entry to the top,",
+      "renumbered. Run after rebasing when another release merged first, and on",
+      "a fresh branch to write the heading. scripts/bump.ts owns the reasoning."
+    ],
     "artifacts:check": [
       "The RELEASE gate, as distinct from the merge gates: it reads",
       "`npm pack --dry-run` for both packages and asks whether the TARBALL is",
@@ -170,8 +176,9 @@
     "typecheck:workbench": "tsc -p tsconfig.workbench.json",
     "typecheck:scripts": "tsc -p tsconfig.scripts.json",
     "screenshots": "node scripts/capture-stories.ts",
-  "skills:check": "node scripts/check-skills.ts",
+    "skills:check": "node scripts/check-skills.ts",
     "changelog:check": "node scripts/check-changelog.ts",
+    "bump": "node scripts/bump.ts",
     "artifacts:check": "node scripts/check-artifacts.ts",
     "test": "npm run test --workspaces --if-present",
     "ci": "npm run tokens:check && npm run skills:check && npm run changelog:check && npm run format && npm run lint && npm run typecheck && npm run typecheck:workbench && npm run typecheck:scripts && npm run test && npm run test:workbench && npm run test:a11y",

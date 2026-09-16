@@ -7,6 +7,13 @@
 // (`useNativeColors`/`useNativeRadii`), never at module load — see
 // native-theme.native.ts.
 //
+// TWO RINGS, NOT ONE. The box and the Show/Hide toggle are two independently
+// focusable controls in one row (Tab order under react-native-web, or a TV
+// remote), so each calls `useNativeFocusRing()` for itself. One instance holds
+// a single boolean, so sharing the field's would ring the whole box whenever
+// the toggle took focus. Same one-ring-per-control shape as the private
+// stepper in `number-input.native.tsx`.
+//
 // PLATFORM SEAM, RECORDED ON PURPOSE. The web leaf draws its toggle as an
 // inline SVG eye/eye-off glyph, because SVG is free on the DOM. React Native
 // has no SVG primitive without a native dependency this package cannot
@@ -41,7 +48,7 @@ import { spacing } from '@insolvia-ai/tokens';
 
 import { FieldContext } from '../field/field.props';
 import { CONTROL_HEIGHT_PX, useInputState } from '../input/input.props';
-import { useNativeFocusRing } from '../lib/native-focus';
+import { suppressPlatformFocusRing, useNativeFocusRing } from '../lib/native-focus';
 import { useNativeColors, useNativeRadii } from '../lib/native-theme';
 import { textScale, useNativeBodyFamily } from '../lib/native-typography';
 import {
@@ -91,6 +98,7 @@ export const PasswordInput = ({
   const r = useNativeRadii();
   const focus = useNativeFocusRing();
   const body = useNativeBodyFamily();
+  const toggleFocus = useNativeFocusRing();
   const [text, setText] = useInputState({ value, defaultValue, onValueChange });
   const [isRevealed, setRevealed] = useRevealedState({
     revealed,
@@ -175,7 +183,15 @@ export const PasswordInput = ({
           focus.blur();
           onBlur?.(event);
         }}
-        style={[styles.input, { fontFamily: body }, { color: disabled ? c.muted : c.ink }, style]}
+        // The ROW above carries the owned ring; this control cancels the
+        // platform's own so only one paints. See suppressPlatformFocusRing.
+        style={[
+          styles.input,
+          suppressPlatformFocusRing,
+          { fontFamily: body },
+          { color: disabled ? c.muted : c.ink },
+          style,
+        ]}
         {...props}
       />
       <Pressable
@@ -184,7 +200,9 @@ export const PasswordInput = ({
         {...toggleProps}
         disabled={disabled}
         onPress={() => setRevealed(!isRevealed)}
-        style={styles.toggle}
+        onFocus={toggleFocus.focus}
+        onBlur={toggleFocus.blur}
+        style={[styles.toggle, toggleFocus.ringStyle]}
       >
         {/* A word, not a glyph — "Show"/"Hide" is body copy and follows the family. */}
         <Text style={[styles.toggleLabel, { fontFamily: body, color: c.muted }]}>
@@ -212,6 +230,13 @@ const styles = StyleSheet.create({
   toggle: {
     flexShrink: 0,
     justifyContent: 'center',
+    // The ring reaches 4px past the toggle (`outlineOffset` 2 + `outlineWidth`
+    // 2), and this row has no vertical padding to absorb it — the toggle
+    // stretches the full inner height of the box. Without this inset the ring
+    // would straddle the box's own border. 4 is exactly that reach, so the
+    // ring lands flush inside the border, and the label stays centred because
+    // the inset is symmetric.
+    marginVertical: spacing.xs,
   },
   toggleLabel: { ...textScale.sm },
 });

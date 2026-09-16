@@ -178,8 +178,9 @@ type Story = StoryObj<typeof meta>;
 /**
  * Ends with the picker OPEN in the web pane, which is the state worth auditing:
  * axe runs after the play, so a surface that is never left open is a surface
- * never audited. Only one pane is opened — two anchored surfaces at once make
- * the comparison harder to read, not easier.
+ * never audited. The native pane's picker is opened three times and shut every
+ * time — those steps check dismissal and the value surviving it, not the
+ * surface — so the one open surface the comparison wants is the web pane's.
  */
 export const Basic: Story = {
   play: async ({ canvasElement, args, step }) => {
@@ -207,6 +208,41 @@ export const Basic: Story = {
       await expect(args.onValueChange).toHaveBeenLastCalledWith('2019-02-14', 'valid');
     });
 
+    // Dismissal, on the leaf where it shipped broken. The native leaf had no
+    // outside listener at all and bound Escape to a node react-native-web
+    // overwrites, so an open picker could only be closed on the button that
+    // opened it. Asserted HERE and not only in the native suite because the
+    // portal is what made it subtle — the surface is a child of document.body,
+    // so `screen` rather than `pair()`'s scoped queries — and because the
+    // browser is where a React Native consumer's users meet this leaf.
+    //
+    // Both steps used to wait 700ms before dismissing, because closing the
+    // picker while `Wheel`'s columns were still scrolling to the value the
+    // field opened on rewrote that value to the first row of every column.
+    // That was a `wheel.native.tsx` bug, fixed in 0.23.0, so the wait is gone.
+    // The value assertions here are NOT what covers that fix — they run the
+    // instant the surface goes, and the rewrite landed about 220ms later, so
+    // they passed throughout. The step at the end of this play is the one that
+    // waits long enough to see it.
+
+    await step('native leaf: Escape closes the picker the BUTTON opened', async () => {
+      await userEvent.click(native.getByRole('button', { name: 'Choose a date' }));
+      await expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+      await userEvent.keyboard('{Escape}');
+      await expect(screen.queryByRole('dialog')).toBeNull();
+      await expect(native.getByRole('textbox')).toHaveValue('2019-02-14');
+    });
+
+    await step('native leaf: and so does a press outside it', async () => {
+      await userEvent.click(native.getByRole('button', { name: 'Choose a date' }));
+      await expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+      await userEvent.click(web.getByRole('textbox'));
+      await expect(screen.queryByRole('dialog')).toBeNull();
+      await expect(native.getByRole('textbox')).toHaveValue('2019-02-14');
+    });
+
     await step('web leaf: the button opens the wheels on the typed date', async () => {
       await userEvent.click(web.getByRole('button', { name: 'Choose a date' }));
       const picker = within(web.getByRole('dialog'));
@@ -220,6 +256,29 @@ export const Basic: Story = {
       );
       await expect(web.getByRole('textbox')).toHaveValue('2019-02-19');
       await expect(args.onValueChange).toHaveBeenLastCalledWith('2019-02-19', 'valid');
+    });
+
+    await step('native leaf: opening and closing at once leaves the value alone', async () => {
+      // A REGRESSION STEP, and one only this runner can hold. Opening the
+      // native picker and closing it again immediately used to rewrite the
+      // field to the first row of every column — `2019-02-14` became
+      // `1926-02-14` — because react-native-web's ScrollViewBase fires one
+      // last `onScroll` 100ms after any scroll, into a wheel that has already
+      // unmounted, off a detached node whose `scrollTop` a browser has zeroed.
+      // `wheel.native.tsx` owns the fix and the full account.
+      //
+      // Nothing in the jsdom suite can watch a picker open and shut in a real
+      // frame; the wheel's own unit test reaches the same guard, but only by
+      // supplying the detach by hand. This step is the one that exercises the
+      // whole path as a person does, which is why it is here and not only
+      // there.
+      const button = native.getByRole('button', { name: 'Choose a date' });
+      await userEvent.click(button);
+      await userEvent.click(button);
+      // Past both timers — RNW's 100ms scroll-end and the wheel's own 120ms
+      // settle — so a commit that was going to land has landed.
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await expect(native.getByRole('textbox')).toHaveValue('2019-02-14');
     });
   },
 };

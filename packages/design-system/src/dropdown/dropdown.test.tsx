@@ -114,3 +114,115 @@ describe('Dropdown', () => {
     expect(screen.getByRole('menu')).toHaveAccessibleName('Actions');
   });
 });
+
+function Nested({ onSelect = () => {} }: { onSelect?: (item: string) => void }) {
+  return (
+    <Dropdown.Root>
+      <Dropdown.Trigger>Actions</Dropdown.Trigger>
+      <Dropdown.Content>
+        <Dropdown.Item onSelect={() => onSelect('Rename')}>Rename</Dropdown.Item>
+        <Dropdown.Sub>
+          <Dropdown.SubTrigger>Move to</Dropdown.SubTrigger>
+          <Dropdown.SubContent>
+            <Dropdown.Item onSelect={() => onSelect('Drydock')}>Drydock</Dropdown.Item>
+            <Dropdown.Item onSelect={() => onSelect('Orbit')}>Orbit</Dropdown.Item>
+          </Dropdown.SubContent>
+        </Dropdown.Sub>
+        <Dropdown.Item onSelect={() => onSelect('Duplicate')}>Duplicate</Dropdown.Item>
+      </Dropdown.Content>
+    </Dropdown.Root>
+  );
+}
+
+async function openToSubTrigger(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: 'Actions' }));
+  await user.keyboard('{ArrowDown}');
+  const subTrigger = screen.getByRole('menuitem', { name: 'Move to' });
+  expect(subTrigger).toHaveFocus();
+  return subTrigger;
+}
+
+describe('Dropdown sub-menus', () => {
+  it('marks the sub trigger as a menu item that opens a menu', async () => {
+    const user = userEvent.setup();
+    render(<Nested />);
+
+    const subTrigger = await openToSubTrigger(user);
+
+    expect(subTrigger).toHaveAttribute('aria-haspopup', 'menu');
+    expect(subTrigger).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getAllByRole('menu')).toHaveLength(1);
+  });
+
+  it('opens on ArrowRight, focuses the first row, and labels the flyout', async () => {
+    const user = userEvent.setup();
+    render(<Nested />);
+
+    const subTrigger = await openToSubTrigger(user);
+    await user.keyboard('{ArrowRight}');
+
+    expect(subTrigger).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('menu', { name: 'Move to' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Drydock' })).toHaveFocus();
+  });
+
+  it('walks the flyout on its own, and the parent on its own', async () => {
+    const user = userEvent.setup();
+    render(<Nested />);
+
+    await openToSubTrigger(user);
+    await user.keyboard('{ArrowRight}{ArrowDown}{ArrowDown}');
+    // Clamped inside the flyout: never falls through to 'Duplicate' below.
+    expect(screen.getByRole('menuitem', { name: 'Orbit' })).toHaveFocus();
+
+    await user.keyboard('{ArrowLeft}');
+    expect(screen.getByRole('menuitem', { name: 'Move to' })).toHaveFocus();
+    expect(screen.queryByRole('menu', { name: 'Move to' })).not.toBeInTheDocument();
+
+    // And the parent's End is the parent's last row, not the flyout's.
+    await user.keyboard('{End}');
+    expect(screen.getByRole('menuitem', { name: 'Duplicate' })).toHaveFocus();
+  });
+
+  it('closes only the flyout on Escape, and the whole menu on a second', async () => {
+    const user = userEvent.setup();
+    render(<Nested />);
+
+    await openToSubTrigger(user);
+    await user.keyboard('{ArrowRight}{Escape}');
+
+    expect(screen.getByRole('menu', { name: 'Actions' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Move to' })).toHaveFocus();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Actions' })).toHaveFocus();
+  });
+
+  it('opens on hover without moving focus', async () => {
+    const user = userEvent.setup();
+    render(<Nested />);
+
+    await user.click(screen.getByRole('button', { name: 'Actions' }));
+    await user.hover(screen.getByRole('menuitem', { name: 'Move to' }));
+
+    expect(screen.getByRole('menu', { name: 'Move to' })).toBeInTheDocument();
+    // The pointer opened it; the keyboard is still where it was.
+    expect(screen.getByRole('menuitem', { name: 'Rename' })).toHaveFocus();
+  });
+
+  it('choosing a row in the flyout closes the whole tree', async () => {
+    const onSelect = vi.fn();
+    const user = userEvent.setup();
+    render(<Nested onSelect={onSelect} />);
+
+    await openToSubTrigger(user);
+    await user.keyboard('{ArrowRight}');
+    await user.click(screen.getByRole('menuitem', { name: 'Orbit' }));
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenLastCalledWith('Orbit');
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Actions' })).toHaveFocus();
+  });
+});
