@@ -161,6 +161,8 @@ Tab or `keydown`, so there was no ring to replace and no keyboard to lose.
   refuses an entry still carrying an unfilled placeholder. Neither reaches the
   tarball.
 
+[#32](https://github.com/insolvia-ai/design-system/pull/32)
+
 ## 0.22.0 — minor
 
 **Widen your range to take this:** `^0.21.x` will not resolve it.
