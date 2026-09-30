@@ -48,6 +48,7 @@ claims about who consumes what.
 | adding a skill for working HERE | `.claude/skills/<name>/SKILL.md`, description opening `Contributor.`, and `metadata.internal: true` — without the flag it is offered to third parties installing the consumer skills |
 | releasing — version bumps, changelog entries, publishing | `design-system-release` skill |
 | opening a PR | `design-system-pr` skill |
+| **any GitHub write** (`gh pr create/merge`, auto-merge, `git push`) or a GitHub 403 / "denied to <user>" | `design-system-github-auth` skill — read the `GitHub:` line from the SessionStart hook; **never `gh auth switch`** |
 | running or setting anything up | [`scripts/README.md`](scripts/README.md) |
 | **needing to SEE a component** | `./scripts/dev-up.sh` — both leaves, side by side |
 | needing a PICTURE of one (PR evidence, a dark-mode check) | `design-system-screenshots` skill — `npm run screenshots` |
